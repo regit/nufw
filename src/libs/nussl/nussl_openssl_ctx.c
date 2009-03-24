@@ -1,5 +1,5 @@
 /*
- ** Copyright (C) 2007-2008 INL
+ ** Copyright (C) 2007-2009 INL
  ** Written by S.Tricaud <stricaud@inl.fr>
  **            L.Defert <ldefert@inl.fr>
  **            Pierre Chifflier <chifflier@inl.fr>
@@ -38,7 +38,7 @@
 
 #ifdef HAVE_OPENSSL
 
-#include "nussl_config.h"
+#include "nussl_privssl.h"
 
 #include <sys/types.h>
 
@@ -58,6 +58,7 @@
 #include <stdlib.h>		/* for abort() */
 #include <pthread.h>
 #endif
+
 
 #include "nussl_ssl.h"
 #include "nussl_ssl_common.h"
@@ -205,7 +206,9 @@ int nussl_ssl_context_trustdir(nussl_ssl_context * ctx,
 int nussl_ssl_context_set_dh_bits(nussl_ssl_context * ctx,
 				  unsigned int dh_bits)
 {
+#ifndef _WIN32
 #warning "Function is not yet implemented"
+#endif
 	/* XXX see man SSL_CTX_set_tmp_dh_callback */
 
 	return NUSSL_OK;

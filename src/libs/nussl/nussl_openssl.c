@@ -38,7 +38,7 @@
 
 #ifdef HAVE_OPENSSL
 
-#include "nussl_config.h"
+#include "nussl_privssl.h"
 
 #include <sys/types.h>
 
@@ -401,7 +401,7 @@ static nussl_ssl_certificate *make_chain(STACK_OF(X509) * chain)
 	for (n = 0; n < count; n++) {
 		nussl_ssl_certificate *cert = nussl_malloc(sizeof *cert);
 		populate_cert(cert, X509_dup(sk_X509_value(chain, n)));
-#ifdef NUSSL_DEBUGGING
+#if defined(NUSSL_DEBUGGING) && !defined(_WIN32)
 		if (nussl_debug_mask & NUSSL_DBG_SSL) {
 			fprintf(nussl_debug_stream, "Cert #%d:\n", n);
 			X509_print_fp(nussl_debug_stream, cert->subject);
@@ -1243,7 +1243,9 @@ int nussl_get_peer_dn(nussl_session * sess, char *buf, size_t * buf_size)
 		return NUSSL_ERROR;
 
 	// XXX
+#ifndef _WIN32
 #warning "Function is not yet implemented"
+#endif
 
 	return NUSSL_OK;
 }

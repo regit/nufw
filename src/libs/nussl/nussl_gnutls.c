@@ -34,8 +34,6 @@
 */
 
 #include "config.h"
-#include "nussl_config.h"
-#include "nussl_ssl_common.h"
 
 #ifdef HAVE_GNUTLS
 
@@ -55,6 +53,13 @@
 #include <gnutls/gnutls.h>
 #include <gnutls/pkcs12.h>
 
+#ifdef HAVE_ICONV
+#include <iconv.h>
+#endif
+
+#include "nussl_privssl.h"
+#include "nussl_ssl_common.h"
+
 #ifdef NUSSL_HAVE_TS_SSL
 #include <errno.h>
 #include <pthread.h>
@@ -63,9 +68,8 @@ GCRY_THREAD_OPTION_PTHREAD_IMPL;
 
 #endif
 
-#ifdef HAVE_ICONV
-#include <iconv.h>
-#endif
+
+
 
 #include "nussl_ssl.h"
 #include "nussl_string.h"

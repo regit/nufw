@@ -1,5 +1,5 @@
 /*
- ** Copyright (C) 2007-2008 INL
+ ** Copyright (C) 2007-2009 INL
  ** Written by S.Tricaud <stricaud@inl.fr>
  **            L.Defert <ldefert@inl.fr>
  **            Pierre Chifflier <chifflier@inl.fr>
@@ -48,6 +48,11 @@
 
 #include <config.h>
 #include "nussl_config.h"
+
+#ifdef HAVE_SYS_SOCKET_H
+# include <sys/socket.h>
+#endif
+
 #include "nussl_ssl.h"
 #include "nussl_socket.h"
 

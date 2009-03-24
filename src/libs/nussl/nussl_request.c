@@ -43,6 +43,7 @@
 #include <unistd.h>
 #endif
 
+#include "nussl_privssl.h"
 #include "nussl_internal.h"
 
 #include "nussl_alloc.h"
@@ -131,7 +132,7 @@ static int do_connect(nussl_session * sess, struct host_info *host,
 	do {
 		sess->status.ci.address = host->current;
 		/* notify_status(sess, nussl_status_connecting); */
-#ifdef NUSSL_DEBUGGING
+#if defined(NUSSL_DEBUGGING) && !defined(_WIN32)
 		if (nussl_debug_mask & NUSSL_DBG_HTTP) {
 			char buf[150];
 			NUSSL_DEBUG(NUSSL_DBG_HTTP, "Connecting to %s\n",

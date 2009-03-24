@@ -46,8 +46,7 @@
  */
 
 #include <config.h>
-#include <pthread.h>
-#include "nussl_config.h"
+
 
 #include <string.h>
 #include <stdlib.h>
@@ -55,6 +54,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include "nussl_privssl.h"
 #include "nussl_session.h"
 #include "nussl_alloc.h"
 #include "nussl_utils.h"
@@ -65,6 +65,9 @@
 
 #include "nussl_private.h"
 
+#ifdef NUSSL_HAVE_TS_SSL
+# include <pthread.h>
+#endif
 
 #if 0
 /* Destroy a a list of hooks. */

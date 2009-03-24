@@ -36,16 +36,9 @@
 #endif
 
 /* #define NUSSL_DBG_SSL fprintf */
-/* XXX : add checks here */
-#define HAVE_ERRNO_H
-#define HAVE_LIMITS_H
-#define HAVE_SYS_SELECT_H
-#define HAVE_NETINET_TCP_H
-
 
 #define  HAVE_FNCTL
 
-#define HAVE_MEMCPY
 #define NEON_VERSION "NuNeon"
 
 /*#define NUSSL_USE_POLL 1 XXX: remove anything related to me*/
@@ -73,22 +66,18 @@
 
 #ifdef WIN32
 
-
-#define NEON_VERSION "@VERSION@"
-#define NUSSL_VERSION_MAJOR (@MAJOR@)
-#define NUSSL_VERSION_MINOR (@MINOR@)
-
-#define HAVE_ERRNO_H
-#define HAVE_LIMITS_H
-
-#define HAVE_MEMCPY
 #define HAVE_SETSOCKOPT
 
-#define HAVE_SSPI
+//#define HAVE_SSPI
+#undef NUSSL_HAVE_TS_SSL
 
 /* Define to enable debugging */
 #define NUSSL_DEBUGGING 1
 
+#define SHUT_RDWR SD_BOTH
+#include <winsock2.h>
+
+#if 0
 /* Win32 uses a underscore, so we use a macro to eliminate that. */
 #define snprintf			_snprintf
 #define vsnprintf			_vsnprintf
@@ -102,6 +91,7 @@
 #define ssize_t				int
 #define inline                          __inline
 #define off_t                           _off_t
+#endif /* 0 */
 
 #ifndef USE_GETADDRINFO
 #define in_addr_t                       unsigned int

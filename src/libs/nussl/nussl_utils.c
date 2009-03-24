@@ -61,7 +61,9 @@
 
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <unistd.h>
+#ifdef HAVE_UNISTD_H
+# include <unistd.h>
+#endif
 
 
 #include "nussl_utils.h"
@@ -188,9 +190,11 @@ int check_key_perms(const char *filename)
 	if (stat(filename, &info) != 0)
 		return NUSSL_ERROR;
 
+#ifndef _WIN32
 	/* File should not be readable or writable by others */
 	if (info.st_mode & S_IROTH || info.st_mode & S_IWOTH)
 		return NUSSL_ERROR;
+#endif
 
 	return NUSSL_OK;
 }

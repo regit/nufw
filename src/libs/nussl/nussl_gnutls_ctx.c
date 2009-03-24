@@ -34,8 +34,6 @@
 
 
 #include "config.h"
-#include "nussl_config.h"
-#include "nussl_ssl_common.h"
 
 
 #ifdef HAVE_GNUTLS
@@ -65,6 +63,9 @@
 #ifdef HAVE_ICONV
 #include <iconv.h>
 #endif
+
+#include "nussl_config.h"
+#include "nussl_ssl_common.h"
 
 #include "nussl_ssl.h"
 #include "nussl_string.h"
