@@ -802,6 +802,10 @@ int tls_user_init(struct tls_user_context_t *context)
 		}
 	}
 
+	if (nuauth_tls.ciphers) {
+		nussl_session_set_ciphers(context->nussl, nuauth_tls.ciphers);
+	}
+
 	return 1;
 }
 

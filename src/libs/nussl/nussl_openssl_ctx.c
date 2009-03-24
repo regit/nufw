@@ -169,6 +169,8 @@ void nussl_ssl_context_destroy(nussl_ssl_context * ctx)
 	SSL_CTX_free(ctx->ctx);
 	if (ctx->sess)
 		SSL_SESSION_free(ctx->sess);
+	if (ctx->ciphers)
+		nussl_free(ctx->ciphers);
 	nussl_free(ctx);
 }
 

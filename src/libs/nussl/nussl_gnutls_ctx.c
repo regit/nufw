@@ -159,6 +159,8 @@ void nussl_ssl_context_destroy(nussl_ssl_context * ctx)
 		gnutls_free(ctx->cache.server.key.data);
 		gnutls_free(ctx->cache.server.data.data);
 	}
+	if (ctx->ciphers)
+		nussl_free(ctx->ciphers);
 	nussl_free(ctx);
 }
 

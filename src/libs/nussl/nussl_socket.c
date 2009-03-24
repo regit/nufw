@@ -1540,6 +1540,9 @@ int nussl_sock_accept_ssl(nussl_socket * sock, nussl_ssl_context * ctx)
 
 	SSL_set_fd(ssl, sock->fd);
 
+	if (ctx->ciphers != NULL)
+		SSL_set_cipher_list(ssl, ctx->ciphers);
+
 	sock->ssl = ssl;
 	ret = SSL_accept(ssl);
 	if (ret != 1) {
@@ -1557,7 +1560,20 @@ int nussl_sock_accept_ssl(nussl_socket * sock, nussl_ssl_context * ctx)
 #elif defined(HAVE_GNUTLS)
 	gnutls_init(&ssl, GNUTLS_SERVER);
 	gnutls_credentials_set(ssl, GNUTLS_CRD_CERTIFICATE, ctx->cred);
-	gnutls_set_default_priority(ssl);
+	if (ctx->ciphers != NULL) {
+		const char *err_pos;
+
+		ret = gnutls_priority_set_direct(ssl, ctx->ciphers, &err_pos);
+		if (ret != GNUTLS_E_SUCCESS) {
+			nussl_snprintf(sock->error, sizeof sock->error,
+					_("Could not set cipher list %s: %s"),
+					err_pos,
+					gnutls_strerror(ret));
+			return NUSSL_SOCK_ERROR;
+		}
+	} else {
+		gnutls_set_default_priority(ssl);
+	}
 
 	/* Set up dummy session cache. */
 	gnutls_db_set_store_function(ssl, store_sess);

@@ -650,6 +650,10 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 		}
 	}
 
+	if (nuauth_tls.ciphers) {
+		nussl_session_set_ciphers(context->server, nuauth_tls.ciphers);
+	}
+
 	if (int_disable_fqdn_check)
 		nussl_set_session_flag(context->server, NUSSL_SESSFLAG_IGNORE_ID_MISMATCH, 1);
 

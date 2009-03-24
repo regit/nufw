@@ -111,6 +111,9 @@ extern "C" {
 
 	int nussl_session_get_fd(nussl_session * sess);
 
+/* Set list of allowed ciphers for TLS negotiation */
+	void nussl_session_set_ciphers(nussl_session * sess, const char *cipher_list);
+
 	int nussl_session_get_cipher(nussl_session * sess, char *buf, size_t bufsz);
 
 	int nussl_session_getpeer(nussl_session * sess,

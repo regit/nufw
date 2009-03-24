@@ -125,6 +125,18 @@ void nussl_set_hostinfo(nussl_session * sess, const char *hostname,
 
 }
 
+/* Set list of allowed ciphers for TLS negotiation */
+void nussl_session_set_ciphers(nussl_session * sess, const char *cipher_list)
+{
+	if (!sess)
+		return;
+
+	if (!sess->ssl_context)
+		return;
+
+	sess->ssl_context->ciphers = nussl_strdup(cipher_list);
+}
+
 nussl_session *nussl_session_create(int mode)
 {
 
@@ -189,6 +201,9 @@ nussl_session *nussl_session_accept(nussl_session * srv_sess)
 
 	if (srv_sess->ssl_context->verify)
 		client_sess->check_peer_cert = 1;
+
+	if (srv_sess->ssl_context->ciphers != NULL)
+		nussl_session_set_ciphers(client_sess, srv_sess->ssl_context->ciphers);
 
 	client_sess->socket = nussl_sock_create();
 

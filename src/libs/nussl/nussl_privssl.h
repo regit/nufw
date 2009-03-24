@@ -62,6 +62,8 @@ struct nussl_ssl_context_s {
 	const char *hostname;	/* for SNI */
 	int verify;		/* non-zero if client cert verification required */
 
+	char *ciphers; /* allowed cipher list */
+
 	DH *dh;
 };
 
@@ -78,6 +80,9 @@ struct nussl_ssl_context_s {
 	gnutls_dh_params dh;
 	unsigned int dh_bits;
 	int verify;		/* non-zero if client cert verification required */
+
+	char *ciphers; /* allowed cipher list */
+
 	int use_cert;
 
 	const char *hostname;	/* for SNI */
