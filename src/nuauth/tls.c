@@ -76,6 +76,7 @@ void tls_common_init(void)
 	nuauth_tls.capath = nuauth_config_table_get("nuauth_tls_ca_path");
 	nuauth_tls.crl_file = nuauth_config_table_get("nuauth_tls_crl");
 	nuauth_tls.crl_refresh = nuauth_config_table_get_or_default_int("nuauth_tls_crl_refresh", DEFAULT_REFRESH_CRL_INTERVAL);
+	nuauth_tls.ciphers = nuauth_config_table_get("nuauth_tls_ciphers");
 	/* {"nuauth_tls_key_passwd", G_TOKEN_STRING, 0, NULL}, */
 
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_GW | DEBUG_AREA_USER,

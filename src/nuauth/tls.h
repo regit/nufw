@@ -143,6 +143,8 @@ struct nuauth_tls_t {
 	int crl_refresh; /* nuauth_tls_crl_refresh */
 	char *key_password; /* nuauth_tls_key_passwd */
 
+	char *ciphers; /* nuauth_tls_ciphers */
+
 /* TLS helpers, no configuration */
 	int crl_refresh_counter; 
 	time_t crl_file_mtime;
