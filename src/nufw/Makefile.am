@@ -8,12 +8,12 @@ EXTRA_DIST = valgrind.sh
 
 # nufw
 
-nodist_include_HEADERS = iface.h nufw.h structure.h nufwconf.h
+noinst_nufw_SOURCES = iface.h nufw.h structure.h nufwconf.h
 
 nufw_SOURCES = authsrv.c  common.c  main.c  packetsrv.c \
 		tls.c audit.c conntrack.c iface.c \
 		nufwconf.c \
-		${nodist_include_HEADERS}
+		${noinst_nufw_SOURCES}
 
 if HAVE_IPQ
 nufw_LDADD = -lipq ../libs/nussl/libnussl.la ../libs/nuconfparser/libnuconfparser.la ../libs/nubase/libnubase.la

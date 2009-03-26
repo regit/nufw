@@ -8,8 +8,8 @@ plugindir = $(libdir)/nuauth/modules
 
 plugin_LTLIBRARIES = libpgsql.la
 
-nodist_include_HEADERS = log_pgsql.h
-libpgsql_la_SOURCES = pgsql.c ${nodist_include_HEADERS}
+noinst_libpgsql_la_SOURCES = log_pgsql.h
+libpgsql_la_SOURCES = pgsql.c ${noinst_libpgsql_la_SOURCES}
 
 libpgsql_la_LDFLAGS = -module -avoid-version
 libpgsql_la_LIBADD = -lpq

@@ -10,8 +10,8 @@ plugindir = $(libdir)/nuauth/modules
 
 plugin_LTLIBRARIES = libnuprelude.la
 
-nodist_include_HEADERS = log_prelude.h
-libnuprelude_la_SOURCES = nuprelude.c ${nodist_include_HEADERS}
+noinst_libnuprelude_la_SOURCES = log_prelude.h
+libnuprelude_la_SOURCES = nuprelude.c ${noinst_libnuprelude_la_SOURCES}
 
 libnuprelude_la_LIBADD = -lprelude
 libnuprelude_la_LDFLAGS = -module -avoid-version

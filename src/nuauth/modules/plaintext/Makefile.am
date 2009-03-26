@@ -8,8 +8,8 @@ plugindir = $(libdir)/nuauth/modules
 
 plugin_LTLIBRARIES = libplaintext.la
 
-nodist_include_HEADERS = auth_plaintext.h
-libplaintext_la_SOURCES = plaintext.c ${nodist_include_HEADERS}
+noinst_libplaintext_la_SOURCES = auth_plaintext.h
+libplaintext_la_SOURCES = plaintext.c ${noinst_libplaintext_la_SOURCES}
 libplaintext_la_LDFLAGS = -module -avoid-version
 
 libplaintext.la: $(libplaintext_la_OBJECTS) $(libplaintext_la_DEPENDENCIES)

@@ -211,12 +211,10 @@ void nussl_ssl_cert_validity_time(const nussl_ssl_certificate * cert,
 				  time_t * from, time_t * until)
 {
 	if (from) {
-		*from =
-		    asn1time_to_timet(X509_get_notBefore(cert->subject));
+		*from = asn1time_to_timet(X509_get_notBefore(cert->subject));
 	}
 	if (until) {
-		*until =
-		    asn1time_to_timet(X509_get_notAfter(cert->subject));
+		*until = asn1time_to_timet(X509_get_notAfter(cert->subject));
 	}
 }
 
@@ -987,9 +985,7 @@ nussl_ssl_certificate *nussl_ssl_cert_read(const char *filename)
 		return NULL;
 	}
 
-	return
-	    populate_cert(nussl_calloc
-			  (sizeof(struct nussl_ssl_certificate_s)), cert);
+	return populate_cert(nussl_calloc(sizeof(struct nussl_ssl_certificate_s)), cert);
 }
 
 int nussl_ssl_cert_write(const nussl_ssl_certificate * cert,
@@ -1189,8 +1185,7 @@ nussl_ssl_certificate *nussl_ssl_cert_import(const char *data)
 		return NULL;
 	}
 
-	return
-	    populate_cert(nussl_calloc
+	return populate_cert(nussl_calloc
 			  (sizeof(struct nussl_ssl_certificate_s)), x5);
 }
 

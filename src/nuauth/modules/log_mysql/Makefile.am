@@ -15,8 +15,8 @@ plugindir = $(libdir)/nuauth/modules
 
 plugin_LTLIBRARIES = libmysql.la
 
-nodist_include_HEADERS = log_mysql.h
-libmysql_la_SOURCES = mysql.c ${nodist_include_HEADERS}
+noinst_libmysql_la_SOURCES = log_mysql.h
+libmysql_la_SOURCES = mysql.c ${noinst_libmysql_la_SOURCES}
 libmysql_la_LDFLAGS = -module -avoid-version 
 
 libmysql.la: $(libmysql_la_OBJECTS) $(libmysql_la_DEPENDENCIES)
