@@ -173,9 +173,23 @@ AC_ARG_ENABLE(nutcpc,   [AC_HELP_STRING(--disable-nutcpc, Don't build nutcpc (de
 AC_ARG_ENABLE(pam-nufw,   [AC_HELP_STRING(--enable-pam-nufw, Build pam_nufw (default is not to build))],build_pam_nufw=$enableval, build_pam_nufw="no" )
 AC_ARG_ENABLE(nuauth-command,   [AC_HELP_STRING(--disable-nuauth-command, Don't build nuauth_command (default is to build))],build_nuauth_command=$enableval, build_nuauth_command="yes" )
 
+define([EXPAND_VARIABLE],
+[$2=[$]$1
+while true; do
+  case "[$]$2" in
+    *\[$]* ) eval "$2=[$]$2" ;;
+    *) break ;;
+  esac
+done])dnl EXPAND_VARIABLE
+
+
+
 if test "${build_nuauth_command}" = "yes"; then
     AC_CHECK_TOOL(PYTHON, python)
     AC_DEFINE_UNQUOTED([BUILD_NUAUTH_COMMAND],[1],[Build nuauth_command])
+
+    EXPAND_VARIABLE(localstatedir,e_localstatedir)
+    AC_SUBST(e_localstatedir)
 fi
 
 AC_ARG_ENABLE(debug,   [AC_HELP_STRING(--enable-debug, Add development debug messages (default no))],debug=$enableval, debug="")
@@ -402,14 +416,15 @@ AC_CONFIG_FILES([Makefile
         src/clients/nutcpc/Makefile
         src/clients/pam_nufw/Makefile
         src/nufw/Makefile
-	scripts/Makefile
-	scripts/nuauth_command/Makefile
-	scripts/nuauth_command/scripts/Makefile
-	scripts/nuauth_command/nuauth_command/Makefile
-	scripts/auth_mysql/Makefile
-	tests/Makefile
-	tests/inl_tests/Makefile
-	tests/pki/Makefile
+        scripts/Makefile
+        scripts/nuauth_command/Makefile
+        scripts/nuauth_command/scripts/Makefile
+        scripts/nuauth_command/scripts/nuauth_command
+        scripts/nuauth_command/nuauth_command/Makefile
+        scripts/auth_mysql/Makefile
+        tests/Makefile
+        tests/inl_tests/Makefile
+        tests/pki/Makefile
 ])
 
 # Display errors if any library is missing

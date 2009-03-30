@@ -81,10 +81,10 @@ gencrl: CA
 openssl.cnf: gen_config.sh
 	./gen_config.sh
 
-clean:
+clean-local:
 	rm -f *.csr user.cnf server.cnf
 
-distclean: clean
+distclean-local: clean-local
 	rm -f *.{crt,key} crl.pem openssl.cnf
 	rm -rf testCA
 

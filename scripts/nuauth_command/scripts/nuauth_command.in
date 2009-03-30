@@ -23,7 +23,7 @@ from nuauth_command.cmdline import CommandLineClient
 from sys import exit
 
 def main():
-    client = CommandLineClient("@localstatedir@/run/nuauth/nuauth-command.socket")
+    client = CommandLineClient("@e_localstatedir@/run/nuauth/nuauth-command.socket")
     try:
         client.connect()
     except NuauthError, err:

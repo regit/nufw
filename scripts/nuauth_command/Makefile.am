@@ -8,7 +8,8 @@ install-exec-local:
 	$(PYTHON) $(srcdir)/setup.py install --prefix $(DESTDIR)$(prefix)
 
 clean-local:
-	$(PYTHON) $(srcdir)/setup.py clean
+	$(PYTHON) $(srcdir)/setup.py clean; \
+	rm -rf $(top_builddir)/scripts/nuauth_command/build
 
 uninstall-local:
 	[ ! -f "$(DESTDIR)$(prefix)/bin/nuauth_command" ] || rm -f "$(DESTDIR)$(prefix)/bin/nuauth_command"
