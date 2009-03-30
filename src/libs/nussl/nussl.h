@@ -141,6 +141,14 @@ extern "C" {
 
 #define NUSSL_VALID_REQ_TYPE(n) (n >= NUSSL_CERT_IGNORE && n <= NUSSL_CERT_REQUIRE)
 
+	/* local check of certificate against CA and CRL (optional) */
+	int nussl_local_check_certificate(const char *cert,
+		const char *ca_cert,
+		const char *ca_path,
+		const char *crl,
+		char *ret_message,
+		size_t message_sz);
+
 #ifdef __cplusplus
 }
 #endif

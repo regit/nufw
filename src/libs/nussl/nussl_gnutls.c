@@ -80,7 +80,7 @@ GCRY_THREAD_OPTION_PTHREAD_IMPL;
 #include "nussl_privssl.h"
 #include "nussl_utils.h"
 
-static int read_to_datum(const char *filename, gnutls_datum * datum);
+int read_to_datum(const char *filename, gnutls_datum * datum);
 
 
 /* Returns the highest used index in subject (or issuer) DN of
@@ -856,7 +856,7 @@ int nussl_ssl_set_crl_file(nussl_session * sess, const char *crl_file, const cha
 }
 
 /* Read the contents of file FILENAME into *DATUM. */
-static int read_to_datum(const char *filename, gnutls_datum * datum)
+int read_to_datum(const char *filename, gnutls_datum * datum)
 {
 	FILE *f = fopen(filename, "r");
 	nussl_buffer *buf;
