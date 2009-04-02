@@ -1561,16 +1561,34 @@ int nussl_sock_accept_ssl(nussl_socket * sock, nussl_ssl_context * ctx)
 	gnutls_init(&ssl, GNUTLS_SERVER);
 	gnutls_credentials_set(ssl, GNUTLS_CRD_CERTIFICATE, ctx->cred);
 	if (ctx->ciphers != NULL) {
+#ifdef HAVE_GNUTLS_STRING_PRIORITY
+		gnutls_priority_t prio;
 		const char *err_pos;
 
-		ret = gnutls_priority_set_direct(ssl, ctx->ciphers, &err_pos);
+		ret = gnutls_priority_init (&prio, ctx->ciphers, &err_pos);
 		if (ret != GNUTLS_E_SUCCESS) {
 			nussl_snprintf(sock->error, sizeof sock->error,
-					_("Could not set cipher list %s: %s"),
+					_("Could not init cipher list %s: %s"),
 					err_pos,
 					gnutls_strerror(ret));
 			return NUSSL_SOCK_ERROR;
 		}
+
+		ret = gnutls_priority_set(ssl, prio);
+		if (ret != GNUTLS_E_SUCCESS) {
+			nussl_snprintf(sock->error, sizeof sock->error,
+					_("Could not set cipher list: %s"),
+					gnutls_strerror(ret));
+			return NUSSL_SOCK_ERROR;
+		}
+
+		gnutls_priority_deinit (prio);
+#else /* HAVE_GNUTLS_STRING_PRIORITY */
+		nussl_snprintf(sock->error, sizeof sock->error,
+				_("GnuTLS library is too old (%s) and does not support gnutls_priority_set. Upgrade library, or comment cipherlist option."),
+				gnutls_check_version(NULL));
+		return NUSSL_SOCK_ERROR;
+#endif /* HAVE_GNUTLS_STRING_PRIORITY */
 	} else {
 		gnutls_set_default_priority(ssl);
 	}

@@ -131,6 +131,7 @@ if test $build_openssl = no; then
                    See www.gnu.org/software/gnutls/ .])
    fi
    AC_DEFINE_UNQUOTED([HAVE_GNUTLS],[1],[Will use gnutls support instead of openssl])
+   AC_CHECK_LIB(gnutls, gnutls_priority_set, AC_DEFINE_UNQUOTED(HAVE_GNUTLS_STRING_PRIORITY, , Define whether GnuTLS provide priority parsing),)
 fi
 dnl
 dnl </SSL>
