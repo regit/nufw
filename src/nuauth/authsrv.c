@@ -737,6 +737,7 @@ void configure_app(int argc, char **argv)
 
 
 	/* set default parameters */
+	params.debug_level = 0;
 	params.daemonize = 0;
 	params.client_srv = NULL;
 	params.nufw_srv = NULL;
