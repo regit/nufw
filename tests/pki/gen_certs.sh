@@ -4,7 +4,7 @@
 
 set -e
 
-make distclean
+make clean
 
 make CA
 

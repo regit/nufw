@@ -88,4 +88,4 @@ distclean-local: clean-local
 	rm -f *.{crt,key} crl.pem openssl.cnf
 	rm -rf testCA
 
-.PHONY: CA CA_dirs
+.PHONY: CA CA_dirs gen_certs
