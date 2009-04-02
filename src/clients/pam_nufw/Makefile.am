@@ -10,7 +10,7 @@ modules_LTLIBRARIES	= pam_nufw.la
 
 pam_nufw_la_SOURCES	= pam_nufw.c
 pam_nufw_la_LDFLAGS	= -avoid-version -module -L$(top_srcdir)/src/clients/lib/
-pam_nufw_la_LIBADD	= -lpam ../lib/libnuclient.la
+pam_nufw_la_LIBADD	= -lpam ../lib/libnuclient.la ../../libs/nussl/libnussl.la
 
 CLEANFILES		= *~ $(TITLE).so
 
