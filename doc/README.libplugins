@@ -1,0 +1,38 @@
+Libnuclient plugin infrastructure
+=================================
+Basics
+------
+ - init
+ - deinit
+
+At init, we need to be able to:
+ - modify the list of client capabilities
+
+Structure
+---------
+ - connection table needs per plugin data for each connection.
+ - nuauth_session_t needs per plugin data 
+
+Hooks
+-----
+ - global init (nu_client_global_init)
+ - nuauth_session_t initiation (at new)
+ - pre nuauth_session_t connection (on connect)
+ - post nuauth_session_t connection (succes or failure handling)
+ - at table check at (nu_client_check)
+ - new connection (and retransmit)
+ - nuauth_session_t deinit 
+ - global deinit (nu_client_global_deinit)
+
+Common functions
+----------------
+Connections table related:
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+ - lock connection table
+ - unlock connection table
+ - iter on connection table (with callback)
+
+Miscellenaous:
+~~~~~~~~~~~~~~
+ - register capabilities (to be sent to server)
+ - unregister capabilities
