@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2004-2008 INL
+ ** Copyright(C) 2004-2009 INL
  ** written by Eric Leblond <regit@inl.fr>
  **            Pierre Chifflier <chifflier@inl.fr>
  **
@@ -133,6 +133,12 @@ static char *normalize_username(const char *username)
 	if (!user)
 		return NULL;
 
+	if (system_suppress_prefixed_domain) {
+		char *pv_user = get_rid_of_prefix_domain(user);
+		g_free(user);
+		user = pv_user;
+	}
+
 	return user;
 }
 
@@ -159,12 +165,6 @@ G_MODULE_EXPORT int user_check(const char *username, const char *pass,
 	user = normalize_username(username);
 	if (user == NULL) {
 		return SASL_BADAUTH;
-	}
-
-	if (system_suppress_prefixed_domain) {
-		char *pv_user = get_rid_of_prefix_domain(user);
-		g_free(user);
-		user = pv_user;
 	}
 
 	if (pass != NULL) {
