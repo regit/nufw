@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2004-2008 INL
+ ** Copyright(C) 2004-2009 INL
  ** Written by  Eric Leblond <regit@inl.fr>
  **             Pierre Chifflier <chifflier@inl.fr>
  **
@@ -95,10 +95,9 @@ int verify_user_password(const char *given, const char *ours)
 		if ((algo == GCRY_MD_SHA1) && seeded) {
 			char temp[24];
 
-			if (sasl_decode64
-			    (splitted_secret[1],
-			     strlen(splitted_secret[1]), temp,
-			     sizeof(temp), &len) != SASL_OK) {
+			if (sasl_decode64(splitted_secret[1],
+					strlen(splitted_secret[1]), temp,
+					sizeof(temp), &len) != SASL_OK) {
 				log_message(INFO, DEBUG_AREA_AUTH,
 					    "sasl_decode64 failed in gcrypt.c, where seeded SHA1 is used");
 				return (SASL_BADAUTH);
@@ -107,10 +106,9 @@ int verify_user_password(const char *given, const char *ours)
 		} else if ((algo == GCRY_MD_MD5) && seeded) {
 			char temp[20];
 
-			if (sasl_decode64
-			    (splitted_secret[1],
-			     strlen(splitted_secret[1]), temp,
-			     sizeof(temp), &len) != SASL_OK) {
+			if (sasl_decode64(splitted_secret[1],
+					strlen(splitted_secret[1]), temp,
+					sizeof(temp), &len) != SASL_OK) {
 				log_message(INFO, DEBUG_AREA_AUTH,
 					    "sasl_decode64 failed in gcrypt.c, where seeded MD5 is used");
 				return (SASL_BADAUTH);
@@ -140,8 +138,8 @@ int verify_user_password(const char *given, const char *ours)
 			}
 		}
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
-				  "given %s, hash %s, decoded %s, stored : %s",
-				  given, res, decoded, ours);
+				  "given %s, decoded %s, stored : %s",
+				  given, decoded, ours);
 
 		if (!seeded && !strcmp(decoded, splitted_secret[1])) {
 			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
@@ -240,13 +238,19 @@ int verify_user_password(const char *given, const char *ours)
 
 #elif HAVE_OPENSSL /* HAVE_GNUTLS */
 
+#include <openssl/evp.h>
+
 int verify_user_password(const char *given, const char *ours)
 {
-	char *res;
 	char *decoded;
 	unsigned int len;
 	char **splitted_secret;
 	int algo = 0;
+	int seeded = 0;
+	const EVP_MD *md;
+	EVP_MD_CTX mdctx;
+	unsigned char md_value[EVP_MAX_MD_SIZE];
+	unsigned int md_len;
 
 	if (g_str_has_prefix(ours, "{")) {
 		splitted_secret = g_strsplit(ours, "}", 2);
@@ -263,24 +267,24 @@ int verify_user_password(const char *given, const char *ours)
 			}
 		}
 
-#warning "MD5 and SHA1 hash for plaintext are not implemented"
-	// XXX see EVP_DigestInit
-#if 0
-		int seeded = 0;
-
 		if (!(strcmp("{SSHA", splitted_secret[0]))) {	/* SHA1 (seeded) */
-			algo = GCRY_MD_SHA1;
+			algo = NID_sha1;
+			md = EVP_sha1();
 			seeded = 1;
 		} else if (!(strcmp("{SMD5", splitted_secret[0]))) {	/* MD5 (seeded) */
-			algo = GCRY_MD_MD5;
+			algo = NID_md5;
+			md = EVP_md5();
 			seeded = 1;
-		} else if (!(strcmp("{SHA1", splitted_secret[0])))	/* SHA1 */
-			algo = GCRY_MD_SHA1;
-		else if (!(strcmp("{SHA", splitted_secret[0])))	/* SHA1 */
-			algo = GCRY_MD_SHA1;
-		else if (!(strcmp("{MD5", splitted_secret[0])))	/* MD5 */
-			algo = GCRY_MD_MD5;
-		else {
+		} else if (!(strcmp("{SHA1", splitted_secret[0]))) {	/* SHA1 */
+			algo = NID_sha1;
+			md = EVP_sha1();
+		} else if (!(strcmp("{SHA", splitted_secret[0]))) {	/* SHA1 */
+			algo = NID_sha1;
+			md = EVP_sha1();
+		} else if (!(strcmp("{MD5", splitted_secret[0]))) {	/* MD5 */
+			algo = NID_md5;
+			md = EVP_md5();
+		} else {
 			log_message(WARNING, DEBUG_AREA_AUTH,
 				    "verify_user_password() : Unsupported hash algorithm");
 			g_strfreev(splitted_secret);
@@ -288,39 +292,39 @@ int verify_user_password(const char *given, const char *ours)
 		}
 
 
-		gcry_md_open(&hd, algo, 0);
-		gcry_md_write(hd, given, strlen(given));
+		EVP_MD_CTX_init(&mdctx);
+		EVP_DigestInit_ex(&mdctx, md, NULL);
+		EVP_DigestUpdate(&mdctx, given, strlen(given));
 
-		if ((algo == GCRY_MD_SHA1) && seeded) {
+		if ((algo == NID_sha1) && seeded) {
 			char temp[24];
 
-			if (sasl_decode64
-			    (splitted_secret[1],
-			     strlen(splitted_secret[1]), temp,
-			     sizeof(temp), &len) != SASL_OK) {
+			if (sasl_decode64(splitted_secret[1],
+					strlen(splitted_secret[1]), temp,
+					sizeof(temp), &len) != SASL_OK) {
 				log_message(INFO, DEBUG_AREA_AUTH,
 					    "sasl_decode64 failed in gcrypt.c, where seeded SHA1 is used");
 				return (SASL_BADAUTH);
 			}
-			gcry_md_write(hd, temp + 20, 4);
-		} else if ((algo == GCRY_MD_MD5) && seeded) {
+			EVP_DigestUpdate(&mdctx, temp+20, 4);
+		} else if ((algo == NID_md5) && seeded) {
 			char temp[20];
 
-			if (sasl_decode64
-			    (splitted_secret[1],
-			     strlen(splitted_secret[1]), temp,
-			     sizeof(temp), &len) != SASL_OK) {
+			if (sasl_decode64(splitted_secret[1],
+					strlen(splitted_secret[1]), temp,
+					sizeof(temp), &len) != SASL_OK) {
 				log_message(INFO, DEBUG_AREA_AUTH,
 					    "sasl_decode64 failed in gcrypt.c, where seeded MD5 is used");
 				return (SASL_BADAUTH);
 			}
-			gcry_md_write(hd, temp + 16, 4);
+			EVP_DigestUpdate(&mdctx, temp+16, 4);
 		}
 
-		res = (char *) gcry_md_read(hd, algo);
+		EVP_DigestFinal_ex(&mdctx, md_value, &md_len);
+		EVP_MD_CTX_cleanup(&mdctx);
 		/* alloc decoded to reasonnable length */
 		decoded = g_new0(char, 50);
-		sasl_encode64(res, strlen(res), decoded, 50, &len);
+		sasl_encode64((char*)md_value, md_len, decoded, 50, &len);
 
 		/* convert password from utf-8 to locale */
 		if (nuauthconf->uses_utf8) {
@@ -340,7 +344,7 @@ int verify_user_password(const char *given, const char *ours)
 		}
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 				  "given %s, hash %s, decoded %s, stored : %s",
-				  given, res, decoded, ours);
+				  given, md_value, decoded, ours);
 
 		if (!seeded && !strcmp(decoded, splitted_secret[1])) {
 			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
@@ -350,7 +354,7 @@ int verify_user_password(const char *given, const char *ours)
 			g_free(decoded);
 			g_strfreev(splitted_secret);
 			return SASL_OK;
-		} else if (seeded && (algo == GCRY_MD_SHA1)
+		} else if (seeded && (algo == NID_sha1)
 			   && !memcmp(decoded, splitted_secret[1], 20)) {
 #ifdef DEBUG_ENABLE
 			if (DEBUG_OR_NOT
@@ -372,7 +376,7 @@ int verify_user_password(const char *given, const char *ours)
 			g_strfreev(splitted_secret);
 			g_free(decoded);
 			return SASL_OK;
-		} else if (seeded && (algo == GCRY_MD_MD5)
+		} else if (seeded && (algo == NID_md5)
 			   && !memcmp(decoded, splitted_secret[1], 16)) {
 #ifdef DEBUG_ENABLE
 			if (DEBUG_OR_NOT
@@ -400,7 +404,6 @@ int verify_user_password(const char *given, const char *ours)
 			g_free(decoded);
 			return SASL_BADAUTH;
 		}
-#endif /* 0 */
 	} else {
 		/* convert password from utf-8 to locale */
 		if (nuauthconf->uses_utf8) {
