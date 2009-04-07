@@ -191,6 +191,9 @@ int nu_check_version(const char *version);
 void nu_client_set_min_delay(nuauth_session_t * session, unsigned int delay);
 void nu_client_set_max_delay(nuauth_session_t * session, unsigned int delay);
 
+int nu_client_set_capability(const char *capa);
+int nu_client_unset_capability(const char *capa);
+
 char *nu_get_home_dir();
 char *nu_get_user_name();
 

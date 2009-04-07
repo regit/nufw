@@ -137,6 +137,12 @@ int nu_client_global_init(nuclient_error_t * err)
 		exit(EXIT_FAILURE);
 	}
 
+	/* init capabilities string */
+	ret = snprintf(nu_capabilities, NU_CAPABILITIES_MAXLENGTH, "%s", NU_CAPABILITIES);
+	if (ret <= 0) {
+		exit(EXIT_FAILURE);
+	}
+
 	load_sys_config();
 
 	return 1;
@@ -227,6 +233,43 @@ char *nu_get_user_name()
 	name = strdup(pwd->pw_name);
 	endpwent();
 	return name;
+}
+
+/**
+ * \ingroup nuclientAPI
+ * Add capability to the list of supported capabilities
+ *
+ * \return 0 if ok, < 0 if not
+ */
+
+int nu_client_set_capability(const char *capa)
+{
+	strncat(nu_capabilities, ";", NU_CAPABILITIES_MAXLENGTH - strlen(nu_capabilities));
+	strncat(nu_capabilities, capa, NU_CAPABILITIES_MAXLENGTH - strlen(nu_capabilities));
+
+	return 0;
+}
+
+/**
+ * \ingroup nuclientAPI
+ * Remove capability from the list of supported capabilities
+ *
+ * \return 0 if ok, < 0 if not
+ */
+
+int nu_client_unset_capability(const char *capa)
+{
+	char * start, * end;
+	start = strstr(nu_capabilities, capa);
+	if (start == NULL) {
+		return -ENOSTR;
+	}
+	end = strstr(start, ";");
+	*(start - 1) = '\0';
+	if (end != NULL) {
+		strcat(nu_capabilities, end);
+	}
+	return 0;
 }
 
 void nu_client_set_client_info(nuauth_session_t *session,
