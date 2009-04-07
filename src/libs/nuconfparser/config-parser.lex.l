@@ -1,6 +1,7 @@
 /*
- ** Copyright (C) 2008 INL
+ ** Copyright (C) 2008-2009 INL
  ** Written by Sebastien Tricaud <s.tricaud@inl.fr>
+ **            Pierre Chifflier <chifflier@inl.fr>
  ** INL http://www.inl.fr/
  **
  ** $Id$
@@ -123,7 +124,7 @@ VOID		[ \t\n]+
 {EQUAL}		{	return TOK_EQUAL; }
 
 {SECTION}	{
-//			yylval.string = escape_str(yytext);
+			yylval->string = escape_str(strndup(yytext + 1, yyleng - 2));
 			return TOK_SECTION;
 		}
 

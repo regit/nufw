@@ -141,7 +141,15 @@ typedef unsigned int flex_uint32_t;
 
 /* Size of default input buffer. */
 #ifndef YY_BUF_SIZE
+#ifdef __ia64__
+/* On IA-64, the buffer size is 16k, not 8k.
+ * Moreover, YY_BUF_SIZE is 2*YY_READ_BUF_SIZE in the general case.
+ * Ditto for the __ia64__ case accordingly.
+ */
+#define YY_BUF_SIZE 32768
+#else
 #define YY_BUF_SIZE 16384
+#endif /* __ia64__ */
 #endif
 
 /* The state buf must be large enough to hold one state per character in the main buffer.
@@ -488,8 +496,9 @@ int yy_flex_debug = 0;
 char *yytext;
 #line 1 "config-parser.lex.l"
 /*
- ** Copyright (C) 2008 INL
+ ** Copyright (C) 2008-2009 INL
  ** Written by Sebastien Tricaud <s.tricaud@inl.fr>
+ **            Pierre Chifflier <chifflier@inl.fr>
  ** INL http://www.inl.fr/
  **
  ** $Id$
@@ -508,7 +517,7 @@ char *yytext;
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#line 25 "config-parser.lex.l"
+#line 26 "config-parser.lex.l"
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -584,7 +593,7 @@ static int can_append_path(char *str)
 
 }
 
-#line 588 "config-parser.lex.c"
+#line 597 "config-parser.lex.c"
 
 #define INITIAL 0
 #define incl 1
@@ -674,7 +683,12 @@ static int input (void );
 
 /* Amount of stuff to slurp up with each read. */
 #ifndef YY_READ_BUF_SIZE
+#ifdef __ia64__
+/* On IA-64, the buffer size is 16k, not 8k */
+#define YY_READ_BUF_SIZE 16384
+#else
 #define YY_READ_BUF_SIZE 8192
+#endif /* __ia64__ */
 #endif
 
 /* Copy whatever the last rule matched to the standard output. */
@@ -682,7 +696,7 @@ static int input (void );
 /* This used to be an fputs(), but since the string might contain NUL's,
  * we now use fwrite().
  */
-#define ECHO fwrite( yytext, yyleng, 1, yyout )
+#define ECHO do { if (fwrite( yytext, yyleng, 1, yyout )) {} } while (0)
 #endif
 
 /* Gets input and stuffs it into "buf".  number of characters read, or YY_NULL,
@@ -784,10 +798,10 @@ YY_DECL
     
         YYLTYPE * yylloc;
     
-#line 114 "config-parser.lex.l"
+#line 115 "config-parser.lex.l"
 
 
-#line 791 "config-parser.lex.c"
+#line 805 "config-parser.lex.c"
 
     yylval = yylval_param;
 
@@ -877,12 +891,12 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 116 "config-parser.lex.l"
+#line 117 "config-parser.lex.l"
 { BEGIN(incl); }
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 118 "config-parser.lex.l"
+#line 119 "config-parser.lex.l"
 {
 			yylval->string = strdup(yytext);
 			return TOK_WORD;
@@ -890,21 +904,21 @@ YY_RULE_SETUP
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 123 "config-parser.lex.l"
+#line 124 "config-parser.lex.l"
 {	return TOK_EQUAL; }
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 125 "config-parser.lex.l"
+#line 126 "config-parser.lex.l"
 {
-//			yylval.string = escape_str(yytext);
+			yylval->string = escape_str(strndup(yytext + 1, yyleng - 2));
 			return TOK_SECTION;
 		}
 	YY_BREAK
 case 5:
 /* rule 5 can match eol */
 YY_RULE_SETUP
-#line 130 "config-parser.lex.l"
+#line 131 "config-parser.lex.l"
 {
 			yylval->string = escape_str(strndup(yytext + 1, yyleng - 2));
 			return TOK_STRING;
@@ -913,7 +927,7 @@ YY_RULE_SETUP
 case 6:
 /* rule 6 can match eol */
 YY_RULE_SETUP
-#line 135 "config-parser.lex.l"
+#line 136 "config-parser.lex.l"
 {
 			/* We don't care */
 		}
@@ -921,19 +935,19 @@ YY_RULE_SETUP
 case 7:
 /* rule 7 can match eol */
 YY_RULE_SETUP
-#line 139 "config-parser.lex.l"
+#line 140 "config-parser.lex.l"
 {
 			/* We don't care */
 		}
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 144 "config-parser.lex.l"
+#line 145 "config-parser.lex.l"
 /* eat the whitespace */
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 145 "config-parser.lex.l"
+#line 146 "config-parser.lex.l"
 { /* got the include file name */
 		  if (includes_index >= MAX_INCLUDE_DEPTH) {
 			  YY_FATAL_ERROR("Includes nested too deeply");
@@ -966,7 +980,7 @@ YY_RULE_SETUP
 	YY_BREAK
 case YY_STATE_EOF(INITIAL):
 case YY_STATE_EOF(incl):
-#line 174 "config-parser.lex.l"
+#line 175 "config-parser.lex.l"
 {
 		  if (--includes_index < 0)
 			  yyterminate();
@@ -980,10 +994,10 @@ case YY_STATE_EOF(incl):
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 185 "config-parser.lex.l"
+#line 186 "config-parser.lex.l"
 ECHO;
 	YY_BREAK
-#line 987 "config-parser.lex.c"
+#line 1001 "config-parser.lex.c"
 
 	case YY_END_OF_BUFFER:
 		{
@@ -1742,8 +1756,8 @@ YY_BUFFER_STATE yy_scan_string (yyconst char * yystr )
 
 /** Setup the input buffer state to scan the given bytes. The next call to yylex() will
  * scan from a @e copy of @a bytes.
- * @param bytes the byte buffer to scan
- * @param len the number of bytes in the buffer pointed to by @a bytes.
+ * @param yybytes the byte buffer to scan
+ * @param _yybytes_len the number of bytes in the buffer pointed to by @a bytes.
  * 
  * @return the newly allocated buffer state object.
  */
@@ -1982,7 +1996,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 185 "config-parser.lex.l"
+#line 186 "config-parser.lex.l"
 
 
 
