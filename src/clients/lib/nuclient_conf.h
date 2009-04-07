@@ -31,6 +31,7 @@ char *nuclient_config_table_get_or_default(char *key, char *replace);
 int nuclient_config_table_get_or_default_int(char *key, int defint);
 void nuclient_config_table_destroy(void);
 void nuclient_config_table_print(void *userdata, void (*func)(void *data, char *keyeqval));
+void nuclient_config_table_walk(void *userdata, void (*func)(void *data, char *key, char *val));
 
 #endif /* NUCLIENT_CONF_H */
 

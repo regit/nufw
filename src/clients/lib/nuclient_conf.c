@@ -116,3 +116,13 @@ void nuclient_config_table_print(void *userdata, void (*func)(void *data, char *
 	return nubase_config_table_print(nuclient_config_table_list,userdata,func);
 }
 
+void nuclient_config_table_walk(void *userdata, void (*func)(void *data, char *key, char *val))
+
+{
+	struct config_table_t *config_table;
+
+	llist_for_each_entry(config_table, nuclient_config_table_list, list) {
+		func(userdata, config_table->key, config_table->value);
+	}
+}
+
