@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/perl -w
 
 # Author: Pierre Chifflier <chifflier@inl.fr>
 # license: GPLv2
@@ -45,6 +45,4 @@ if (!$plaintext) {
 # we append a = because the sha1_base64 function does not append it
 
 print sha1_base64($plaintext), "=\n";
-
-print "$hash\n";
 
