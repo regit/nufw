@@ -56,7 +56,7 @@
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 45 "config-parser.yacc.y"
+#line 48 "config-parser.yacc.y"
 {
 	char *string;
 	int number;

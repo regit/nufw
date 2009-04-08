@@ -1,5 +1,5 @@
 /*
- ** Copyright (C) 2008 INL
+ ** Copyright (C) 2008-2009 INL
  ** Written by Sebastien Tricaud <s.tricaud@inl.fr>
  **            Pierre Chifflier <chifflier@inl.fr>
  ** INL http://www.inl.fr/
@@ -31,9 +31,12 @@ extern FILE *yyin;
 const char *filename;
 char *path;
 
+typedef struct config_arg_t {
+	struct llist_head* parsed_config;
+	char *current_section;
+} config_arg_t;
 /* Pass the argument to yyparse through to yylex. */
-#define YYPARSE_PARAM parsed_config
-#define YYLEX_PARAM   parsed_config
+#define YYLEX_PARAM   config_arg
 
 %}
 
@@ -52,14 +55,14 @@ char *path;
 %locations
 %pure_parser
 
-%parse-param { struct llist_head* parsed_config }
+%parse-param { struct config_arg_t* config_arg }
 
 %{
 
 /* this must come after bison macros, since we need these types to be defined */
-int yylex(YYSTYPE* lvalp, YYLTYPE* llocp, struct llist_head* parsed_config);
+int yylex(YYSTYPE* lvalp, YYLTYPE* llocp, struct config_arg_t* config_arg);
 
-void yyerror(YYLTYPE* locp, struct llist_head *parsed_config, const char* err);
+void yyerror(YYLTYPE* locp, struct config_arg_t *config_arg, const char* err);
 
 
 %}
@@ -71,20 +74,21 @@ config:		 /* empty */
 		;
 
 section:		TOK_SECTION {
-				printf("\n%s is a section\n", $1);
-				free($1);
+				if (config_arg->current_section)
+					free(config_arg->current_section);
+				config_arg->current_section = $1;
 			}
 			;
 key_value:		TOK_WORD TOK_EQUAL TOK_WORD
 			{
-				nubase_config_table_append(parsed_config, $1,$3);
+				nubase_config_table_append_with_section(config_arg->parsed_config, config_arg->current_section, $1, $3);
 				free($1);
 				free($3);
 			}
 		|
 			TOK_WORD TOK_EQUAL TOK_STRING
 			{
-				nubase_config_table_append(parsed_config, $1,$3);
+				nubase_config_table_append_with_section(config_arg->parsed_config, config_arg->current_section, $1, $3);
 				free($1);
 				free($3);
 			}
@@ -92,7 +96,7 @@ key_value:		TOK_WORD TOK_EQUAL TOK_WORD
 
 %%
 
-void yyerror(YYLTYPE* locp, struct llist_head *parsed_config, const char* err)
+void yyerror(YYLTYPE* locp, struct config_arg_t *config_arg, const char* err)
 {
 	fprintf(stderr, "YYERROR:%s\n", err);
 }
@@ -100,6 +104,7 @@ void yyerror(YYLTYPE* locp, struct llist_head *parsed_config, const char* err)
 struct llist_head * parse_configuration(const char *config)
 {
 	struct llist_head * config_table_list;
+	struct config_arg_t config_argument;
 
 	path = str_extract_until(config, '/');
 	filename = config;
@@ -112,8 +117,13 @@ struct llist_head * parse_configuration(const char *config)
 	config_table_list = malloc(sizeof(*config_table_list));
 	INIT_LLIST_HEAD( config_table_list );
 
-	yyparse(config_table_list);
+	config_argument.parsed_config = config_table_list;
+	config_argument.current_section = NULL;
 
+	yyparse(&config_argument);
+
+	if (config_argument.current_section)
+		free(config_argument.current_section);
 	return config_table_list;
 }
 

@@ -95,9 +95,12 @@ extern FILE *yyin;
 const char *filename;
 char *path;
 
+typedef struct config_arg_t {
+	struct llist_head* parsed_config;
+	char *current_section;
+} config_arg_t;
 /* Pass the argument to yyparse through to yylex. */
-#define YYPARSE_PARAM parsed_config
-#define YYLEX_PARAM   parsed_config
+#define YYLEX_PARAM   config_arg
 
 
 
@@ -121,13 +124,13 @@ char *path;
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 typedef union YYSTYPE
-#line 45 "config-parser.yacc.y"
+#line 48 "config-parser.yacc.y"
 {
 	char *string;
 	int number;
 }
 /* Line 187 of yacc.c.  */
-#line 131 "config-parser.yacc.c"
+#line 134 "config-parser.yacc.c"
 	YYSTYPE;
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
@@ -149,19 +152,19 @@ typedef struct YYLTYPE
 
 
 /* Copy the second part of user declarations.  */
-#line 57 "config-parser.yacc.y"
+#line 60 "config-parser.yacc.y"
 
 
 /* this must come after bison macros, since we need these types to be defined */
-int yylex(YYSTYPE* lvalp, YYLTYPE* llocp, struct llist_head* parsed_config);
+int yylex(YYSTYPE* lvalp, YYLTYPE* llocp, struct config_arg_t* config_arg);
 
-void yyerror(YYLTYPE* locp, struct llist_head *parsed_config, const char* err);
+void yyerror(YYLTYPE* locp, struct config_arg_t *config_arg, const char* err);
 
 
 
 
 /* Line 216 of yacc.c.  */
-#line 165 "config-parser.yacc.c"
+#line 168 "config-parser.yacc.c"
 
 #ifdef short
 # undef short
@@ -446,7 +449,7 @@ static const yytype_int8 yyrhs[] =
 /* YYRLINE[YYN] -- source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,    68,    68,    69,    70,    73,    78,    85
+       0,    71,    71,    72,    73,    76,    82,    89
 };
 #endif
 
@@ -561,7 +564,7 @@ do								\
     }								\
   else								\
     {								\
-      yyerror (&yylloc, parsed_config, YY_("syntax error: cannot back up")); \
+      yyerror (&yylloc, config_arg, YY_("syntax error: cannot back up")); \
       YYERROR;							\
     }								\
 while (YYID (0))
@@ -641,7 +644,7 @@ do {									  \
     {									  \
       YYFPRINTF (stderr, "%s ", Title);					  \
       yy_symbol_print (stderr,						  \
-		  Type, Value, Location, parsed_config); \
+		  Type, Value, Location, config_arg); \
       YYFPRINTF (stderr, "\n");						  \
     }									  \
 } while (YYID (0))
@@ -655,21 +658,21 @@ do {									  \
 #if (defined __STDC__ || defined __C99__FUNC__ \
      || defined __cplusplus || defined _MSC_VER)
 static void
-yy_symbol_value_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep, YYLTYPE const * const yylocationp, struct llist_head* parsed_config)
+yy_symbol_value_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep, YYLTYPE const * const yylocationp, struct config_arg_t* config_arg)
 #else
 static void
-yy_symbol_value_print (yyoutput, yytype, yyvaluep, yylocationp, parsed_config)
+yy_symbol_value_print (yyoutput, yytype, yyvaluep, yylocationp, config_arg)
     FILE *yyoutput;
     int yytype;
     YYSTYPE const * const yyvaluep;
     YYLTYPE const * const yylocationp;
-    struct llist_head* parsed_config;
+    struct config_arg_t* config_arg;
 #endif
 {
   if (!yyvaluep)
     return;
   YYUSE (yylocationp);
-  YYUSE (parsed_config);
+  YYUSE (config_arg);
 # ifdef YYPRINT
   if (yytype < YYNTOKENS)
     YYPRINT (yyoutput, yytoknum[yytype], *yyvaluep);
@@ -691,15 +694,15 @@ yy_symbol_value_print (yyoutput, yytype, yyvaluep, yylocationp, parsed_config)
 #if (defined __STDC__ || defined __C99__FUNC__ \
      || defined __cplusplus || defined _MSC_VER)
 static void
-yy_symbol_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep, YYLTYPE const * const yylocationp, struct llist_head* parsed_config)
+yy_symbol_print (FILE *yyoutput, int yytype, YYSTYPE const * const yyvaluep, YYLTYPE const * const yylocationp, struct config_arg_t* config_arg)
 #else
 static void
-yy_symbol_print (yyoutput, yytype, yyvaluep, yylocationp, parsed_config)
+yy_symbol_print (yyoutput, yytype, yyvaluep, yylocationp, config_arg)
     FILE *yyoutput;
     int yytype;
     YYSTYPE const * const yyvaluep;
     YYLTYPE const * const yylocationp;
-    struct llist_head* parsed_config;
+    struct config_arg_t* config_arg;
 #endif
 {
   if (yytype < YYNTOKENS)
@@ -709,7 +712,7 @@ yy_symbol_print (yyoutput, yytype, yyvaluep, yylocationp, parsed_config)
 
   YY_LOCATION_PRINT (yyoutput, *yylocationp);
   YYFPRINTF (yyoutput, ": ");
-  yy_symbol_value_print (yyoutput, yytype, yyvaluep, yylocationp, parsed_config);
+  yy_symbol_value_print (yyoutput, yytype, yyvaluep, yylocationp, config_arg);
   YYFPRINTF (yyoutput, ")");
 }
 
@@ -749,14 +752,14 @@ do {								\
 #if (defined __STDC__ || defined __C99__FUNC__ \
      || defined __cplusplus || defined _MSC_VER)
 static void
-yy_reduce_print (YYSTYPE *yyvsp, YYLTYPE *yylsp, int yyrule, struct llist_head* parsed_config)
+yy_reduce_print (YYSTYPE *yyvsp, YYLTYPE *yylsp, int yyrule, struct config_arg_t* config_arg)
 #else
 static void
-yy_reduce_print (yyvsp, yylsp, yyrule, parsed_config)
+yy_reduce_print (yyvsp, yylsp, yyrule, config_arg)
     YYSTYPE *yyvsp;
     YYLTYPE *yylsp;
     int yyrule;
-    struct llist_head* parsed_config;
+    struct config_arg_t* config_arg;
 #endif
 {
   int yynrhs = yyr2[yyrule];
@@ -770,7 +773,7 @@ yy_reduce_print (yyvsp, yylsp, yyrule, parsed_config)
       fprintf (stderr, "   $%d = ", yyi + 1);
       yy_symbol_print (stderr, yyrhs[yyprhs[yyrule] + yyi],
 		       &(yyvsp[(yyi + 1) - (yynrhs)])
-		       , &(yylsp[(yyi + 1) - (yynrhs)])		       , parsed_config);
+		       , &(yylsp[(yyi + 1) - (yynrhs)])		       , config_arg);
       fprintf (stderr, "\n");
     }
 }
@@ -778,7 +781,7 @@ yy_reduce_print (yyvsp, yylsp, yyrule, parsed_config)
 # define YY_REDUCE_PRINT(Rule)		\
 do {					\
   if (yydebug)				\
-    yy_reduce_print (yyvsp, yylsp, Rule, parsed_config); \
+    yy_reduce_print (yyvsp, yylsp, Rule, config_arg); \
 } while (YYID (0))
 
 /* Nonzero means print parse trace.  It is left uninitialized so that
@@ -1029,20 +1032,20 @@ yysyntax_error (char *yyresult, int yystate, int yychar)
 #if (defined __STDC__ || defined __C99__FUNC__ \
      || defined __cplusplus || defined _MSC_VER)
 static void
-yydestruct (const char *yymsg, int yytype, YYSTYPE *yyvaluep, YYLTYPE *yylocationp, struct llist_head* parsed_config)
+yydestruct (const char *yymsg, int yytype, YYSTYPE *yyvaluep, YYLTYPE *yylocationp, struct config_arg_t* config_arg)
 #else
 static void
-yydestruct (yymsg, yytype, yyvaluep, yylocationp, parsed_config)
+yydestruct (yymsg, yytype, yyvaluep, yylocationp, config_arg)
     const char *yymsg;
     int yytype;
     YYSTYPE *yyvaluep;
     YYLTYPE *yylocationp;
-    struct llist_head* parsed_config;
+    struct config_arg_t* config_arg;
 #endif
 {
   YYUSE (yyvaluep);
   YYUSE (yylocationp);
-  YYUSE (parsed_config);
+  YYUSE (config_arg);
 
   if (!yymsg)
     yymsg = "Deleting";
@@ -1051,14 +1054,14 @@ yydestruct (yymsg, yytype, yyvaluep, yylocationp, parsed_config)
   switch (yytype)
     {
       case 4: /* "TOK_WORD" */
-#line 50 "config-parser.yacc.y"
+#line 53 "config-parser.yacc.y"
 	{ free ((yyvaluep->string)); };
-#line 1057 "config-parser.yacc.c"
+#line 1060 "config-parser.yacc.c"
 	break;
       case 5: /* "TOK_SECTION" */
-#line 50 "config-parser.yacc.y"
+#line 53 "config-parser.yacc.y"
 	{ free ((yyvaluep->string)); };
-#line 1062 "config-parser.yacc.c"
+#line 1065 "config-parser.yacc.c"
 	break;
 
       default:
@@ -1077,7 +1080,7 @@ int yyparse ();
 #endif
 #else /* ! YYPARSE_PARAM */
 #if defined __STDC__ || defined __cplusplus
-int yyparse (struct llist_head* parsed_config);
+int yyparse (struct config_arg_t* config_arg);
 #else
 int yyparse ();
 #endif
@@ -1106,11 +1109,11 @@ yyparse (YYPARSE_PARAM)
 #if (defined __STDC__ || defined __C99__FUNC__ \
      || defined __cplusplus || defined _MSC_VER)
 int
-yyparse (struct llist_head* parsed_config)
+yyparse (struct config_arg_t* config_arg)
 #else
 int
-yyparse (parsed_config)
-    struct llist_head* parsed_config;
+yyparse (config_arg)
+    struct config_arg_t* config_arg;
 #endif
 #endif
 {
@@ -1381,26 +1384,27 @@ yyreduce:
   switch (yyn)
     {
         case 5:
-#line 73 "config-parser.yacc.y"
+#line 76 "config-parser.yacc.y"
     {
-				printf("\n%s is a section\n", (yyvsp[(1) - (1)].string));
-				free((yyvsp[(1) - (1)].string));
+				if (config_arg->current_section)
+					free(config_arg->current_section);
+				config_arg->current_section = (yyvsp[(1) - (1)].string);
 			}
     break;
 
   case 6:
-#line 79 "config-parser.yacc.y"
+#line 83 "config-parser.yacc.y"
     {
-				nubase_config_table_append(parsed_config, (yyvsp[(1) - (3)].string),(yyvsp[(3) - (3)].string));
+				nubase_config_table_append_with_section(config_arg->parsed_config, config_arg->current_section, (yyvsp[(1) - (3)].string), (yyvsp[(3) - (3)].string));
 				free((yyvsp[(1) - (3)].string));
 				free((yyvsp[(3) - (3)].string));
 			}
     break;
 
   case 7:
-#line 86 "config-parser.yacc.y"
+#line 90 "config-parser.yacc.y"
     {
-				nubase_config_table_append(parsed_config, (yyvsp[(1) - (3)].string),(yyvsp[(3) - (3)].string));
+				nubase_config_table_append_with_section(config_arg->parsed_config, config_arg->current_section, (yyvsp[(1) - (3)].string), (yyvsp[(3) - (3)].string));
 				free((yyvsp[(1) - (3)].string));
 				free((yyvsp[(3) - (3)].string));
 			}
@@ -1408,7 +1412,7 @@ yyreduce:
 
 
 /* Line 1267 of yacc.c.  */
-#line 1412 "config-parser.yacc.c"
+#line 1416 "config-parser.yacc.c"
       default: break;
     }
   YY_SYMBOL_PRINT ("-> $$ =", yyr1[yyn], &yyval, &yyloc);
@@ -1444,7 +1448,7 @@ yyerrlab:
     {
       ++yynerrs;
 #if ! YYERROR_VERBOSE
-      yyerror (&yylloc, parsed_config, YY_("syntax error"));
+      yyerror (&yylloc, config_arg, YY_("syntax error"));
 #else
       {
 	YYSIZE_T yysize = yysyntax_error (0, yystate, yychar);
@@ -1468,11 +1472,11 @@ yyerrlab:
 	if (0 < yysize && yysize <= yymsg_alloc)
 	  {
 	    (void) yysyntax_error (yymsg, yystate, yychar);
-	    yyerror (&yylloc, parsed_config, yymsg);
+	    yyerror (&yylloc, config_arg, yymsg);
 	  }
 	else
 	  {
-	    yyerror (&yylloc, parsed_config, YY_("syntax error"));
+	    yyerror (&yylloc, config_arg, YY_("syntax error"));
 	    if (yysize != 0)
 	      goto yyexhaustedlab;
 	  }
@@ -1496,7 +1500,7 @@ yyerrlab:
       else
 	{
 	  yydestruct ("Error: discarding",
-		      yytoken, &yylval, &yylloc, parsed_config);
+		      yytoken, &yylval, &yylloc, config_arg);
 	  yychar = YYEMPTY;
 	}
     }
@@ -1553,7 +1557,7 @@ yyerrlab1:
 
       yyerror_range[0] = *yylsp;
       yydestruct ("Error: popping",
-		  yystos[yystate], yyvsp, yylsp, parsed_config);
+		  yystos[yystate], yyvsp, yylsp, config_arg);
       YYPOPSTACK (1);
       yystate = *yyssp;
       YY_STACK_PRINT (yyss, yyssp);
@@ -1596,7 +1600,7 @@ yyabortlab:
 | yyexhaustedlab -- memory exhaustion comes here.  |
 `-------------------------------------------------*/
 yyexhaustedlab:
-  yyerror (&yylloc, parsed_config, YY_("memory exhausted"));
+  yyerror (&yylloc, config_arg, YY_("memory exhausted"));
   yyresult = 2;
   /* Fall through.  */
 #endif
@@ -1604,7 +1608,7 @@ yyexhaustedlab:
 yyreturn:
   if (yychar != YYEOF && yychar != YYEMPTY)
      yydestruct ("Cleanup: discarding lookahead",
-		 yytoken, &yylval, &yylloc, parsed_config);
+		 yytoken, &yylval, &yylloc, config_arg);
   /* Do not reclaim the symbols of the rule which action triggered
      this YYABORT or YYACCEPT.  */
   YYPOPSTACK (yylen);
@@ -1612,7 +1616,7 @@ yyreturn:
   while (yyssp != yyss)
     {
       yydestruct ("Cleanup: popping",
-		  yystos[*yyssp], yyvsp, yylsp, parsed_config);
+		  yystos[*yyssp], yyvsp, yylsp, config_arg);
       YYPOPSTACK (1);
     }
 #ifndef yyoverflow
@@ -1628,10 +1632,10 @@ yyreturn:
 }
 
 
-#line 93 "config-parser.yacc.y"
+#line 97 "config-parser.yacc.y"
 
 
-void yyerror(YYLTYPE* locp, struct llist_head *parsed_config, const char* err)
+void yyerror(YYLTYPE* locp, struct config_arg_t *config_arg, const char* err)
 {
 	fprintf(stderr, "YYERROR:%s\n", err);
 }
@@ -1639,6 +1643,7 @@ void yyerror(YYLTYPE* locp, struct llist_head *parsed_config, const char* err)
 struct llist_head * parse_configuration(const char *config)
 {
 	struct llist_head * config_table_list;
+	struct config_arg_t config_argument;
 
 	path = str_extract_until(config, '/');
 	filename = config;
@@ -1651,8 +1656,13 @@ struct llist_head * parse_configuration(const char *config)
 	config_table_list = malloc(sizeof(*config_table_list));
 	INIT_LLIST_HEAD( config_table_list );
 
-	yyparse(config_table_list);
+	config_argument.parsed_config = config_table_list;
+	config_argument.current_section = NULL;
 
+	yyparse(&config_argument);
+
+	if (config_argument.current_section)
+		free(config_argument.current_section);
 	return config_table_list;
 }
 
