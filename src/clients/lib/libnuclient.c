@@ -40,6 +40,8 @@
 #include "libnuclient.h"
 #include "nuclient.h"
 #include "nufw_source.h"
+#include "nuclient_plugins.h"
+
 #include <sasl/sasl.h>
 #include <sasl/saslutil.h>
 #include <stdarg.h>		/* va_list, va_start, ... */
@@ -144,6 +146,8 @@ int nu_client_global_init(nuclient_error_t * err)
 	}
 
 	load_sys_config();
+
+	load_plugins();
 
 	return 1;
 }
@@ -885,12 +889,17 @@ int nu_client_connect(nuauth_session_t * session,
 	}
 
 	if (!init_sasl(session, hostname, err)) {
+		plugin_emit_event(NUCLIENT_EVENT_LOGIN_FAILED, session, session->username);
 		return 0;
 	}
 
 	if (!finish_init(session, err)) {
+		plugin_emit_event(NUCLIENT_EVENT_LOGIN_FAILED, session, session->username);
 		return 0;
 	}
+
+	plugin_emit_event(NUCLIENT_EVENT_LOGIN_OK, session, session->username);
+
 	return 1;
 }
 
