@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2008 INL
+ ** Copyright(C) 2008-2009 INL
  ** Written by Sebastien Tricaud <s.tricaud@inl.fr>
  **            Pierre Chifflier <chifflier@inl.fr>
  **
@@ -36,6 +36,7 @@ char *nubase_config_table_get_or_default(struct llist_head *config_table_list, c
 int nubase_config_table_get_or_default_int(struct llist_head *config_table_list, char *key, int defint);
 
 struct config_table_t *nubase_config_table_append(struct llist_head *config_table_list, char *key, char *value);
+struct config_table_t *nubase_config_table_append_with_section(struct llist_head *config_table_list, char *section, char *key, char *value);
 void nubase_config_table_destroy(struct llist_head *config_table_list);
 struct config_table_t *nubase_config_table_set(struct llist_head *config_table_list, char *key, char *value);
 void nubase_config_table_print(struct llist_head *config_table_list, void *userdata, void (*func)(void *data, char *keyeqval));

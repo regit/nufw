@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2008 INL
+ ** Copyright(C) 2008-2009 INL
  ** Written by Sebastien Tricaud <s.tricaud@inl.fr>
  **            Pierre Chifflier <chifflier@inl.fr>
  **
@@ -99,6 +99,18 @@ struct config_table_t *nubase_config_table_append(struct llist_head *config_tabl
 
 
 	return config_table;
+}
+
+struct config_table_t *nubase_config_table_append_with_section(struct llist_head *config_table_list, char *section, char *key, char *value)
+{
+	char buffer[4096];
+	int ret;
+
+	ret = snprintf(buffer, sizeof(buffer), "%s/%s", section, key);
+	if (ret >= (int)sizeof(buffer))
+		return NULL;
+
+	return nubase_config_table_append(config_table_list, buffer, value);
 }
 
 void nubase_config_table_destroy(struct llist_head *config_table_list)
