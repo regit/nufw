@@ -85,12 +85,16 @@ static void _nuclient_load_plugin(void *data, char *key, char *val)
 	char *plugins_path = "/usr/lib/nuclient"; // XXX harcoded value
 	void * handle;
 	int dlopen_args = RTLD_LOCAL;
+	const char *section_prefix = "plugins/";
+	const char *instance_name = NULL;
 
-	if (strncmp(key,"instance",strlen("instance")) != 0)
+	if (strncmp(key,section_prefix,strlen(section_prefix)) != 0)
 		return;
 	if (val == NULL || strlen(val) == 0)
 		return;
-printf("DEBUG trying to load instance : %s / %s\n", key, val);
+
+	instance_name = key + strlen(section_prefix);
+printf("DEBUG trying to load instance : %s / %s\n", instance_name, val);
 
 	if (val[0] == '/')
 		handle = dlopen(val, dlopen_args);
@@ -102,23 +106,23 @@ printf("DEBUG trying to load instance : %s / %s\n", key, val);
 	}
 
 	if (handle == NULL) {
-printf("WARNING Could not load plugin %s : %s\n", key, dlerror());
+printf("WARNING Could not load plugin %s : %s\n", instance_name, dlerror());
 		return;
 	}
 
 	tmp = malloc(sizeof(*tmp));
 	memset(tmp, 0, sizeof(*tmp));
 	tmp->handle = handle;
-	tmp->instance_name = strdup(key);
+	tmp->instance_name = strdup(instance_name);
 
 	if (_nuclient_init_plugin(tmp) != 0) {
-printf("WARNING Plugin %s is not a valid plugin\n", key);
+printf("WARNING Plugin %s is not a valid plugin\n", instance_name);
 		nuclient_plugin_free(tmp);
 		return;
 	}
 
 	llist_add(&(tmp->list), &(l->list));
-printf("INFO Plugin %s loaded\n", key);
+printf("INFO Plugin %s loaded\n", instance_name);
 
 	/* XXX extract config section corresponding to plugin name
 	 * and give it the the plugin,
