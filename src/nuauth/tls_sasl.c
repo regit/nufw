@@ -136,17 +136,18 @@ static void tls_sasl_connect_ok(user_session_t * c_session, int c)
 
 static int add_client_capa(user_session_t * c_session, const char * value)
 {
+	int i;
 	if (! value)
 		return SASL_FAIL;
 
-	if (!strcmp("HELLO", value))
-		c_session->capa_flags = c_session->capa_flags | CAPA_FLAGS_HELLO;
-	if (!strcmp("TCP", value))
-		c_session->capa_flags = c_session->capa_flags | CAPA_FLAGS_TCP;
-	if (!strcmp("UDP", value))
-		c_session->capa_flags = c_session->capa_flags | CAPA_FLAGS_UDP;
+	for (i = 0; i < 32; i++) {
+		if (!strcmp(capa_array[i], value)) {
+			c_session->capa_flags = c_session->capa_flags | (1 << i);
+			return SASL_OK;
+		}
 
-	return SASL_OK;
+	}
+	return SASL_NOTDONE;
 }
 
 static int parse_user_capabilities(user_session_t * c_session, char *buf, int buf_size)

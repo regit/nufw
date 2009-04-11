@@ -749,4 +749,37 @@ void block_on_conf_reload()
 	g_mutex_unlock(nuauthdatas->reload_cond_mutex);
 }
 
+/**
+ * \brief Register client capabilities (for plugin)
+ */
+
+nu_error_t register_client_capa(const char * name, int * index)
+{
+	int i;
+
+	for (i = 0; i < 32; i++) {
+		if (! capa_array[i]) {
+			capa_array[i] = g_strdup(name);
+			*index = i;
+			return NU_EXIT_OK;
+		}
+
+	}
+
+	return NU_EXIT_ERROR;
+}
+
+/**
+ * \brief Unregister client capabilities (for plugin)
+ */
+
+nu_error_t unregister_client_capa(int index)
+{
+	g_free(capa_array[index]);
+	capa_array[index] = NULL;
+
+	return NU_EXIT_OK;
+}
+
+
 /* @} */

@@ -158,6 +158,9 @@ void cleanup_func_remove(cleanup_func_t func);
 
 typedef uint32_t(*get_module_version_func_t) (void);
 
+nu_error_t register_client_capa(const char * name, int * index);
+nu_error_t unregister_client_capa(int index);
+
 /**
  * @}
  */

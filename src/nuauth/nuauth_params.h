@@ -216,6 +216,11 @@ struct nuauth_datas {
 	struct sigaction old_sigint_hdl;
 	struct sigaction old_sigterm_hdl;
 	struct sigaction old_sighup_hdl;
+
+	/* capabilities index */
+	gint hello_capa;
+	gint tcp_capa;
+	gint udp_capa;
 };
 
 struct nuauth_params *nuauthconf;
