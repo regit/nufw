@@ -64,7 +64,7 @@ static int _emc_create_socket(const char *addr, const char *port)
 	ecode = getaddrinfo(addr, port,
 			&hints, &res);
 	if (ecode != 0) {
-		fprintf(stderr, "Invalid server listening address %s:%s, error: %s\n",
+		log_printf(DEBUG_LEVEL_FATAL, "Invalid server listening address %s:%s, error: %s",
 		     addr, port,
 		     gai_strerror(ecode));
 		return -1;
@@ -72,7 +72,7 @@ static int _emc_create_socket(const char *addr, const char *port)
 
 	sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 	if (sock == -1) {
-		fprintf(stderr,"Socket creation failed.\n");
+		log_printf(DEBUG_LEVEL_FATAL,"Socket creation failed.");
 		return -1;
 	}
 
@@ -96,7 +96,7 @@ static int _emc_create_socket(const char *addr, const char *port)
 	/* bind */
 	ecode = bind(sock, res->ai_addr, res->ai_addrlen);
 	if (ecode < 0) {
-		fprintf(stderr, "Unable to bind server socket %s:%s.\n",
+		log_printf(DEBUG_LEVEL_FATAL, "Unable to bind server socket %s:%s.",
 					  addr,
 					  port);
 		close(sock);
@@ -115,14 +115,11 @@ static void emc_client_cb (struct ev_loop *loop, ev_io *w, int revents)
 
 	buffer[0] = '\0';
 
-fprintf(stderr,"emc_client_cb : revents %d\n", revents);
-
 	if (revents & EV_READ) {
-fprintf(stderr, "will read\n");
 		len = nussl_read(client_ctx->nussl, buffer, sizeof(buffer));
-fprintf(stderr, "\tnussl_read: %d  [%s]\n", len, buffer);
+log_printf(DEBUG_LEVEL_DEBUG, "\tnussl_read: %d  [%s]", len, buffer);
 		if (len < 0) {
-			fprintf(stderr, "nussl_error, removing connection [%s]\n", nussl_get_error(client_ctx->nussl));
+			log_printf(DEBUG_LEVEL_WARNING, "nussl_error, removing connection [%s]\n", nussl_get_error(client_ctx->nussl));
 			ev_io_stop(loop, w);
 			nussl_session_destroy(client_ctx->nussl);
 			free(client_ctx);
@@ -131,7 +128,7 @@ fprintf(stderr, "\tnussl_read: %d  [%s]\n", len, buffer);
 		}
 	}
 	if (revents & EV_WRITE) {
-fprintf(stderr, "will write\n");
+log_printf(DEBUG_LEVEL_DEBUG, "will write");
 	}
 }
 
@@ -152,19 +149,18 @@ static void emc_server_accept_cb (struct ev_loop *loop, ev_io *w, int revents)
 	ev_io *client_watcher = NULL;
 	struct emc_client_context *client_ctx = NULL;
 
-fprintf(stderr,"emc_server_accept_cb : revents %d\n", revents);
 	ctx = w->data;
 
 	nussl_sess = nussl_session_accept(ctx->nussl);
 	if (nussl_sess == NULL) {
-		fprintf(stderr, "Error while accepting new connection: %s\n",
+		log_printf(DEBUG_LEVEL_WARNING, "Error while accepting new connection: %s",
 				nussl_get_error(ctx->nussl));
 		return;
 	}
 
 	if (nussl_session_getpeer(nussl_sess, (struct sockaddr *) &sockaddr, &len_inet) != NUSSL_OK)
 	{
-		fprintf(stderr, "WARNING New client connection failed during nussl_session_getpeer(): %s", nussl_get_error(ctx->nussl));
+		log_printf(DEBUG_LEVEL_WARNING, "WARNING New client connection failed during nussl_session_getpeer(): %s", nussl_get_error(ctx->nussl));
 		free(nussl_sess);
 		return;
 	}
@@ -181,7 +177,7 @@ fprintf(stderr,"emc_server_accept_cb : revents %d\n", revents);
 	}
 
 	format_ipv6(&addr, address, sizeof(address), NULL);
-	fprintf(stderr, "DEBUG emc: user connection attempt from %s\n",
+	log_printf(DEBUG_LEVEL_DEBUG, "DEBUG emc: user connection attempt from %s",
 			address);
 
 	/* do not verify FQDN field from client */
@@ -194,7 +190,7 @@ fprintf(stderr,"emc_server_accept_cb : revents %d\n", revents);
 	// nussl_session_handshake is a blocking operation
 	ret = nussl_session_handshake(nussl_sess,ctx->nussl);
 	if ( ret ) {
-		fprintf(stderr, "WARNING New client connection from %s failed during nussl_session_handshake(): %s\n",
+		log_printf(DEBUG_LEVEL_WARNING, "WARNING New client connection from %s failed during nussl_session_handshake(): %s",
 			    address,
 			    nussl_get_error(ctx->nussl));
 		nussl_session_destroy(nussl_sess);
@@ -202,7 +198,7 @@ fprintf(stderr,"emc_server_accept_cb : revents %d\n", revents);
 	}
 
 	nussl_session_get_cipher(nussl_sess, cipher, sizeof(cipher));
-	fprintf(stderr, "INFO TLS handshake with client %s succeeded, cipher is %s\n",
+	log_printf(DEBUG_LEVEL_INFO, "INFO TLS handshake with client %s succeeded, cipher is %s",
 		    address, cipher);
 
 
@@ -218,14 +214,14 @@ fprintf(stderr,"emc_server_accept_cb : revents %d\n", revents);
 	ev_io_init(client_watcher, emc_client_cb, socket, EV_READ | EV_TIMEOUT | EV_ERROR);
 	ev_io_start(loop, client_watcher);
 
-fprintf(stderr, "DEBUG client connection added\n");
+log_printf(DEBUG_LEVEL_DEBUG, "DEBUG client connection added");
 }
 
 static void sigint_cb(struct ev_loop *loop, ev_signal *w, int revents)
 {
 	struct emc_server_context *ctx = w->data;
 
-fprintf(stderr, "INFO signal SIGINT caught, exiting\n");
+log_printf(DEBUG_LEVEL_INFO, "INFO signal SIGINT caught, exiting");
 	ctx->continue_processing = 0;
 	ev_unloop (loop, EVUNLOOP_ALL);
 }
@@ -244,7 +240,7 @@ int emc_start_server(struct emc_server_context *ctx)
 	result = listen(server_sock, 20);
 	if (result == -1) {
 		close(server_sock);
-		fprintf(stderr, "Unable to listen() on socket, aborting\n");
+		log_printf(DEBUG_LEVEL_FATAL, "Unable to listen() on socket, aborting");
 		return -1;
 	}
 
@@ -252,7 +248,7 @@ int emc_start_server(struct emc_server_context *ctx)
 	result = emc_init_tls(ctx);
 	if (result != 0) {
 		close(server_sock);
-		fprintf(stderr, "Unable to initialize TLS, aborting\n");
+		log_printf(DEBUG_LEVEL_FATAL, "Unable to initialize TLS, aborting");
 		return -1;
 	}
 

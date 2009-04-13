@@ -58,20 +58,20 @@ int emc_init_tls(struct emc_server_context *ctx)
 	ctx->nussl = nussl_session_create_with_fd(ctx->server_sock, request_cert);
 
 	if (nussl_session_set_dh_bits(ctx->nussl, DH_BITS) != NUSSL_OK) {
-		fprintf(stderr, "ERROR Unable to initialize Diffie Hellman params.\n");
+		log_printf(DEBUG_LEVEL_FATAL, "ERROR Unable to initialize Diffie Hellman params.");
 		return -1;
 	}
 
 	ret = nussl_ssl_set_keypair(ctx->nussl, tls_cert, tls_key);
 	if (ret != NUSSL_OK) {
-		fprintf(stderr, "ERROR Failed to load user key/certificate: %s\n",
+		log_printf(DEBUG_LEVEL_FATAL, "ERROR Failed to load user key/certificate: %s",
 			    nussl_get_error(ctx->nussl));
 		return -1;
 	}
 
 	ret = nussl_ssl_trust_cert_file(ctx->nussl, tls_ca);
 	if (ret != NUSSL_OK) {
-		fprintf(stderr, "ERROR Failed to load user certificate authority: %s\n",
+		log_printf(DEBUG_LEVEL_FATAL, "ERROR Failed to load user certificate authority: %s",
 			    nussl_get_error(ctx->nussl));
 		return -1;
 	}
@@ -79,8 +79,8 @@ int emc_init_tls(struct emc_server_context *ctx)
 	if (tls_capath) {
 		ret = nussl_ssl_trust_dir(ctx->nussl, tls_capath);
 		if (ret != NUSSL_OK) {
-			fprintf(stderr,
-					"ERROR Failed to load user certificate authority directory: %s\n",
+			log_printf(DEBUG_LEVEL_FATAL,
+					"ERROR Failed to load user certificate authority directory: %s",
 					nussl_get_error(ctx->nussl));
 			return -1;
 		}
@@ -89,8 +89,8 @@ int emc_init_tls(struct emc_server_context *ctx)
 	if (tls_crl) {
 		ret = nussl_ssl_set_crl_file(ctx->nussl, tls_crl, tls_ca);
 		if (ret != NUSSL_OK) {
-			fprintf(stderr,
-					"ERROR Failed to load certificate revocation list (CRL): %s\n",
+			log_printf(DEBUG_LEVEL_FATAL,
+					"ERROR Failed to load certificate revocation list (CRL): %s",
 					nussl_get_error(ctx->nussl));
 			return -1;
 		}

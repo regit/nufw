@@ -26,6 +26,8 @@
 
 #include <signal.h>
 
+#include <nubase.h>
+
 #include "emc_server.h"
 #include "emc_config.h"
 
@@ -36,11 +38,15 @@ int main(int argc, char **argv)
 	memset(&server_ctx, 0, sizeof(server_ctx));
 	nussl_init();
 
+	init_log_engine("emc");
+	debug_level = DEBUG_LEVEL_INFO;
+
 	/* ignore SIGPIPE */
 	signal(SIGPIPE, SIG_IGN);
 
 	if (emc_init_config(EMC_DEFAULT_CONF) != 0) {
-		fprintf(stderr, "ERROR could not load config, aborting\n");
+		log_printf(DEBUG_LEVEL_FATAL, "ERROR could not load config, aborting\n");
+
 		exit(-1);
 	}
 
