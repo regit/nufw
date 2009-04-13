@@ -106,6 +106,10 @@ struct config_table_t *nubase_config_table_append_with_section(struct llist_head
 	char buffer[4096];
 	int ret;
 
+	if (section == NULL || strcasecmp(section,"global")==0) {
+		return nubase_config_table_append(config_table_list, key, value);
+	}
+
 	ret = snprintf(buffer, sizeof(buffer), "%s/%s", section, key);
 	if (ret >= (int)sizeof(buffer))
 		return NULL;
