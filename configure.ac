@@ -173,6 +173,7 @@ AC_ARG_ENABLE(libnuclient,   [AC_HELP_STRING(--disable-libnuclient, Don't build 
 AC_ARG_ENABLE(nutcpc,   [AC_HELP_STRING(--disable-nutcpc, Don't build nutcpc (default is to build))],build_nutcpc=$enableval, build_nutcpc="yes" )
 AC_ARG_ENABLE(pam-nufw,   [AC_HELP_STRING(--enable-pam-nufw, Build pam_nufw (default is not to build))],build_pam_nufw=$enableval, build_pam_nufw="no" )
 AC_ARG_ENABLE(nuauth-command,   [AC_HELP_STRING(--disable-nuauth-command, Don't build nuauth_command (default is to build))],build_nuauth_command=$enableval, build_nuauth_command="yes" )
+AC_ARG_ENABLE(emc,   [AC_HELP_STRING(--disable-emc, Don't build emc (default is to build))],build_emc=$enableval, build_emc="yes")
 
 define([EXPAND_VARIABLE],
 [$2=[$]$1
@@ -333,6 +334,13 @@ if test "${build_pam_nufw}" = "yes"; then
     AC_CHECK_LIB([pam],[pam_start],AC_DEFINE([HAVE_LIBRARY_PAM],[1],[pam lib flag]), check_pam=no)
 fi
 
+if test "${build_emc}" = "yes"; then
+    AC_CHECK_HEADERS([ev.h])
+    AC_CHECK_LIB([ev], [ev_loop], have_libev="yes", build_emc="")
+fi
+
+
+AM_CONDITIONAL(BUILD_EMC, test x${build_emc} = xyes)
 AM_CONDITIONAL(BUILD_NUFW, test x${build_nufw} = xyes)
 AM_CONDITIONAL(BUILD_NUAUTH, test x${build_nuauth} = xyes)
 AM_CONDITIONAL(BUILD_NUTCPC, test x${build_nutcpc} = xyes)
@@ -417,6 +425,7 @@ AC_CONFIG_FILES([Makefile
         src/clients/nutcpc/Makefile
         src/clients/pam_nufw/Makefile
         src/nufw/Makefile
+        src/emc/Makefile
         scripts/Makefile
         scripts/nuauth_command/Makefile
         scripts/nuauth_command/scripts/Makefile
@@ -581,6 +590,10 @@ fi
 
 if test "${build_pam_nufw}" = "yes"; then
 	AC_MSG_RESULT([* Compiling pam_nufw])
+fi
+
+if test "${build_emc}" = "yes"; then
+	AC_MSG_RESULT([* Compiling emc])
 fi
 
 AC_MSG_RESULT([
