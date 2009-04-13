@@ -1,8 +1,8 @@
 /*
- ** Copyright(C) 2006 INL
- ** Written by  Victor Stinner <haypo@inl.fr>
- **
- ** $Id: log.c 2738 2007-02-17 13:59:56Z regit $
+ ** Copyright(C) 2006-2009 INL
+ ** Written by Victor Stinner <haypo@inl.fr>
+ **            Pierre Chifflier <chifflier@inl.fr>
+ ** INL http://www.inl.fr/
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -50,10 +50,10 @@
  *   - else use printf()
  * \see log_printf()
  */
-int log_engine;
+int log_engine = 0;
 
-int debug_level;                /*!< Debug level, default valut: #DEFAULT_DEBUG_LEVEL */
-int debug_areas;                /*!< Debug areas, default value: #DEFAULT_DEBUG_AREAS (all areas) */
+int debug_level = DEFAULT_DEBUG_LEVEL;    /*!< Debug level, default valut: #DEFAULT_DEBUG_LEVEL */
+int debug_areas = DEFAULT_DEBUG_AREAS;    /*!< Debug areas, default value: #DEFAULT_DEBUG_AREAS (all areas except perf) */
 
 
 /**

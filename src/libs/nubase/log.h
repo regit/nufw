@@ -1,9 +1,8 @@
 /*
- ** Copyright (C) 2006-2008 INL
+ ** Copyright(C) 2006-2009 INL
  ** Written by Victor Stinner <haypo@inl.fr>
+ **            Pierre Chifflier <chifflier@inl.fr>
  ** INL http://www.inl.fr/
- **
- ** $Id: log.h 4323 2008-01-18 09:12:11Z pollux $
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -48,8 +47,8 @@
  */
 extern int log_engine;
 
-extern int debug_level;		/*!< Debug level, default valut: #DEFAULT_DEBUG_LEVEL */
-extern int debug_areas;		/*!< Debug areas, default value: #DEFAULT_DEBUG_AREAS (all areas) */
+extern int debug_level;    /*!< Debug level, default valut: #DEFAULT_DEBUG_LEVEL */
+extern int debug_areas;    /*!< Debug areas, default value: #DEFAULT_DEBUG_AREAS (all areas) */
 
 void init_log_engine(const char* log_id);
 void log_printf(debug_level_t priority, char *format, ...)
