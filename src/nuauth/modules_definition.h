@@ -73,6 +73,7 @@ typedef void auth_error_log_callback(user_session_t * session,
 				     nuauth_auth_error_t error,
 				     const char *message, gpointer params);
 
+typedef int postauth_proto_callback(user_session_t * session, gpointer params);
 /** @} */
 
 #endif
