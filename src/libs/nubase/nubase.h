@@ -50,5 +50,12 @@ typedef enum {
 	NU_EXIT_CONTINUE
 } nu_error_t;
 
+typedef enum {
+	EXT_PROTO_OUTSIDE,
+	EXT_PROTO_START,
+	EXT_PROTO_CMD,
+	EXT_PROTO_CMD_ARGS,
+	EXT_PROTO_END,
+} ext_proto_state_t;
 
 #endif				/* ifndef NUBASE_HEADER */
