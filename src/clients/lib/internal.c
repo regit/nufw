@@ -458,11 +458,11 @@ int send_capa(nuauth_session_t * session, nuclient_error_t * err)
 	char buf[1024];
 	struct nu_authfield *vfield = (struct nu_authfield *) buf;
 	char *enc_capa = buf + sizeof(struct nu_authfield);
-	unsigned stringlen = sizeof(NU_CAPABILITIES);
+	unsigned stringlen = sizeof(nu_capabilities);
 	unsigned actuallen;
 	int ret;
 
-	if (sasl_encode64(NU_CAPABILITIES, strlen(NU_CAPABILITIES), enc_capa, 4 * stringlen,
+	if (sasl_encode64(nu_capabilities, strlen(nu_capabilities), enc_capa, 4 * stringlen,
 	     &actuallen) == SASL_BUFOVER) {
 		SET_ERROR(err, SASL_ERROR, SASL_BUFOVER);
 		/* TODO set explicit string message */
