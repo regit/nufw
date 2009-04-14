@@ -198,8 +198,9 @@ static int parse_user_capabilities(user_session_t * c_session, char *buf, int bu
 		return SASL_BADAUTH;
 	}
 	dec_buf = g_new0(gchar, dec_buf_size);
-	decode = sasl_decode64(buf + 4, ntohs(vfield->length) - 4, dec_buf,
-			  dec_buf_size, &len);
+	decode = sasl_decode64(buf + sizeof(struct nu_authfield),
+			  ntohs(vfield->length) - sizeof(struct nu_authfield),
+			  dec_buf, dec_buf_size, &len);
 	if (decode != SASL_OK) {
 		g_free(dec_buf);
 		return SASL_BADAUTH;
@@ -301,8 +302,9 @@ static int parse_user_version(user_session_t * c_session, char *buf, int buf_siz
 		return SASL_BADAUTH;
 	}
 	dec_buf = g_new0(gchar, dec_buf_size);
-	decode = sasl_decode64(buf + 4, ntohs(vfield->length) - 4, dec_buf,
-			  dec_buf_size, &len);
+	decode = sasl_decode64(buf + sizeof(struct nu_authfield),
+			  ntohs(vfield->length) - sizeof(struct nu_authfield),
+			  dec_buf, dec_buf_size, &len);
 	if (decode != SASL_OK) {
 		g_free(dec_buf);
 		return SASL_BADAUTH;
@@ -422,7 +424,8 @@ static int parse_user_os(user_session_t * c_session, char *buf, int buf_size)
 		return SASL_BADAUTH;
 	}
 	dec_buf = g_new0(gchar, dec_buf_size);
-	decode = sasl_decode64(buf + 4, ntohs(osfield->length) - 4, dec_buf,
+	decode = sasl_decode64(buf + sizeof(struct nu_authfield),
+			  ntohs(osfield->length) - sizeof(struct nu_authfield), dec_buf,
 			  dec_buf_size, &len);
 	if (decode != SASL_OK) {
 		g_free(dec_buf);
