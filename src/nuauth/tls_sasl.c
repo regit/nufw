@@ -690,6 +690,19 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 	client = (struct client_connection *)userdata;
 	socket_fd = client->socket;
 
+	/* complete handshake */
+	ret = tls_user_do_handshake(client, client->srv_context);
+	if (ret != 0) {
+		/* error, cleanup & exit */
+		log_message(INFO, DEBUG_AREA_USER,
+				"Handshake failed, exiting client %s\n",
+				client->str_addr);
+		nussl_session_destroy(client->nussl);
+		g_free(client->str_addr);
+		g_free(userdata);
+		return;
+	}
+
 	c_session = g_new0(user_session_t, 1);
 	c_session->nussl = client->nussl;
 	c_session->socket = socket_fd;
@@ -700,6 +713,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 	c_session->groups = NULL;
 	c_session->user_name = NULL;
 	c_session->user_id = 0;
+	g_free(client->str_addr);
 	g_free(userdata);
 
 	/* Check the user is authorized to connect

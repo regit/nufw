@@ -1379,19 +1379,20 @@ void nussl__ssl_exit(void)
 #endif
 }
 
-int nussl_ssl_accept(nussl_ssl_socket * ssl, unsigned int timeout)
+int nussl_ssl_accept(nussl_ssl_socket * ssl_sock, unsigned int timeout)
 {
 	int ret, status, sslerr;
 	int sock;
 	int blocking_state;
 	fd_set fd_r, fd_w;
 	struct timeval tv;
+	SSL *ssl = *ssl_sock;
 
 	if (timeout == 0) {
-		return SSL_accept((SSL*)ssl);
+		return SSL_accept(ssl);
 	}
 
-	sock = SSL_get_fd((SSL*)ssl);
+	sock = SSL_get_fd(ssl);
 	blocking_state = fcntl(sock,F_GETFL);
 
 	fcntl(sock,F_SETFL,(fcntl(sock,F_GETFL)|O_NONBLOCK));
@@ -1399,8 +1400,8 @@ int nussl_ssl_accept(nussl_ssl_socket * ssl, unsigned int timeout)
 	ret = -1;
 
 	do {
-		status = SSL_accept((SSL*)ssl);
-		sslerr = SSL_get_error((SSL*)ssl,status);
+		status = SSL_accept(ssl);
+		sslerr = SSL_get_error(ssl,status);
 
 		if (status == 1) {
 			ret = 1; /* ok */

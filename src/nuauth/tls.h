@@ -65,11 +65,17 @@ struct client_connection {
 	/** IPv6 address */
 	struct in6_addr addr;
 
+	/** String version of the source address */
+	char *str_addr;
+
 	/** Source port */
 	int sport;
 
 	/** Nussl server structure */
 	nussl_session* nussl;
+
+	/* server context, used to create client ssl structure */
+	struct tls_user_context_t *srv_context;
 };
 
 /**
@@ -199,5 +205,7 @@ void tls_user_start_servers(GSList *servers);
 void tls_common_init(void);
 void tls_common_deinit(void);
 void refresh_crl_file(void);
+
+int tls_user_do_handshake(struct client_connection *current_client_conn, struct tls_user_context_t *context);
 
 #endif
