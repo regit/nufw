@@ -220,7 +220,7 @@ int mysasl_negotiate(nuauth_session_t * session, sasl_conn_t * conn,
 		return SASL_FAIL;
 	} else {
 		if (session->verbose)
-			puts("Authentication started...\n");
+			puts("Authentication started...");
 	}
 
 	return SASL_OK;
