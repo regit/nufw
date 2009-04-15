@@ -5,8 +5,6 @@
  **            Pierre Chifflier <p.chifflier@inl.fr>
  ** INL http://www.inl.fr/
  **
- ** $Id$
- **
  ** NuSSL: OpenSSL / GnuTLS layer based on libneon
  */
 
@@ -67,6 +65,8 @@
 GCRY_THREAD_OPTION_PTHREAD_IMPL;
 
 #endif
+
+#include <fcntl.h>
 
 
 
@@ -1307,6 +1307,81 @@ void nussl__ssl_exit(void)
 	 * the process. */
 	gnutls_global_deinit();
 #endif
+}
+
+int nussl_ssl_accept(nussl_ssl_socket * ssl, unsigned int timeout)
+{
+	gnutls_session session = *(gnutls_session*)ssl;
+	int ret, continue_loop=1;
+	int sock;
+	int blocking_state;
+	int was_writing=0;
+	fd_set fd_r, fd_w;
+	struct timeval tv;
+
+printf("nussl_ssl_accept\n");
+	if (timeout == 0) {
+		return gnutls_handshake(session);
+	}
+
+	sock = (int)gnutls_transport_get_ptr(session);
+	blocking_state = fcntl(sock,F_GETFL);
+
+	fcntl(sock,F_SETFL,(fcntl(sock,F_GETFL)|O_NONBLOCK));
+
+	ret = -1;
+
+	do {
+printf("avant le handshake\n");
+		ret = gnutls_handshake(session);
+printf("apres le handshake\n");
+		if (ret == 0) {
+			/* handshake ok */
+			ret = 1;
+			continue_loop = 0;
+			break;
+		}
+		if (gnutls_error_is_fatal(ret)) {
+			//out_log(LEVEL_HIGH,"GnuTLS: handshake failed: %s\n",gnutls_strerror(ret));
+			ret = -1;
+			continue_loop = 0;
+			break;
+		}
+		switch (ret) {
+			case GNUTLS_E_AGAIN:
+			case GNUTLS_E_INTERRUPTED:
+				was_writing = gnutls_record_get_direction(session);
+				break;
+			default:
+				//out_log(LEVEL_HIGH,"GnuTLS: handshake failed, unknown non-fatal error: %s\n",gnutls_strerror(ret));
+				ret = -1;
+				continue_loop = 0;
+				break;
+		}
+
+		/* we need to wait before continuing the handshake */
+		FD_ZERO(&fd_r);
+		FD_ZERO(&fd_w);
+		tv.tv_usec = 0;
+		tv.tv_sec = timeout;
+		if (was_writing) { FD_SET(sock,&fd_w); }
+		else { FD_SET(sock,&fd_r); }
+
+		ret = select(sock + 1, &fd_r, &fd_w, NULL, &tv);
+
+		if ( ! (FD_ISSET(sock,&fd_r) || FD_ISSET(sock,&fd_w)) ) {
+			/* timeout */
+			continue_loop = 0;
+			ret = 0;
+			break;
+		}
+		ret = 1;
+	} while (continue_loop);
+
+	/* restore blocking state */
+	fcntl(sock,F_SETFL,blocking_state);
+
+	return ret;
 }
 
 #endif				/* HAVE_GNUTLS */

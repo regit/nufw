@@ -5,8 +5,6 @@
  **            Pierre Chifflier <chifflier@inl.fr>
  ** INL http://www.inl.fr/
  **
- ** $Id$
- **
  ** NuSSL: OpenSSL / GnuTLS layer based on libneon
  */
 
@@ -58,6 +56,8 @@
 #include <stdlib.h>		/* for abort() */
 #include <pthread.h>
 #endif
+
+#include <fcntl.h>
 
 #include "nussl_ssl.h"
 #include "nussl_ssl_common.h"
@@ -1377,6 +1377,66 @@ void nussl__ssl_exit(void)
 		free(locks);
 	}
 #endif
+}
+
+int nussl_ssl_accept(nussl_ssl_socket * ssl, unsigned int timeout)
+{
+	int ret, status, sslerr;
+	int sock;
+	int blocking_state;
+	fd_set fd_r, fd_w;
+	struct timeval tv;
+
+	if (timeout == 0) {
+		return SSL_accept((SSL*)ssl);
+	}
+
+	sock = SSL_get_fd((SSL*)ssl);
+	blocking_state = fcntl(sock,F_GETFL);
+
+	fcntl(sock,F_SETFL,(fcntl(sock,F_GETFL)|O_NONBLOCK));
+
+	ret = -1;
+
+	do {
+		status = SSL_accept((SSL*)ssl);
+		sslerr = SSL_get_error((SSL*)ssl,status);
+
+		if (status == 1) {
+			ret = 1; /* ok */
+			break;
+		} else {
+			FD_ZERO(&fd_r);
+			FD_ZERO(&fd_w);
+			tv.tv_usec = 0;
+			tv.tv_sec = timeout;
+			switch (sslerr) {
+				case SSL_ERROR_WANT_READ:
+					FD_SET(sock,&fd_r);
+					break;
+				case SSL_ERROR_WANT_WRITE:
+					FD_SET(sock,&fd_w);
+					break;
+				default:
+					//out_log(LEVEL_HIGH,"Error accepting connection: ret %d error code %d : %s\n",status,sslerr,
+					//		ERR_error_string(SSL_get_error(context->ssl->obj,status),NULL));
+					//out_log(LEVEL_HIGH,"Error accepting connection: ret %d error code %ld : %s\n",status,ERR_get_error(),
+					//		ERR_error_string(ERR_get_error(),NULL));
+					ret = -1; /* error */
+					break;
+			}
+			ret = select(sock + 1, &fd_r, &fd_w, NULL, &tv);
+			if ( ! (FD_ISSET(sock,&fd_r) || FD_ISSET(sock,&fd_w)) ) { /* timeout */
+				ret = 0; /* timeout */
+				break;
+			}
+		}
+	} while (status == -1 && ret != 0);
+
+	/* restore blocking state */
+	fcntl(sock,F_SETFL,blocking_state);
+
+	return ret;
 }
 
 #endif				/* HAVE_OPENSSL */

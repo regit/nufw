@@ -5,8 +5,6 @@
  **            Pierre Chifflier <chifflier@inl.fr>
  ** INL http://www.inl.fr/
  **
- ** $Id: nussl_openssl.c 4310 2008-01-14 17:05:56Z lds $
- **
  ** NuSSL: OpenSSL / GnuTLS layer based on libneon
  */
 

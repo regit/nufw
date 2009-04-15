@@ -4,8 +4,6 @@
  **             Vincent Deffontaines <gryzor@inl.fr>
  **             Pierre Chifflier <chifflier@inl.fr>
  **
- ** $Id$
- **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
  ** the Free Software Foundation, version 3 of the License.
@@ -354,6 +352,9 @@ int tls_user_accept(struct tls_user_context_t *context)
 		NUSSL_SESSFLAG_IGNORE_ID_MISMATCH,
 		1
 		);
+
+	// XXX default value is 30s, should be a configuration value
+	nussl_set_connect_timeout(current_client_conn->nussl, 30);
 
 	ret = nussl_session_handshake(current_client_conn->nussl,context->nussl);
 	if ( ret ) {
