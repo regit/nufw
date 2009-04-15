@@ -278,6 +278,9 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 		nussl_get_session_flag(context->server, NUSSL_SESSFLAG_IGNORE_ID_MISMATCH)
 		);
 
+	// XXX default value is 30s, should be a configuration value
+	nussl_set_connect_timeout(nu_session->nufw_client, 30);
+
 	ret = nussl_session_handshake(nu_session->nufw_client, context->server);
 	if ( ret ) {
 		log_message(WARNING, DEBUG_AREA_MAIN,
