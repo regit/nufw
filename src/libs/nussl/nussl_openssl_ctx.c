@@ -204,10 +204,22 @@ int nussl_ssl_context_trustdir(nussl_ssl_context * ctx,
 int nussl_ssl_context_set_dh_bits(nussl_ssl_context * ctx,
 				  unsigned int dh_bits)
 {
-#ifndef _WIN32
-#warning "Function is not yet implemented"
-#endif
-	/* XXX see man SSL_CTX_set_tmp_dh_callback */
+	DH *dh;
+
+	ERR_clear_error();
+	dh = DH_new();
+
+	if (!DH_generate_parameters_ex(dh, dh_bits, 2, NULL)) {
+		DH_free(dh);
+		return NUSSL_ERROR;
+	}
+
+	if (SSL_CTX_set_tmp_dh(ctx->ctx, dh) != 1) {
+		DH_free(dh);
+		return NUSSL_ERROR;
+	}
+
+	ctx->dh = dh;
 
 	return NUSSL_OK;
 }
