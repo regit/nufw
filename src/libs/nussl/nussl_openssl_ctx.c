@@ -224,5 +224,31 @@ int nussl_ssl_context_set_dh_bits(nussl_ssl_context * ctx,
 	return NUSSL_OK;
 }
 
+int nussl_ssl_context_set_dh_file(nussl_ssl_context * ctx,
+				  const char *filename)
+{
+	FILE *fp;
+	DH *dh;
+
+	fp = fopen(filename, "r+");
+	if (fp == NULL)
+		return NUSSL_ERROR;
+
+	dh = PEM_read_DHparams(fp, NULL, NULL, NULL);
+	fclose(fp);
+
+	if (dh == NULL)
+		return NUSSL_ERROR;
+
+	if (SSL_CTX_set_tmp_dh(ctx->ctx, dh) != 1) {
+		DH_free(dh);
+		return NUSSL_ERROR;
+	}
+
+	ctx->dh = dh;
+
+	return NUSSL_OK;
+}
+
 
 #endif				/* HAVE_OPENSSL */

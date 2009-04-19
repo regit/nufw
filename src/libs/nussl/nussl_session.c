@@ -271,6 +271,14 @@ int nussl_session_set_dh_bits(nussl_session * sess, unsigned int dh_bits)
 	return nussl_ssl_context_set_dh_bits(sess->ssl_context, dh_bits);
 }
 
+int nussl_session_set_dh_file(nussl_session * sess, const char *file)
+{
+	if (!sess)
+		return NUSSL_ERROR;
+
+	return nussl_ssl_context_set_dh_file(sess->ssl_context, file);
+}
+
 void nussl_set_addrlist(nussl_session * sess,
 			const nussl_inet_addr ** addrs, size_t n)
 {
