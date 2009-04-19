@@ -26,6 +26,10 @@
 
 #include <signal.h>
 
+#ifdef HAVE_GETOPT_H
+# include <getopt.h>
+#endif
+
 #include <nubase.h>
 
 #include "emc_server.h"
@@ -33,18 +37,78 @@
 
 static struct emc_server_context server_ctx;
 
+static struct option long_options[] = {
+	{"help", 0, NULL, 'h'},
+	{"version", 0, NULL, 'V'},
+	{"daemon", 0, NULL, 'D'},
+	{"verbose", 0, NULL, 'v'},
+	{"config", 0, NULL, 'f'},
+
+	{0, 0, 0, 0}
+};
+
+void display_usage(void)
+{
+	fprintf(stdout, "emc [-hVDv ]"
+				"\n\
+\t-h (--help       ): display this help and exit\n\
+\t-V (--version    ): display version and exit\n\
+\t-D (--daemon     ): daemonize\n\
+\t-v (--verbose    ): increase debug level (+1 for each 'v') (max useful number: 10)\n\
+\t-f (--config     ): use specific config file\n\
+"
+	);
+}
+
 int main(int argc, char **argv)
 {
+	const char options_list[] = "hVDvf:";
+	int option, daemonize = 0;
+	const char *version = PACKAGE_VERSION;
+	char *conf_file = EMC_DEFAULT_CONF;
+
+	debug_level = DEBUG_LEVEL_INFO;
+
+	/*parse options */
+	while ((option = getopt_long(argc, argv, options_list, long_options, NULL)) != -1) {
+		switch (option) {
+		case 'V':
+			fprintf(stdout, "emc (version %s)\n",
+				version);
+			return 1;
+		case 'D':
+			daemonize = 1;
+			break;
+		case 'v':
+			debug_level += 1;
+			break;
+		case 'h':
+			display_usage();
+			exit(EXIT_SUCCESS);
+		case 'f':
+			conf_file = strdup(optarg);
+			if (conf_file == NULL) {
+				fprintf(stderr,
+					"Couldn't malloc! Exiting");
+				exit(EXIT_FAILURE);
+			}
+			break;
+		}
+	}
+
+
+
 	memset(&server_ctx, 0, sizeof(server_ctx));
 	nussl_init();
 
 	init_log_engine("emc");
-	debug_level = DEBUG_LEVEL_INFO;
+
+	log_printf(DEBUG_LEVEL_INFO, "INFO EMC server starting (version %s)", version);
 
 	/* ignore SIGPIPE */
 	signal(SIGPIPE, SIG_IGN);
 
-	if (emc_init_config(EMC_DEFAULT_CONF) != 0) {
+	if (emc_init_config(conf_file) != 0) {
 		log_printf(DEBUG_LEVEL_FATAL, "ERROR could not load config, aborting\n");
 
 		exit(-1);
