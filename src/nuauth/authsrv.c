@@ -828,6 +828,11 @@ void configure_app(int argc, char **argv)
 		"Nuauth started in foreground (without -D option), "
 		"logging on stderr and stdout only (no syslog)");
 	}
+
+	/* declare default capabilities */
+	register_client_capa("HELLO", &(nuauthdatas->hello_capa));
+	register_client_capa("TCP", &(nuauthdatas->tcp_capa));
+	register_client_capa("UDP", &(nuauthdatas->udp_capa));
 }
 
 /**

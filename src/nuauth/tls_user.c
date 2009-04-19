@@ -4,8 +4,6 @@
  **             Vincent Deffontaines <gryzor@inl.fr>
  **             Pierre Chifflier <chifflier@inl.fr>
  **
- ** $Id$
- **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
  ** the Free Software Foundation, version 3 of the License.
@@ -273,6 +271,53 @@ nu_error_t treat_user_request(user_session_t * c_session,
 }
 
 /**
+ * Function called by client sasl thread, to complete TLS handshake
+ *    - Call nussl_session_handshake()
+ *    - Check client certificate
+ *
+ * \return If an error occurs returns 1, else returns 0.
+ */
+int tls_user_do_handshake(struct client_connection *current_client_conn, struct tls_user_context_t *context)
+{
+	int ret;
+	char cipher[256];
+
+	/* do not verify FQDN field from client */
+	nussl_set_session_flag(current_client_conn->nussl,
+		NUSSL_SESSFLAG_IGNORE_ID_MISMATCH,
+		1
+		);
+
+	// XXX default value is 30s, should be a configuration value
+	nussl_set_connect_timeout(current_client_conn->nussl, 30);
+
+	ret = nussl_session_handshake(current_client_conn->nussl,context->nussl);
+	if ( ret ) {
+		log_message(WARNING, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
+			    "New client connection from %s failed during nussl_session_handshake(): %s",
+			    current_client_conn->str_addr,
+			    nussl_get_error(context->nussl));
+		return 1;
+	}
+
+	nussl_session_get_cipher(current_client_conn->nussl, cipher, sizeof(cipher));
+	log_message(INFO, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
+		    "TLS handshake with client %s succeeded, cipher is %s",
+		    current_client_conn->str_addr, cipher);
+
+	/* Check certificate hook */
+	ret = modules_check_certificate(current_client_conn->nussl);
+	if ( ret ) {
+		log_message(WARNING, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
+			    "New client connection from %s failed during modules_check_certificate()",
+			    current_client_conn->str_addr);
+		return 1;
+	}
+
+	return 0;
+}
+
+/**
  * Function called on new client connection:
  *    - Call accept()
  *    - Drop client if there are to much clients or if NuAuth is in reload
@@ -294,9 +339,7 @@ int tls_user_accept(struct tls_user_context_t *context)
 	int socket;
 	gint option_value;
 	unsigned short sport;
-	int ret;
 	char address[INET6_ADDRSTRLEN];
-	char cipher[256];
 
 	current_client_conn = g_new0(struct client_connection, 1);
 
@@ -349,43 +392,11 @@ int tls_user_accept(struct tls_user_context_t *context)
 		return 1;
 	}
 
-	/* do not verify FQDN field from client */
-	nussl_set_session_flag(current_client_conn->nussl,
-		NUSSL_SESSFLAG_IGNORE_ID_MISMATCH,
-		1
-		);
-
-	ret = nussl_session_handshake(current_client_conn->nussl,context->nussl);
-	if ( ret ) {
-		log_message(WARNING, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
-			    "New client connection from %s failed during nussl_session_handshake(): %s",
-			    address,
-			    nussl_get_error(context->nussl));
-		nussl_session_destroy(current_client_conn->nussl);
-		g_free(current_client_conn);
-		return 1;
-	}
-
-	nussl_session_get_cipher(current_client_conn->nussl, cipher, sizeof(cipher));
-	log_message(INFO, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
-		    "TLS handshake with client %s succeeded, cipher is %s",
-		    address, cipher);
-
-	/* Check certificate hook */
-	ret = modules_check_certificate(current_client_conn->nussl);
-	if ( ret ) {
-		log_message(WARNING, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
-			    "New client connection from %s failed during modules_check_certificate()",
-			    address);
-		nussl_session_destroy(current_client_conn->nussl);
-		g_free(current_client_conn);
-		return 1;
-	}
-
-
 	current_client_conn->socket = socket;
 	current_client_conn->addr = addr;
 	current_client_conn->sport = sport;
+	current_client_conn->str_addr = g_strdup(address);
+	current_client_conn->srv_context = context;
 
 	/* Set KEEP ALIVE on connection */
 	option_value = 1;

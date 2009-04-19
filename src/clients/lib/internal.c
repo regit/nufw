@@ -220,7 +220,7 @@ int mysasl_negotiate(nuauth_session_t * session, sasl_conn_t * conn,
 		return SASL_FAIL;
 	} else {
 		if (session->verbose)
-			puts("Authentication started...\n");
+			puts("Authentication started...");
 	}
 
 	return SASL_OK;
@@ -372,8 +372,7 @@ int send_os(nuauth_session_t * session, nuclient_error_t * err)
 	(void) secure_snprintf(oses, stringlen,
 			       "%s;%s;%s",
 			       info.sysname, info.release, info.version);
-	if (sasl_encode64
-	    (oses, strlen(oses), enc_oses, 4 * stringlen,
+	if (sasl_encode64(oses, strlen(oses), enc_oses, 4 * stringlen,
 	     &actuallen) == SASL_BUFOVER) {
 		SET_ERROR(err, SASL_ERROR, SASL_BUFOVER);
 		/* TODO set explicit string message */
@@ -383,7 +382,7 @@ int send_os(nuauth_session_t * session, nuclient_error_t * err)
 	/* build packet header */
 	osfield->type = OS_FIELD;
 	osfield->option = OS_SRV;
-	osfield->length = sizeof(osfield) + actuallen;
+	osfield->length = sizeof(struct nu_authfield) + actuallen;
 
 	/* add packet body */
 	osfield->length = htons(osfield->length);
@@ -420,8 +419,7 @@ int send_client(nuauth_session_t * session, nuclient_error_t * err)
 	(void) secure_snprintf(version, stringlen,
 			       "%s;%s",
 			       session->client_name, session->client_version);
-	if (sasl_encode64
-	    (version, strlen(version), enc_version, 4 * stringlen,
+	if (sasl_encode64(version, strlen(version), enc_version, 4 * stringlen,
 	     &actuallen) == SASL_BUFOVER) {
 		SET_ERROR(err, SASL_ERROR, SASL_BUFOVER);
 		/* TODO set explicit string message */
@@ -431,7 +429,7 @@ int send_client(nuauth_session_t * session, nuclient_error_t * err)
 	/* build packet header */
 	vfield->type = VERSION_FIELD;
 	vfield->option = CLIENT_SRV;
-	vfield->length = sizeof(vfield) + actuallen;
+	vfield->length = sizeof(struct nu_authfield) + actuallen;
 
 	/* add packet body */
 	vfield->length = htons(vfield->length);
@@ -460,12 +458,11 @@ int send_capa(nuauth_session_t * session, nuclient_error_t * err)
 	char buf[1024];
 	struct nu_authfield *vfield = (struct nu_authfield *) buf;
 	char *enc_capa = buf + sizeof(struct nu_authfield);
-	unsigned stringlen = sizeof(NU_CAPABILITIES);
+	unsigned stringlen = sizeof(nu_capabilities);
 	unsigned actuallen;
 	int ret;
 
-	if (sasl_encode64
-	    (NU_CAPABILITIES, strlen(NU_CAPABILITIES), enc_capa, 4 * stringlen,
+	if (sasl_encode64(nu_capabilities, strlen(nu_capabilities), enc_capa, 4 * stringlen,
 	     &actuallen) == SASL_BUFOVER) {
 		SET_ERROR(err, SASL_ERROR, SASL_BUFOVER);
 		/* TODO set explicit string message */
@@ -475,7 +472,7 @@ int send_capa(nuauth_session_t * session, nuclient_error_t * err)
 	/* build packet header */
 	vfield->type = CAPA_FIELD;
 	vfield->option = CLIENT_SRV;
-	vfield->length = sizeof(vfield) + actuallen;
+	vfield->length = sizeof(struct nu_authfield) + actuallen;
 
 	/* add packet body */
 	vfield->length = htons(vfield->length);

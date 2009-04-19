@@ -4,8 +4,6 @@
  **            L.Defert <ldefert@inl.fr>
  ** INL http://www.inl.fr/
  **
- ** $Id$
- **
  ** NuSSL: OpenSSL / GnuTLS layer based on libneon
  */
 
@@ -1544,7 +1542,12 @@ int nussl_sock_accept_ssl(nussl_socket * sock, nussl_ssl_context * ctx)
 		SSL_set_cipher_list(ssl, ctx->ciphers);
 
 	sock->ssl = ssl;
-	ret = SSL_accept(ssl);
+	ret = nussl_ssl_accept(&ssl, sock->cotimeout);
+	if (ret == 0) { /* timeout */
+		nussl_snprintf(sock->error, sizeof sock->error,
+				_("SSL handshake timeout"));
+		return NUSSL_SOCK_ERROR;
+	}
 	if (ret != 1) {
 		int ret_verif;
 		ret_verif = SSL_get_verify_result(ssl);
@@ -1605,7 +1608,12 @@ int nussl_sock_accept_ssl(nussl_socket * sock, nussl_ssl_context * ctx)
 	gnutls_transport_set_ptr((gnutls_session_t) sock->ssl,
 				 (gnutls_transport_ptr) sock->fd);
 
-	ret = gnutls_handshake(ssl);
+	ret = nussl_ssl_accept(&ssl, sock->cotimeout);
+	if (ret == 0) { /* timeout */
+		nussl_snprintf(sock->error, sizeof sock->error,
+				_("SSL handshake timeout"));
+		return NUSSL_SOCK_ERROR;
+	}
 	if (ret < 0) {
 		return error_gnutls(sock, ret);
 	}

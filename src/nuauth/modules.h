@@ -45,6 +45,7 @@ typedef enum {
 	MOD_PERIOD,
 	MOD_CERT_CHECK,
 	MOD_CERT_TO_UID,
+	MOD_POSTAUTH_PROTO,
 	MOD_IP_AUTH,
 	MOD_OPTIONAL = MOD_IP_AUTH,
 	MOD_END,
@@ -149,6 +150,8 @@ void modules_auth_error_log(user_session_t * session,
 			    nuauth_auth_error_t error,
 			    const char *message);
 
+int modules_postauth_proto(user_session_t * user);
+
 gboolean nuauth_is_reloading();
 void block_on_conf_reload();
 
@@ -157,6 +160,9 @@ void cleanup_func_push(cleanup_func_t func);
 void cleanup_func_remove(cleanup_func_t func);
 
 typedef uint32_t(*get_module_version_func_t) (void);
+
+nu_error_t register_client_capa(const char * name, int * index);
+nu_error_t unregister_client_capa(int index);
 
 /**
  * @}

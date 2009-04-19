@@ -136,17 +136,18 @@ static void tls_sasl_connect_ok(user_session_t * c_session, int c)
 
 static int add_client_capa(user_session_t * c_session, const char * value)
 {
+	int i;
 	if (! value)
 		return SASL_FAIL;
 
-	if (!strcmp("HELLO", value))
-		c_session->capa_flags = c_session->capa_flags | CAPA_FLAGS_HELLO;
-	if (!strcmp("TCP", value))
-		c_session->capa_flags = c_session->capa_flags | CAPA_FLAGS_TCP;
-	if (!strcmp("UDP", value))
-		c_session->capa_flags = c_session->capa_flags | CAPA_FLAGS_UDP;
+	for (i = 0; i < 32; i++) {
+		if (!strcmp(capa_array[i], value)) {
+			c_session->capa_flags = c_session->capa_flags | (1 << i);
+			return SASL_OK;
+		}
 
-	return SASL_OK;
+	}
+	return SASL_NOTDONE;
 }
 
 static int parse_user_capabilities(user_session_t * c_session, char *buf, int buf_size)
@@ -198,8 +199,9 @@ static int parse_user_capabilities(user_session_t * c_session, char *buf, int bu
 		return SASL_BADAUTH;
 	}
 	dec_buf = g_new0(gchar, dec_buf_size);
-	decode = sasl_decode64(buf + 4, ntohs(vfield->length) - 4, dec_buf,
-			  dec_buf_size, &len);
+	decode = sasl_decode64(buf + sizeof(struct nu_authfield),
+			  ntohs(vfield->length) - sizeof(struct nu_authfield),
+			  dec_buf, dec_buf_size, &len);
 	if (decode != SASL_OK) {
 		g_free(dec_buf);
 		return SASL_BADAUTH;
@@ -301,8 +303,9 @@ static int parse_user_version(user_session_t * c_session, char *buf, int buf_siz
 		return SASL_BADAUTH;
 	}
 	dec_buf = g_new0(gchar, dec_buf_size);
-	decode = sasl_decode64(buf + 4, ntohs(vfield->length) - 4, dec_buf,
-			  dec_buf_size, &len);
+	decode = sasl_decode64(buf + sizeof(struct nu_authfield),
+			  ntohs(vfield->length) - sizeof(struct nu_authfield),
+			  dec_buf, dec_buf_size, &len);
 	if (decode != SASL_OK) {
 		g_free(dec_buf);
 		return SASL_BADAUTH;
@@ -422,7 +425,8 @@ static int parse_user_os(user_session_t * c_session, char *buf, int buf_size)
 		return SASL_BADAUTH;
 	}
 	dec_buf = g_new0(gchar, dec_buf_size);
-	decode = sasl_decode64(buf + 4, ntohs(osfield->length) - 4, dec_buf,
+	decode = sasl_decode64(buf + sizeof(struct nu_authfield),
+			  ntohs(osfield->length) - sizeof(struct nu_authfield), dec_buf,
 			  dec_buf_size, &len);
 	if (decode != SASL_OK) {
 		g_free(dec_buf);
@@ -611,6 +615,16 @@ static int finish_nego(user_session_t * c_session)
 	debug_log_message(DEBUG, DEBUG_AREA_USER,
 				  "user version read");
 
+	/* call module for plugin modification of protocol */
+	ret = modules_postauth_proto(c_session);
+	if (ret != SASL_OK) {
+		if (nuauthconf->push) {
+			clean_session(c_session);
+			return SASL_FAIL;
+		} else {
+			return SASL_FAIL;
+		}
+	}
 
 	/* send mode to client */
 	msg.type = SRV_TYPE;
@@ -631,7 +645,6 @@ static int finish_nego(user_session_t * c_session)
 			return SASL_FAIL;
 		}
 	}
-
 
 	/* send nego done */
 	msg.type = SRV_INIT;
@@ -677,6 +690,19 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 	client = (struct client_connection *)userdata;
 	socket_fd = client->socket;
 
+	/* complete handshake */
+	ret = tls_user_do_handshake(client, client->srv_context);
+	if (ret != 0) {
+		/* error, cleanup & exit */
+		log_message(INFO, DEBUG_AREA_USER,
+				"Handshake failed, exiting client %s\n",
+				client->str_addr);
+		nussl_session_destroy(client->nussl);
+		g_free(client->str_addr);
+		g_free(userdata);
+		return;
+	}
+
 	c_session = g_new0(user_session_t, 1);
 	c_session->nussl = client->nussl;
 	c_session->socket = socket_fd;
@@ -687,6 +713,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 	c_session->groups = NULL;
 	c_session->user_name = NULL;
 	c_session->user_id = 0;
+	g_free(client->str_addr);
 	g_free(userdata);
 
 	/* Check the user is authorized to connect

@@ -5,8 +5,6 @@
  **            Pierre Chifflier <chifflier@inl.fr>
  ** INL http://www.inl.fr/
  **
- ** $Id$
- **
  ** NuSSL: OpenSSL / GnuTLS layer based on libneon
  */
 
@@ -367,6 +365,9 @@ void nussl_set_connect_timeout(nussl_session * sess, int timeout)
 		return;
 
 	sess->cotimeout = timeout;
+
+	if (sess->socket)
+		nussl_sock_connect_timeout(sess->socket, timeout);
 
 }
 

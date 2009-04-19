@@ -76,6 +76,7 @@ static hook_t hooks[MOD_END] = {
 	{ "nuauth_periods_module", NULL, NULL, "define_periods", "define periods checking" },
 	{ "nuauth_certificate_check_module", NULL, NULL,  "certificate_check", "certificate check" },
 	{ "nuauth_certificate_to_uid_module", NULL, NULL, "certificate_to_uid", "certificate to uid" },
+	{ "nuauth_postauth_proto_module", NULL, NULL, "postauth_proto", "post auth proto" },
 	{ "nuauth_ip_authentication_module", NULL, NULL, "ip_authentication", "ip authentication" },
 };
 
@@ -374,6 +375,29 @@ void modules_auth_error_log(user_session_t * session,
 	}
 }
 
+
+/**
+ * custom modification of post authentication exchange
+ */
+int modules_postauth_proto(user_session_t * user)
+{
+	/* iter through all modules list */
+	GSList *walker = hooks[MOD_POSTAUTH_PROTO].modules;
+	int ret;
+
+	block_on_conf_reload();
+	for (; walker != NULL; walker = walker->next) {
+		postauth_proto_callback *handler =
+		    (postauth_proto_callback *) ((module_t *) walker->
+						    data)->func;
+		ret = handler(user, ((module_t *) walker->data)->params);
+		if (ret != SASL_OK) {
+			return ret;
+		}
+	}
+	return SASL_OK;
+}
+
 void clean_module_t(module_t *module)
 {
 	if (module) {
@@ -599,6 +623,7 @@ static char *module_default_value(int type)
 			return DEFAULT_USERAUTH_MODULE;
 			break;
 		case MOD_USER_FAIL:
+		case MOD_POSTAUTH_PROTO:
 			return "";
 			break;
 		case MOD_ACL_CHECK:
@@ -748,5 +773,38 @@ void block_on_conf_reload()
 	}
 	g_mutex_unlock(nuauthdatas->reload_cond_mutex);
 }
+
+/**
+ * \brief Register client capabilities (for plugin)
+ */
+
+nu_error_t register_client_capa(const char * name, int * index)
+{
+	int i;
+
+	for (i = 0; i < 32; i++) {
+		if (! capa_array[i]) {
+			capa_array[i] = g_strdup(name);
+			*index = i;
+			return NU_EXIT_OK;
+		}
+
+	}
+
+	return NU_EXIT_ERROR;
+}
+
+/**
+ * \brief Unregister client capabilities (for plugin)
+ */
+
+nu_error_t unregister_client_capa(int index)
+{
+	g_free(capa_array[index]);
+	capa_array[index] = NULL;
+
+	return NU_EXIT_OK;
+}
+
 
 /* @} */

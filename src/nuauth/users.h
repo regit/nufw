@@ -82,19 +82,6 @@ typedef struct {
 	gboolean activated;	/*!< \brief TRUE if user server listen for event for this session */
 } user_session_t;
 
-typedef enum {
-	CAPA_FLAGS_NONE = 0,
-	/* Client supports authentication via HELLO mode */
-	CAPA_FLAGS_HELLO_BIT = 0,
-	CAPA_FLAGS_HELLO = (1 << CAPA_FLAGS_HELLO_BIT),
-	/* Client supports TCP authentication via NuFW protocol */
-	CAPA_FLAGS_TCP_BIT = 1,
-	CAPA_FLAGS_TCP = (1 << CAPA_FLAGS_TCP_BIT),
-	/* Client supports UDP authentication via NuFW protocol */
-	CAPA_FLAGS_UDP_BIT = 2,
-	CAPA_FLAGS_UDP = (1 << CAPA_FLAGS_UDP_BIT),
-} capa_flags_t;
-
-
+char *capa_array[32];
 
 #endif
