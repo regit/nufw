@@ -75,59 +75,38 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	return TRUE;
 }
 
-static int process_field(int field_buffer_len,
-			   char * buf,
-			   char **username)
-{
-	char pbuf[1024];
-	char *lbuf = buf;
-	int state = EXT_PROTO_OUTSIDE;
-
-	*username = NULL;
-	do {
-		sscanf(lbuf,"%s", pbuf);
-		switch (state) {
-			case EXT_PROTO_OUTSIDE:
-				/* should find "BEGIN" */
-				if (! strcmp(pbuf, "BEGIN")) {
-					state = EXT_PROTO_START;
-				}
-				break;
-			case EXT_PROTO_START:
-				if (! strcmp(pbuf, LUSER_EXT_NAME)) {
-					state = EXT_PROTO_CMD;
-				}
-				break;
-			case EXT_PROTO_CMD:
-				if (! strcmp(pbuf, "END")) {
-					state = EXT_PROTO_OUTSIDE;
-				}
-				if (! strcmp(pbuf, LUSER_USER_CMD)) {
-					state = EXT_PROTO_CMD_ARGS;
-				}
-				break;
-			case EXT_PROTO_CMD_ARGS:
-				if (*username) {
-					g_free(*username);
-					*username = NULL;
-				}
-				*username = g_strdup(pbuf);
-				state = EXT_PROTO_CMD;
-				break;
-		}
-		lbuf += strlen(pbuf) + 1;
-
-	} while (lbuf < buf + field_buffer_len);
-
-	if (*username) {
-		return SASL_OK;
-	} else {
-		return SASL_FAIL;
-	}
-}
-
 /**
  * @{ */
+
+
+int assign_username(char **buf, int bufsize, void *data)
+{
+	char pbuf[1024];
+	char **username = data;
+
+
+	sscanf(*buf,"%s", pbuf);
+	if (pbuf[strlen(pbuf)] != 0) {
+		return SASL_FAIL;
+	}
+	*username = g_strdup(pbuf);
+	*buf += strlen(pbuf) + 1;
+
+	return SASL_OK;
+}
+
+
+struct proto_ext_t localuser_ext = {
+	.name = LUSER_EXT_NAME,
+	.ncmd = 1,
+	.cmd = {
+		{
+		.cmdname = LUSER_USER_CMD,
+		.nargs = 1,
+		.callback = &assign_username,
+		},
+	}
+};
 
 G_MODULE_EXPORT int postauth_proto(user_session_t * session, struct postauth_localuser_params * params)
 {
@@ -137,6 +116,7 @@ G_MODULE_EXPORT int postauth_proto(user_session_t * session, struct postauth_loc
 	int buf_size, ret;
 	char * username;
 	char address[INET6_ADDRSTRLEN];
+	struct llist_head prot_list;
 
 
 	if (session->capa_flags & (1 << params->capa_index)) {
@@ -164,9 +144,13 @@ G_MODULE_EXPORT int postauth_proto(user_session_t * session, struct postauth_loc
 
 		buf_size = nussl_read(session->nussl, buf, sizeof buf);
 		/* FIXME add test on type of field */
-		ret = process_field(buf_size - sizeof(struct nu_authfield),
-				    buf + sizeof(struct nu_authfield),
-				    &username);
+		INIT_LLIST_HEAD(&prot_list);
+		INIT_LLIST_HEAD(&localuser_ext.list);
+		llist_add(&prot_list, &localuser_ext.list);
+		ret = process_ext_message(buf + sizeof(struct nu_authfield),
+				buf_size - sizeof(struct nu_authfield),
+				&prot_list,
+				&username);
 		if (ret != SASL_OK)
 			return ret;
 
