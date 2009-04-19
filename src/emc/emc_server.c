@@ -267,7 +267,7 @@ int emc_start_server(struct emc_server_context *ctx)
 	log_printf(DEBUG_LEVEL_INFO, "INFO EMC server ready");
 
 	while (ctx->continue_processing)
-		ev_loop(loop, /* 0 or: */ EVLOOP_NONBLOCK );
+		ev_loop(loop, 0 /* or: EVLOOP_NONBLOCK */ );
 
 	nussl_session_destroy(ctx->nussl);
 	ctx->nussl = NULL;
