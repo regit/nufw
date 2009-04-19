@@ -43,41 +43,8 @@ G_MODULE_EXPORT uint32_t get_api_version()
 }
 
 
-G_MODULE_EXPORT gchar *unload_module_with_params(gpointer params_p)
-{
-	struct postauth_localuser_params *params =
-	    (struct postauth_localuser_params *) params_p;
-
-	g_free(params->username);
-	g_free(params);
-
-	return NULL;
-}
-
-G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
-{
-	struct postauth_localuser_params *params =
-	    g_new0(struct postauth_localuser_params, 1);
-
-	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
-		    "Postauth_localuser module");
-
-	params->username = nuauth_config_table_get_or_default("postauth_localuser_default_username", POSTAUTH_DEFAULT_USERNAME);
-
-
-	if (register_client_capa(LUSER_EXT_NAME, &(params->capa_index)) != NU_EXIT_OK) {
-		log_message(WARNING, DEBUG_AREA_MAIN,
-			    "Unable to register capability LUSER");
-		return FALSE;
-	}
-
-	module->params = (gpointer) params;
-	return TRUE;
-}
-
 /**
  * @{ */
-
 
 int assign_username(char **buf, int bufsize, void *data)
 {
@@ -89,12 +56,17 @@ int assign_username(char **buf, int bufsize, void *data)
 	if (pbuf[strlen(pbuf)] != 0) {
 		return SASL_FAIL;
 	}
-	*username = g_strdup(pbuf);
+	if (username) {
+		*username = g_strdup(pbuf);
+	} else {
+		debug_log_message(DEBUG, DEBUG_AREA_USER,
+				"Remote username is \"%s\"",
+				pbuf);
+	}
 	*buf += strlen(pbuf) + 1;
 
 	return SASL_OK;
 }
-
 
 struct proto_ext_t localuser_ext = {
 	.name = LUSER_EXT_NAME,
@@ -170,3 +142,54 @@ G_MODULE_EXPORT int postauth_proto(user_session_t * session, struct postauth_loc
 }
 
 /** @} */
+
+
+G_MODULE_EXPORT gchar *unload_module_with_params(gpointer params_p)
+{
+	struct postauth_localuser_params *params =
+	    (struct postauth_localuser_params *) params_p;
+
+	g_free(params->username);
+	g_free(params);
+
+	if (unregister_client_capa(params->capa_index) != NU_EXIT_OK) {
+		log_message(WARNING, DEBUG_AREA_MAIN,
+			    "Unable to unregister capability LUSER");
+		return FALSE;
+	}
+
+	if (unregister_protocol_extension(&localuser_ext) != NU_EXIT_OK) {
+		log_message(WARNING, DEBUG_AREA_MAIN,
+			    "Unable to unregister protocol extension for LUSER");
+		return FALSE;
+	}
+	return NULL;
+}
+
+G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
+{
+	struct postauth_localuser_params *params =
+	    g_new0(struct postauth_localuser_params, 1);
+
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
+		    "Postauth_localuser module");
+
+	params->username = nuauth_config_table_get_or_default("postauth_localuser_default_username", POSTAUTH_DEFAULT_USERNAME);
+
+
+	if (register_client_capa(LUSER_EXT_NAME, &(params->capa_index)) != NU_EXIT_OK) {
+		log_message(WARNING, DEBUG_AREA_MAIN,
+			    "Unable to register capability LUSER");
+		return FALSE;
+	}
+
+	if (register_protocol_extension(nuauthdatas, &localuser_ext) != NU_EXIT_OK) {
+		log_message(WARNING, DEBUG_AREA_MAIN,
+			    "Unable to register protocol extension for LUSER");
+		return FALSE;
+	}
+
+	module->params = (gpointer) params;
+	return TRUE;
+}
+
