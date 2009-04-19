@@ -1,9 +1,6 @@
 /*
- ** Copyright (C) 2008 INL
- ** Written by Sebastien Tricaud <s.tricaud@inl.fr>
- ** INL http://www.inl.fr/
- **
- ** $Id$
+ ** Copyright(C) 2009 INL
+ ** Written by Eric Leblond <eleblond@inl.fr>
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -17,38 +14,28 @@
  ** You should have received a copy of the GNU General Public License
  ** along with this program; if not, write to the Free Software
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
+ **
  */
 
+typedef enum _ext_proto_state_t {
+	EXT_PROTO_OUTSIDE,
+	EXT_PROTO_START,
+	EXT_PROTO_CMD,
+	EXT_PROTO_END,
+} ext_proto_state_t;
 
-#ifndef NUBASE_HEADER
-#define NUBASE_HEADER
+struct proto_ext_cmd_t {
+	char *cmdname;
+	int nargs;
+	int (*callback)(char **buf, int bufsize, void *data);
+};
 
-#ifdef HAVE_CONFIG_H
-#  include "config.h"
-#endif
+struct proto_ext_t {
+	struct llist_head list;
+	char * name;
+	int ncmd;
+	struct proto_ext_cmd_t cmd[];
+};
 
-#ifndef FALSE
-#define FALSE 0
-#endif
+int process_ext_message(char *buf, int bufsize, struct llist_head *ext_proto, void *data);
 
-#ifndef TRUE
-#define TRUE  1
-#endif
-
-#include <limits.h>
-
-#include "config-table.h"
-#include "ipv6.h"
-#include "log.h"
-#include "packet_parser.h"
-#include "strings.h"
-#include "ext_proto.h"
-
-typedef enum {
-	NU_EXIT_ERROR = -1,
-	NU_EXIT_OK = 0,
-	NU_EXIT_NO_RETURN,
-	NU_EXIT_CONTINUE
-} nu_error_t;
-
-#endif				/* ifndef NUBASE_HEADER */
