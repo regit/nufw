@@ -186,8 +186,8 @@ static void emc_server_accept_cb (struct ev_loop *loop, ev_io *w, int revents)
 		1
 		);
 
-	// XXX set timeout ?
-	// nussl_session_handshake is a blocking operation
+	nussl_set_connect_timeout(nussl_sess, 30);
+
 	ret = nussl_session_handshake(nussl_sess,ctx->nussl);
 	if ( ret ) {
 		log_printf(DEBUG_LEVEL_WARNING, "WARNING New client connection from %s failed during nussl_session_handshake(): %s",
@@ -264,8 +264,10 @@ int emc_start_server(struct emc_server_context *ctx)
 	server_watcher.data = ctx;
 	signal_watcher.data = ctx;
 
+	log_printf(DEBUG_LEVEL_INFO, "INFO EMC server ready");
+
 	while (ctx->continue_processing)
-		ev_loop(loop, EVLOOP_NONBLOCK);
+		ev_loop(loop, /* 0 or: */ EVLOOP_NONBLOCK );
 
 	nussl_session_destroy(ctx->nussl);
 	ctx->nussl = NULL;
