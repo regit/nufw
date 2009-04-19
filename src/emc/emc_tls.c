@@ -59,14 +59,6 @@ int emc_init_tls(struct emc_server_context *ctx)
 
 	ctx->nussl = nussl_session_create_with_fd(ctx->server_sock, request_cert);
 
-	if (tls_dh_file == NULL || nussl_session_set_dh_file(ctx->nussl, tls_dh_file) != NUSSL_OK) {
-		log_printf(DEBUG_LEVEL_WARNING, "WARNING Unable to read Diffie Hellman params file.");
-		if (nussl_session_set_dh_bits(ctx->nussl, DH_BITS) != NUSSL_OK) {
-			log_printf(DEBUG_LEVEL_FATAL, "ERROR Unable to generate Diffie Hellman params.");
-			return -1;
-		}
-	}
-
 	ret = nussl_ssl_set_keypair(ctx->nussl, tls_cert, tls_key);
 	if (ret != NUSSL_OK) {
 		log_printf(DEBUG_LEVEL_FATAL, "ERROR Failed to load user key/certificate: %s",
@@ -103,6 +95,14 @@ int emc_init_tls(struct emc_server_context *ctx)
 
 	if (tls_ciphers) {
 		nussl_session_set_ciphers(ctx->nussl, tls_ciphers);
+	}
+
+	if (tls_dh_file == NULL || nussl_session_set_dh_file(ctx->nussl, tls_dh_file) != NUSSL_OK) {
+		log_printf(DEBUG_LEVEL_WARNING, "WARNING Unable to read Diffie Hellman params file.");
+		if (nussl_session_set_dh_bits(ctx->nussl, DH_BITS) != NUSSL_OK) {
+			log_printf(DEBUG_LEVEL_FATAL, "ERROR Unable to generate Diffie Hellman params.");
+			return -1;
+		}
 	}
 
 	return 0;
