@@ -86,7 +86,6 @@
 #include "users.h"
 #include "user_logs.h"
 #include "pckt_authsrv.h"
-#include "modules.h"
 #include "cache.h"
 #include "acls.h"
 #include "user_authsrv.h"
@@ -103,6 +102,7 @@
 #include "nuauth_params.h"
 #include "nuauthconf.h"
 
+#include "modules.h"
 
 nu_error_t treat_user_request(user_session_t * c_session,
 			      struct tls_buffer_read **datas);

@@ -164,6 +164,10 @@ typedef uint32_t(*get_module_version_func_t) (void);
 nu_error_t register_client_capa(const char * name, int * index);
 nu_error_t unregister_client_capa(int index);
 
+nu_error_t init_protocol_extension(struct nuauth_datas * ndatas);
+nu_error_t register_protocol_extension(struct nuauth_datas * ndatas, struct proto_ext_t *extproto);
+nu_error_t unregister_protocol_extension(struct proto_ext_t *extproto);
+
 /**
  * @}
  */

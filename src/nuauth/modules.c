@@ -806,5 +806,27 @@ nu_error_t unregister_client_capa(int index)
 	return NU_EXIT_OK;
 }
 
+/*
+ * protocol extension handling
+ */
+
+nu_error_t init_protocol_extension(struct nuauth_datas * ndatas)
+{
+	INIT_LLIST_HEAD(&(ndatas->ext_proto_l));
+	return NU_EXIT_OK;
+}
+
+nu_error_t register_protocol_extension(struct nuauth_datas * ndatas, struct proto_ext_t *extproto)
+{
+	INIT_LLIST_HEAD(&(extproto->list));
+	llist_add(&(ndatas->ext_proto_l), &(extproto->list));
+	return NU_EXIT_OK;
+}
+
+nu_error_t unregister_protocol_extension(struct proto_ext_t *extproto)
+{
+	llist_del(&(extproto->list));
+	return NU_EXIT_OK;
+}
 
 /* @} */

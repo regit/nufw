@@ -881,6 +881,8 @@ void init_nuauthdata()
 	if (!nuauthdatas->connections_queue)
 		exit(EXIT_FAILURE);
 
+	init_protocol_extension(nuauthdatas);
+
 	/* init and load modules */
 	init_modules_system();
 	if (!load_modules())
