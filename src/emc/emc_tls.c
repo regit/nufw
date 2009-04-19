@@ -47,6 +47,7 @@ int emc_init_tls(struct emc_server_context *ctx)
 	char *tls_ciphers;
 	int request_cert = 1; /* XXX hardcoded value, should be 2 (request cert) */
 	int ret;
+	char *tls_dh_file;
 
 	tls_cert    = emc_config_table_get_or_default("emc_tls_cert",NULL);
 	tls_key     = emc_config_table_get_or_default("emc_tls_key",NULL);
@@ -54,12 +55,16 @@ int emc_init_tls(struct emc_server_context *ctx)
 	tls_capath  = emc_config_table_get("emc_tls_capath");
 	tls_crl     = emc_config_table_get("emc_tls_crl");
 	tls_ciphers = emc_config_table_get("emc_tls_ciphers");
+	tls_dh_file = emc_config_table_get("emc_tls_dh_file");
 
 	ctx->nussl = nussl_session_create_with_fd(ctx->server_sock, request_cert);
 
-	if (nussl_session_set_dh_bits(ctx->nussl, DH_BITS) != NUSSL_OK) {
-		log_printf(DEBUG_LEVEL_FATAL, "ERROR Unable to initialize Diffie Hellman params.");
-		return -1;
+	if (tls_dh_file == NULL || nussl_session_set_dh_file(ctx->nussl, tls_dh_file) != NUSSL_OK) {
+		log_printf(DEBUG_LEVEL_WARNING, "WARNING Unable to read Diffie Hellman params file.");
+		if (nussl_session_set_dh_bits(ctx->nussl, DH_BITS) != NUSSL_OK) {
+			log_printf(DEBUG_LEVEL_FATAL, "ERROR Unable to generate Diffie Hellman params.");
+			return -1;
+		}
 	}
 
 	ret = nussl_ssl_set_keypair(ctx->nussl, tls_cert, tls_key);
