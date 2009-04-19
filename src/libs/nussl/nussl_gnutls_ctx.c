@@ -76,6 +76,7 @@
 #include "nussl_privssl.h"
 #include "nussl_utils.h"
 
+int read_to_datum(const char *filename, gnutls_datum * datum);
 
 nussl_ssl_context *nussl_ssl_context_create(int flags)
 {
@@ -123,6 +124,36 @@ int nussl_ssl_context_set_dh_bits(nussl_ssl_context * ctx,
 	if (gnutls_dh_params_generate2(ctx->dh, ctx->dh_bits) < 0)
 		return NUSSL_ERROR;
 
+	return NUSSL_OK;
+}
+
+int nussl_ssl_context_set_dh_file(nussl_ssl_context * ctx,
+				  const char *filename)
+{
+	gnutls_datum_t datum_dh;
+	int ret;
+
+	datum_dh.data = NULL;
+
+	if (!filename)
+		return NUSSL_ERROR;
+
+	/* read CRL and CA */
+	ret = read_to_datum(filename, &datum_dh);
+	if (ret != 0)
+		return NUSSL_ERROR;
+
+	if (gnutls_dh_params_init(&ctx->dh) < 0) {
+		free(datum_dh.data);
+		return NUSSL_ERROR;
+	}
+
+	if (gnutls_dh_params_import_pkcs3(ctx->dh, &datum_dh, GNUTLS_X509_FMT_PEM) < 0) {
+		free(datum_dh.data);
+		return NUSSL_ERROR;
+	}
+
+	free(datum_dh.data);
 	return NUSSL_OK;
 }
 
