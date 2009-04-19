@@ -1321,7 +1321,11 @@ int nussl_ssl_accept(nussl_ssl_socket * ssl, unsigned int timeout)
 
 printf("nussl_ssl_accept\n");
 	if (timeout == 0) {
-		return gnutls_handshake(session);
+		ret = gnutls_handshake(session);
+		if (ret == 0)
+			return 1; /* success */
+		else
+			return -1;
 	}
 
 	sock = (int)gnutls_transport_get_ptr(session);
@@ -1332,9 +1336,7 @@ printf("nussl_ssl_accept\n");
 	ret = -1;
 
 	do {
-printf("avant le handshake\n");
 		ret = gnutls_handshake(session);
-printf("apres le handshake\n");
 		if (ret == 0) {
 			/* handshake ok */
 			ret = 1;
