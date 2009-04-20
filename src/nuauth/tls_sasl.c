@@ -141,6 +141,9 @@ static int add_client_capa(user_session_t * c_session, const char * value)
 		return SASL_FAIL;
 
 	for (i = 0; i < 32; i++) {
+		if (! capa_array[i]) {
+			return SASL_NOTDONE;
+		}
 		if (!strcmp(capa_array[i], value)) {
 			c_session->capa_flags = c_session->capa_flags | (1 << i);
 			return SASL_OK;
@@ -218,7 +221,7 @@ static int parse_user_capabilities(user_session_t * c_session, char *buf, int bu
 					  "client capa field: %s",
 					  value);
 			ret = add_client_capa(c_session, value);
-			if (ret != SASL_OK) {
+			if (ret == SASL_FAIL) {
 				g_strfreev(v_strings);
 				g_free(dec_buf);
 				return SASL_FAIL;
