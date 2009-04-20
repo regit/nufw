@@ -23,6 +23,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #include <signal.h>
 
@@ -34,6 +35,10 @@
 
 #include "emc_server.h"
 #include "emc_config.h"
+
+/*! Name of pid file prefixed by LOCAL_STATE_DIR (variable defined
+ * during compilation/installation) */
+#define EMC_PID_FILE  LOCAL_STATE_DIR "/run/emc.pid"
 
 struct emc_server_context *server_ctx;
 
@@ -59,6 +64,65 @@ void display_usage(void)
 "
 	);
 }
+
+/**
+ * Daemonize current process.
+ */
+void emc_daemonize()
+{
+	FILE *pf;
+	pid_t pidf;
+
+	if (access(EMC_PID_FILE, R_OK) == 0) {
+		/* Check if the existing process is still alive. */
+		pid_t pidv;
+
+		pf = fopen(EMC_PID_FILE, "r");
+		if (pf != NULL &&
+		    fscanf(pf, "%d", &pidv) == 1 && kill(pidv, 0) == 0) {
+			fclose(pf);
+			printf
+			    ("pid file exists. Is emc already running? Aborting!\n");
+			exit(EXIT_FAILURE);
+		}
+
+		if (pf != NULL)
+			fclose(pf);
+	}
+
+	pidf = fork();
+	if (pidf < 0) {
+		log_printf(DEBUG_LEVEL_FATAL, "Unable to fork. Aborting!");
+		exit(-1);
+	} else {
+		/* parent */
+		if (pidf > 0) {
+			if ((pf = fopen(EMC_PID_FILE, "w")) != NULL) {
+				fprintf(pf, "%d\n", (int) pidf);
+				fclose(pf);
+			} else {
+				printf("Dying, can not create PID file : "
+				       EMC_PID_FILE "\n");
+				exit(EXIT_FAILURE);
+			}
+			exit(EXIT_SUCCESS);
+		}
+	}
+
+	chdir("/");
+
+	setsid();
+
+	/* set log engine */
+	log_engine = LOG_TO_SYSLOG;
+
+	/* Close stdin, stdout, stderr. */
+	(void) close(0);
+	(void) close(1);
+	(void) close(2);
+}
+
+
 
 int main(int argc, char **argv)
 {
@@ -101,6 +165,13 @@ int main(int argc, char **argv)
 	server_ctx = g_malloc0(sizeof(struct emc_server_context));
 	nussl_init();
 
+	// XXX try to init structures (TLS, for ex) before this point, so
+	// we get a useful error message before forking
+	/* Daemon code */
+	if (daemonize == 1) {
+		emc_daemonize();
+	}
+
 	init_log_engine("emc");
 
 	log_printf(DEBUG_LEVEL_INFO, "INFO EMC server starting (version %s)", version);
@@ -117,6 +188,8 @@ int main(int argc, char **argv)
 	emc_start_server(server_ctx);
 
 	g_free(server_ctx);
+
+	unlink(EMC_PID_FILE);
 
 	return 0;
 }

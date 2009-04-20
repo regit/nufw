@@ -1,6 +1,6 @@
 if BUILD_EMC
 
-AM_CFLAGS = -DCONFIG_DIR=\"$(sysconfdir)\"
+AM_CFLAGS = -DLOCAL_STATE_DIR=\"$(localstatedir)\" -DCONFIG_DIR=\"$(sysconfdir)\"
 
 INCLUDES = $(GLIB_CFLAGS) -I$(top_srcdir)/src/include/ -I$(top_srcdir)/src/libs/nubase/ -I$(top_srcdir)/src/libs/nussl/ -I$(top_srcdir)/src/libs/nubase -I$(top_srcdir)/src/libs/nuconfparser -D_REENTRANT
 
