@@ -24,6 +24,14 @@
 
 #define EMC_DEFAULT_CONF	CONFIG_DIR "/emc.conf"
 
+/** \brief Default port EMC will listen to
+ */
+#define EMC_DEFAULT_PORT	"4140"
+
+/** \brief Default value for maximum number of worker threads.
+ */
+#define EMC_DEFAULT_MAX_WORKERS	32
+
 int emc_init_config(const char *filename);
 
 char *emc_config_table_get(const char *key);

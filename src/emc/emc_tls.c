@@ -37,7 +37,7 @@
 #include "emc_config.h"
 #include "emc_tls.h"
 
-int emc_init_tls(struct emc_server_context *ctx)
+int emc_init_tls(struct emc_tls_server_context *ctx)
 {
 	char *tls_cert;
 	char *tls_key;

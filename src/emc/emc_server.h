@@ -32,18 +32,25 @@
 
 #include <nussl.h>
 
-struct emc_server_context {
-	int continue_processing;
+#define EMC_MAX_ADDRESS	256
+
+struct emc_tls_server_context {
+	char address[256];
+
 	int server_sock;
 
 	nussl_session *nussl;
+};
+
+struct emc_server_context {
+	int continue_processing;
+
+	GList *tls_server_list;
 
 	GThreadPool *pool_tls_handshake;
 	GThreadPool *pool_reader;
 	GAsyncQueue *work_queue;
 };
-
-#define EMC_MAX_ADDRESS	256
 
 enum emc_client_state {
 	EMC_CLIENT_STATE_NULL = 0,
@@ -61,9 +68,11 @@ struct emc_client_context {
 	char address[256];
 
 	void *ev;
-	struct emc_server_context *server_ctx;
+	struct emc_tls_server_context *tls_server_ctx;
 };
 
 int emc_start_server(struct emc_server_context *ctx);
+
+extern struct emc_server_context *server_ctx;
 
 #endif /* __EMC_SERVER_H__ */

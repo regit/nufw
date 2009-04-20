@@ -63,7 +63,7 @@ fprintf(stderr, "[%s] : %lx\n", __func__, (long)pthread_self());
 		/* stop reading io, to avoid duplicating events */
 		ev_io_stop(loop, w);
 		client_ctx->ev = w;
-		g_thread_pool_push(client_ctx->server_ctx->pool_reader,
+		g_thread_pool_push(server_ctx->pool_reader,
 				   w, NULL);
 	}
 	if (revents & EV_WRITE) {
@@ -91,11 +91,11 @@ fprintf(stderr, "[%s] : %lx\n", __func__, (long)pthread_self());
 
 	nussl_set_connect_timeout(nussl_sess, 30);
 
-	ret = nussl_session_handshake(nussl_sess, client_ctx->server_ctx->nussl);
+	ret = nussl_session_handshake(nussl_sess, client_ctx->tls_server_ctx->nussl);
 	if ( ret ) {
 		log_printf(DEBUG_LEVEL_WARNING, "WARNING New client connection from %s failed during nussl_session_handshake(): %s",
 			    client_ctx->address,
-			    nussl_get_error(client_ctx->server_ctx->nussl));
+			    nussl_get_error(client_ctx->tls_server_ctx->nussl));
 		nussl_session_destroy(nussl_sess);
 		return;
 	}
@@ -114,7 +114,7 @@ fprintf(stderr, "[%s] : %lx\n", __func__, (long)pthread_self());
 
 	ev_io_init(client_watcher, emc_client_cb, socket, EV_READ | EV_TIMEOUT | EV_ERROR);
 
-	g_async_queue_push(client_ctx->server_ctx->work_queue, client_watcher);
+	g_async_queue_push(server_ctx->work_queue, client_watcher);
 
 	ev_async_send (EV_DEFAULT_ &client_ready_signal);
 
@@ -148,7 +148,7 @@ fprintf(stderr, "[%s] : %lx\n", __func__, (long)pthread_self());
 log_printf(DEBUG_LEVEL_DEBUG, "\tnussl_read: %d  [%s]", len, buffer);
 
 	/* re-schedule reader */
-	g_async_queue_push(client_ctx->server_ctx->work_queue, client_ctx->ev);
+	g_async_queue_push(server_ctx->work_queue, client_ctx->ev);
 	client_ctx->ev = NULL;
 
 	ev_async_send (EV_DEFAULT_ &client_ready_signal);

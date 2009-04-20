@@ -45,11 +45,60 @@
 
 #include <nubase.h>
 
+#include "emc_config.h"
 #include "emc_server.h"
 #include "emc_tls.h"
 #include "emc_worker.h"
 
 ev_async client_ready_signal;
+
+
+/**
+ * Parse "[ipv6]:port", "[ipv6]", "ipv4:port" or "ipv4" string
+ */
+int parse_addr_port(
+	const char *text, const char* default_port,
+	char **addr, char **port)
+{
+	char *pos;
+	if (text[0] == '[') {
+		pos = strchr(text+1, ']');
+	} else {
+		pos = NULL;
+	}
+	if (pos) {
+		size_t len = pos - text - 1;
+		if (*(pos+1) && *(pos+1) != ':') {
+			/* eg. "[ipv6]port", invalid syntax */
+			return 0;
+		}
+		if (*(pos+1) == ':') {
+			if (!strlen(pos+2)) {
+				/* eg. "[ipv6]:", missing port */
+				return 0;
+			}
+			*port = g_strdup(pos+2);
+		} else {
+			*port = g_strdup(default_port);
+		}
+		*addr = g_strndup(text+1, len);
+	} else {
+		char **context_datas = g_strsplit(text, ":", 2);
+		if (!context_datas[0]) {
+			g_strfreev(context_datas);
+			return 0;
+		}
+		*addr = g_strdup(context_datas[0]);
+		if (context_datas[1]) {
+			*port = g_strdup(context_datas[1]);
+		} else {
+			*port = g_strdup(default_port);
+		}
+		g_strfreev(context_datas);
+	}
+	return 1;
+}
+
 
 static int _emc_create_socket(const char *addr, const char *port)
 {
@@ -124,7 +173,7 @@ fprintf(stderr, "[%s] : %lx\n", __func__, (long)pthread_self());
 
 static void emc_server_accept_cb (struct ev_loop *loop, ev_io *w, int revents)
 {
-	struct emc_server_context *ctx;
+	struct emc_tls_server_context *ctx;
 	struct sockaddr_storage sockaddr;
 	struct sockaddr_in *sockaddr4 = (struct sockaddr_in *) &sockaddr;
 	struct sockaddr_in6 *sockaddr6 = (struct sockaddr_in6 *) &sockaddr;
@@ -171,10 +220,10 @@ fprintf(stderr, "[%s] : %lx\n", __func__, (long)pthread_self());
 	client_ctx = malloc(sizeof(struct emc_client_context));
 	client_ctx->nussl = nussl_sess;
 	strncpy(client_ctx->address, address, sizeof(client_ctx->address));
-	client_ctx->server_ctx = ctx;
+	client_ctx->tls_server_ctx = ctx;
 	client_ctx->state = EMC_CLIENT_STATE_HANDSHAKE;
 
-	g_thread_pool_push(ctx->pool_tls_handshake, client_ctx, NULL);
+	g_thread_pool_push(server_ctx->pool_tls_handshake, client_ctx, NULL);
 
 }
 
@@ -202,39 +251,99 @@ log_printf(DEBUG_LEVEL_INFO, "  TLS worker threads : current %d / idle %d / max 
 		g_thread_pool_get_max_threads(ctx->pool_reader) );
 }
 
+static int emc_setup_servers(struct ev_loop *loop, struct emc_server_context *ctx)
+{
+	ev_io *server_watcher;
+	char * bind_address_list;
+	int server_sock;
+	int result;
+	char **addresses;
+	int i;
+	char *context_addr;
+	char *context_port;
+	struct emc_tls_server_context *tls_server_ctx;
+
+	bind_address_list = emc_config_table_get("emc_bind_address");
+	if (!bind_address_list) {
+		log_printf(DEBUG_LEVEL_FATAL,
+				"FATAL config value emc_bind_address is required");
+		return -1;
+	}
+
+	addresses = g_strsplit(bind_address_list, " ", 0);
+
+	for (i=0; addresses[i]; i++) {
+		if (!parse_addr_port(addresses[i], EMC_DEFAULT_PORT, &context_addr, &context_port)) {
+			log_printf(DEBUG_LEVEL_FATAL,
+					"Address parsing error at %s:%d (\"%s\")", __FILE__,
+					__LINE__, addresses[i]);
+			return -1;
+		}
+
+		log_printf(DEBUG_LEVEL_INFO, "INFO adding server %s:%s",
+			   context_addr, context_port);
+		server_sock = _emc_create_socket(context_addr, context_port);
+
+		result = listen(server_sock, 20);
+		if (result == -1) {
+			close(server_sock);
+			log_printf(DEBUG_LEVEL_FATAL, "Unable to listen() on socket, aborting");
+			return -1;
+		}
+
+		tls_server_ctx = g_malloc0(sizeof(struct emc_tls_server_context));
+		tls_server_ctx->server_sock = server_sock;
+
+		result = emc_init_tls(tls_server_ctx);
+		if (result != 0) {
+			close(server_sock);
+			g_free(tls_server_ctx);
+			log_printf(DEBUG_LEVEL_FATAL, "Unable to initialize TLS, aborting");
+			return -1;
+		}
+
+		ctx->tls_server_list = g_list_append(ctx->tls_server_list, tls_server_ctx);
+		server_watcher = malloc(sizeof(ev_io));
+
+		ev_io_init(server_watcher, emc_server_accept_cb, tls_server_ctx->server_sock, EV_READ);
+		ev_io_start(loop, server_watcher);
+
+		server_watcher->data = tls_server_ctx;
+	}
+
+	return 0;
+}
+
+static void emc_close_servers(struct emc_server_context *ctx)
+{
+	struct emc_tls_server_context *tls_server_ctx;
+	GList *it;
+
+	for (it = g_list_first(ctx->tls_server_list); it != NULL; it = g_list_next (it)) {
+		tls_server_ctx = it->data;
+
+		nussl_session_destroy(tls_server_ctx->nussl);
+		g_free(tls_server_ctx);
+	}
+}
 
 int emc_start_server(struct emc_server_context *ctx)
 {
-	int server_sock;
 	int result;
 	struct ev_loop *loop;
-	ev_io server_watcher;
 	ev_signal signal_watcher, sigusr1_watcher;
-	int max_workers = 32; // XXX hardcoded value
+	int max_workers;
 
 	g_thread_init(NULL);
 
-	server_sock = _emc_create_socket("localhost", "4140");
-
-	result = listen(server_sock, 20);
-	if (result == -1) {
-		close(server_sock);
-		log_printf(DEBUG_LEVEL_FATAL, "Unable to listen() on socket, aborting");
-		return -1;
-	}
-
-	ctx->server_sock = server_sock;
-	result = emc_init_tls(ctx);
-	if (result != 0) {
-		close(server_sock);
-		log_printf(DEBUG_LEVEL_FATAL, "Unable to initialize TLS, aborting");
-		return -1;
-	}
+	max_workers = emc_config_table_get_or_default_int("emc_max_workers", EMC_DEFAULT_MAX_WORKERS);
 
 	loop = ev_default_loop(0);
 
-	ev_io_init(&server_watcher, emc_server_accept_cb, ctx->server_sock, EV_READ);
-	ev_io_start(loop, &server_watcher);
+	result = emc_setup_servers(loop, ctx);
+	if (result < 0) {
+		return -1;
+	}
 
 	ev_signal_init(&signal_watcher, sigint_cb, SIGINT);
 	ev_signal_start(loop, &signal_watcher);
@@ -246,7 +355,6 @@ int emc_start_server(struct emc_server_context *ctx)
 	ev_async_start(loop, &client_ready_signal);
 
 	ctx->continue_processing = 1;
-	server_watcher.data = ctx;
 	signal_watcher.data = ctx;
 	sigusr1_watcher.data = ctx;
 	client_ready_signal.data = ctx;
@@ -277,8 +385,7 @@ fprintf(stderr, "Max: %d\n", g_thread_pool_get_max_unused_threads());
 
 	ev_default_destroy();
 
-	nussl_session_destroy(ctx->nussl);
-	ctx->nussl = NULL;
+	emc_close_servers(ctx);
 
 	return 0;
 }

@@ -35,7 +35,7 @@
 #include "emc_server.h"
 #include "emc_config.h"
 
-static struct emc_server_context server_ctx;
+struct emc_server_context *server_ctx;
 
 static struct option long_options[] = {
 	{"help", 0, NULL, 'h'},
@@ -98,7 +98,7 @@ int main(int argc, char **argv)
 
 
 
-	memset(&server_ctx, 0, sizeof(server_ctx));
+	server_ctx = g_malloc0(sizeof(struct emc_server_context));
 	nussl_init();
 
 	init_log_engine("emc");
@@ -114,7 +114,9 @@ int main(int argc, char **argv)
 		exit(-1);
 	}
 
-	emc_start_server(&server_ctx);
+	emc_start_server(server_ctx);
+
+	g_free(server_ctx);
 
 	return 0;
 }

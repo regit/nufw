@@ -28,6 +28,6 @@
  */
 #define DH_BITS 1024
 
-int emc_init_tls(struct emc_server_context *ctx);
+int emc_init_tls(struct emc_tls_server_context *ctx);
 
 #endif /* __EMC_TLS_H__ */
