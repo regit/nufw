@@ -187,6 +187,21 @@ log_printf(DEBUG_LEVEL_INFO, "INFO signal SIGINT caught, exiting");
 	ev_unloop (loop, EVUNLOOP_ALL);
 }
 
+static void sigusr1_cb(struct ev_loop *loop, ev_signal *w, int revents)
+{
+	struct emc_server_context *ctx = w->data;
+
+log_printf(DEBUG_LEVEL_INFO, "INFO signal SIGUSR1 caught");
+log_printf(DEBUG_LEVEL_INFO, "  TLS handshake threads : current %d / idle %d / max %d",
+		g_thread_pool_get_num_threads(ctx->pool_tls_handshake),
+		g_thread_pool_get_num_unused_threads(),
+		g_thread_pool_get_max_threads(ctx->pool_tls_handshake) );
+log_printf(DEBUG_LEVEL_INFO, "  TLS worker threads : current %d / idle %d / max %d",
+		g_thread_pool_get_num_threads(ctx->pool_reader),
+		g_thread_pool_get_num_unused_threads(),
+		g_thread_pool_get_max_threads(ctx->pool_reader) );
+}
+
 
 int emc_start_server(struct emc_server_context *ctx)
 {
@@ -194,7 +209,7 @@ int emc_start_server(struct emc_server_context *ctx)
 	int result;
 	struct ev_loop *loop;
 	ev_io server_watcher;
-	ev_signal signal_watcher;
+	ev_signal signal_watcher, sigusr1_watcher;
 	int max_workers = 32; // XXX hardcoded value
 
 	g_thread_init(NULL);
@@ -224,12 +239,16 @@ int emc_start_server(struct emc_server_context *ctx)
 	ev_signal_init(&signal_watcher, sigint_cb, SIGINT);
 	ev_signal_start(loop, &signal_watcher);
 
+	ev_signal_init(&sigusr1_watcher, sigusr1_cb, SIGUSR1);
+	ev_signal_start(loop, &sigusr1_watcher);
+
 	ev_async_init(&client_ready_signal, emc_client_ready_cb);
 	ev_async_start(loop, &client_ready_signal);
 
 	ctx->continue_processing = 1;
 	server_watcher.data = ctx;
 	signal_watcher.data = ctx;
+	sigusr1_watcher.data = ctx;
 	client_ready_signal.data = ctx;
 
 	g_thread_pool_set_max_unused_threads( (int)(max_workers/2) );
@@ -255,6 +274,8 @@ fprintf(stderr, "Max: %d\n", g_thread_pool_get_max_unused_threads());
 	g_thread_pool_free(ctx->pool_tls_handshake, TRUE, TRUE);
 	g_thread_pool_free(ctx->pool_reader, TRUE, TRUE);
 	g_async_queue_unref(ctx->work_queue);
+
+	ev_default_destroy();
 
 	nussl_session_destroy(ctx->nussl);
 	ctx->nussl = NULL;
