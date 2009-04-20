@@ -47,6 +47,9 @@
 
 #include "emc_server.h"
 #include "emc_tls.h"
+#include "emc_worker.h"
+
+ev_async client_ready_signal;
 
 static int _emc_create_socket(const char *addr, const char *port)
 {
@@ -107,29 +110,16 @@ static int _emc_create_socket(const char *addr, const char *port)
 	return sock;
 }
 
-static void emc_client_cb (struct ev_loop *loop, ev_io *w, int revents)
+static void emc_client_ready_cb (struct ev_loop *loop, ev_async *w, int revents)
 {
-	struct emc_client_context *client_ctx = w->data;
-	char buffer[4096];
-	int len;
+	struct emc_server_context *ctx = (struct emc_server_context*)w->data;
+	ev_io *client_watcher;
 
-	buffer[0] = '\0';
+fprintf(stderr, "[%s] : %lx\n", __func__, (long)pthread_self());
 
-	if (revents & EV_READ) {
-		len = nussl_read(client_ctx->nussl, buffer, sizeof(buffer));
-log_printf(DEBUG_LEVEL_DEBUG, "\tnussl_read: %d  [%s]", len, buffer);
-		if (len < 0) {
-			log_printf(DEBUG_LEVEL_WARNING, "nussl_error, removing connection [%s]\n", nussl_get_error(client_ctx->nussl));
-			ev_io_stop(loop, w);
-			nussl_session_destroy(client_ctx->nussl);
-			free(client_ctx);
-			free(w);
-			return;
-		}
-	}
-	if (revents & EV_WRITE) {
-log_printf(DEBUG_LEVEL_DEBUG, "will write");
-	}
+	client_watcher = (ev_io *)g_async_queue_pop(ctx->work_queue);
+
+	ev_io_start(EV_DEFAULT_ client_watcher);
 }
 
 static void emc_server_accept_cb (struct ev_loop *loop, ev_io *w, int revents)
@@ -140,15 +130,13 @@ static void emc_server_accept_cb (struct ev_loop *loop, ev_io *w, int revents)
 	struct sockaddr_in6 *sockaddr6 = (struct sockaddr_in6 *) &sockaddr;
 	struct in6_addr addr;
 	unsigned int len_inet = sizeof sockaddr;
-	int ret;
 	nussl_session *nussl_sess;
 	int socket;
 	int sport;
 	char address[INET6_ADDRSTRLEN];
-	char cipher[256];
-	ev_io *client_watcher = NULL;
 	struct emc_client_context *client_ctx = NULL;
 
+fprintf(stderr, "[%s] : %lx\n", __func__, (long)pthread_self());
 	ctx = w->data;
 
 	nussl_sess = nussl_session_accept(ctx->nussl);
@@ -180,41 +168,14 @@ static void emc_server_accept_cb (struct ev_loop *loop, ev_io *w, int revents)
 	log_printf(DEBUG_LEVEL_DEBUG, "DEBUG emc: user connection attempt from %s",
 			address);
 
-	/* do not verify FQDN field from client */
-	nussl_set_session_flag(nussl_sess,
-		NUSSL_SESSFLAG_IGNORE_ID_MISMATCH,
-		1
-		);
-
-	nussl_set_connect_timeout(nussl_sess, 30);
-
-	ret = nussl_session_handshake(nussl_sess,ctx->nussl);
-	if ( ret ) {
-		log_printf(DEBUG_LEVEL_WARNING, "WARNING New client connection from %s failed during nussl_session_handshake(): %s",
-			    address,
-			    nussl_get_error(ctx->nussl));
-		nussl_session_destroy(nussl_sess);
-		return;
-	}
-
-	nussl_session_get_cipher(nussl_sess, cipher, sizeof(cipher));
-	log_printf(DEBUG_LEVEL_INFO, "INFO TLS handshake with client %s succeeded, cipher is %s",
-		    address, cipher);
-
-
-
 	client_ctx = malloc(sizeof(struct emc_client_context));
 	client_ctx->nussl = nussl_sess;
+	strncpy(client_ctx->address, address, sizeof(client_ctx->address));
+	client_ctx->server_ctx = ctx;
+	client_ctx->state = EMC_CLIENT_STATE_HANDSHAKE;
 
-	/* push the connection to the list */
-	client_watcher = malloc(sizeof(ev_io));
-	client_watcher->data = client_ctx;
+	g_thread_pool_push(ctx->pool_tls_handshake, client_ctx, NULL);
 
-
-	ev_io_init(client_watcher, emc_client_cb, socket, EV_READ | EV_TIMEOUT | EV_ERROR);
-	ev_io_start(loop, client_watcher);
-
-log_printf(DEBUG_LEVEL_DEBUG, "DEBUG client connection added");
 }
 
 static void sigint_cb(struct ev_loop *loop, ev_signal *w, int revents)
@@ -234,6 +195,9 @@ int emc_start_server(struct emc_server_context *ctx)
 	struct ev_loop *loop;
 	ev_io server_watcher;
 	ev_signal signal_watcher;
+	int max_workers = 32; // XXX hardcoded value
+
+	g_thread_init(NULL);
 
 	server_sock = _emc_create_socket("localhost", "4140");
 
@@ -260,14 +224,37 @@ int emc_start_server(struct emc_server_context *ctx)
 	ev_signal_init(&signal_watcher, sigint_cb, SIGINT);
 	ev_signal_start(loop, &signal_watcher);
 
+	ev_async_init(&client_ready_signal, emc_client_ready_cb);
+	ev_async_start(loop, &client_ready_signal);
+
 	ctx->continue_processing = 1;
 	server_watcher.data = ctx;
 	signal_watcher.data = ctx;
+	client_ready_signal.data = ctx;
+
+	g_thread_pool_set_max_unused_threads( (int)(max_workers/2) );
+
+	ctx->pool_tls_handshake = g_thread_pool_new((GFunc)emc_worker_tls_handshake, NULL,
+						    max_workers, FALSE,
+						    NULL);
+	ctx->pool_reader = g_thread_pool_new((GFunc)emc_worker_reader, NULL,
+						    max_workers, FALSE,
+						    NULL);
+
+	ctx->work_queue = g_async_queue_new();
+
+fprintf(stderr, "Max: %d\n", g_thread_pool_get_max_unused_threads());
 
 	log_printf(DEBUG_LEVEL_INFO, "INFO EMC server ready");
 
 	while (ctx->continue_processing)
 		ev_loop(loop, 0 /* or: EVLOOP_NONBLOCK */ );
+
+	log_printf(DEBUG_LEVEL_INFO, "INFO EMC server shutting down");
+
+	g_thread_pool_free(ctx->pool_tls_handshake, TRUE, TRUE);
+	g_thread_pool_free(ctx->pool_reader, TRUE, TRUE);
+	g_async_queue_unref(ctx->work_queue);
 
 	nussl_session_destroy(ctx->nussl);
 	ctx->nussl = NULL;

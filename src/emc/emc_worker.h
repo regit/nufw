@@ -19,51 +19,17 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-#ifndef __EMC_SERVER_H__
-#define __EMC_SERVER_H__
+#ifndef __EMC_WORKER_H__
+#define __EMC_WORKER_H__
 
 #include <config.h>
 
-#ifdef HAVE_SYS_SOCKET_H
-# include <sys/socket.h>
-#endif
-
 #include <glib.h>
 
-#include <nussl.h>
+void emc_worker_tls_handshake(gpointer userdata, gpointer data);
 
-struct emc_server_context {
-	int continue_processing;
-	int server_sock;
+void emc_worker_reader(gpointer userdata, gpointer data);
 
-	nussl_session *nussl;
+void emc_client_cb (struct ev_loop *loop, ev_io *w, int revents);
 
-	GThreadPool *pool_tls_handshake;
-	GThreadPool *pool_reader;
-	GAsyncQueue *work_queue;
-};
-
-#define EMC_MAX_ADDRESS	256
-
-enum emc_client_state {
-	EMC_CLIENT_STATE_NULL = 0,
-	EMC_CLIENT_STATE_HANDSHAKE,
-	EMC_CLIENT_STATE_READY,
-
-	EMC_CLIENT_STATE_LAST
-};
-
-struct emc_client_context {
-	enum emc_client_state state;
-
-	nussl_session *nussl;
-
-	char address[256];
-
-	void *ev;
-	struct emc_server_context *server_ctx;
-};
-
-int emc_start_server(struct emc_server_context *ctx);
-
-#endif /* __EMC_SERVER_H__ */
+#endif /* __EMC_WORKER_H__ */
