@@ -145,6 +145,9 @@ int nu_client_global_init(nuclient_error_t * err)
 		exit(EXIT_FAILURE);
 	}
 
+	INIT_LLIST_HEAD(&nu_postauth_extproto_l);
+	INIT_LLIST_HEAD(&nu_cruise_extproto_l);
+
 	load_sys_config();
 
 	load_plugins();
@@ -816,6 +819,12 @@ static int finish_init(nuauth_session_t * session, nuclient_error_t * err)
 				break;
 			case SRV_TYPE:
 				session->server_mode = message->option;
+				break;
+			case SRV_EXTENDED_PROTO:
+				process_ext_message(buf + sizeof(struct nu_srv_message),
+						bufsize - sizeof(struct nu_srv_message),
+						&nu_postauth_extproto_l,
+						session);
 				break;
 			case SRV_INIT:
 				finish = 1;

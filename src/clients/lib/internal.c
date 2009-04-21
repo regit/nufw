@@ -489,9 +489,6 @@ int send_capa(nuauth_session_t * session, nuclient_error_t * err)
 	return 1;
 }
 
-
-
-
 /**
  * SASL callback used to get password
  *
