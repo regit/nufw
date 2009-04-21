@@ -28,9 +28,11 @@
 #define LUSER_EXT_NAME "LUSER"
 #define LUSER_USER_CMD "LOCALUSER"
 #define POSTAUTH_DEFAULT_USERNAME "unknown"
+#define POSTAUTH_DEFAULT_MODE 0
 
 struct postauth_localuser_params {
 	gchar *username;
+	int require_capa;
 	int capa_index;
 };
 
@@ -106,12 +108,7 @@ G_MODULE_EXPORT int postauth_proto(user_session_t * session, struct postauth_loc
 			log_message(WARNING, DEBUG_AREA_USER,
 					"nussl_write() failure at %s:%d",
 					__FILE__, __LINE__);
-			if (nuauthconf->push) {
-				clean_session(session);
-				return SASL_FAIL;
-			} else {
-				return SASL_FAIL;
-			}
+			return SASL_FAIL;
 		}
 
 		buf_size = nussl_read(session->nussl, buf, sizeof buf);
@@ -134,9 +131,22 @@ G_MODULE_EXPORT int postauth_proto(user_session_t * session, struct postauth_loc
 		g_free(username);
 	} else {
 		format_ipv6(&session->addr, address, INET6_ADDRSTRLEN, NULL);
-		log_message(DEBUG, DEBUG_AREA_USER, "User \"%s\" at %s does not support local user announce",
-				session->user_name,
-				address);
+		if (params->require_capa) {
+			log_message(INFO,
+				    DEBUG_AREA_USER,
+				    "User \"%s\" at %s does not support local user announce, rejecting",
+				    session->user_name,
+				    address);
+		} else {
+			log_message(INFO,
+				    DEBUG_AREA_USER,
+				    "User \"%s\" at %s does not support local user announce",
+				    session->user_name,
+				    address);
+		}
+		if (params->require_capa) {
+			return SASL_FAIL;
+		}
 	}
 	return SASL_OK;
 }
@@ -175,6 +185,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 		    "Postauth_localuser module");
 
 	params->username = nuauth_config_table_get_or_default("postauth_localuser_default_username", POSTAUTH_DEFAULT_USERNAME);
+	params->require_capa = nuauth_config_table_get_or_default_int("postauth_localuser_require_capa", POSTAUTH_DEFAULT_MODE);
 
 
 	if (register_client_capa(LUSER_EXT_NAME, &(params->capa_index)) != NU_EXIT_OK) {
