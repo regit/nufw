@@ -2,7 +2,7 @@ if BUILD_LIBNUCLIENT
 AM_CPPFLAGS = -DCONFIG_DIR=\"$(sysconfdir)\"
 INCLUDES = -I$(top_srcdir)/src/include/ -I$(top_srcdir)/src/libs/nussl/  -I$(top_srcdir)/src/libs/nubase/ -I$(top_srcdir)/src/libs/nuconfparser/
 
-SUBDIRS = tests
+SUBDIRS = tests plugins
 
 lib_LTLIBRARIES = libnuclient.la
 

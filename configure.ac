@@ -415,6 +415,8 @@ AC_CONFIG_FILES([Makefile
         src/clients/Makefile
         src/clients/lib/Makefile
         src/clients/lib/tests/Makefile
+        src/clients/lib/plugins/Makefile
+        src/clients/lib/plugins/luser/Makefile
         src/clients/nutcpc/Makefile
         src/clients/pam_nufw/Makefile
         src/nufw/Makefile
