@@ -492,7 +492,7 @@ static GSList *treat_extended_proto(struct tls_buffer_read *data)
 	struct nu_header *header = (struct nu_header *) data->buffer;
 
 	/* FIXME double check this */
-	if (sizeof(*header) > data->buffer_len) {
+	if (sizeof(*header) > (size_t)data->buffer_len) {
 		log_message(WARNING, DEBUG_AREA_USER,
 				"Error: too small message");
 		return NULL;

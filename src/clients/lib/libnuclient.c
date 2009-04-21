@@ -790,8 +790,8 @@ static int finish_init(nuauth_session_t * session, nuclient_error_t * err)
 
 	while (! finish) {
 		bufsize = nussl_read(session->nussl, buf, sizeof(buf));
-		if ((bufsize < 0) || 
-			(bufsize < sizeof(struct nu_srv_message))) {
+		if ((bufsize < 0) ||
+			((size_t)bufsize < sizeof(struct nu_srv_message))) {
 			/* allo houston */
 			return 0;
 		}

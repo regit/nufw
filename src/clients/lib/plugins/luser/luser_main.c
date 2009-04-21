@@ -59,8 +59,8 @@ int NUCLIENT_PLUGIN_INIT(unsigned int api_num, struct nuclient_plugin_t *plugin)
 {
 	printf("***********************\n");
 	printf("Hello from plugin\n");
-	printf("Server API version: 0x%lx\n", api_num);
-	printf("Internal API version: 0x%lx\n", PLUGIN_API_NUM);
+	printf("Server API version: 0x%lx\n", (long)api_num);
+	printf("Internal API version: 0x%lx\n", (long)PLUGIN_API_NUM);
 	printf("Instance name: %s\n", plugin->instance_name);
 	printf("***********************\n");
 

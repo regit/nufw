@@ -1236,7 +1236,7 @@ int nussl_get_peer_dn(nussl_session * sess, char *buf, size_t * buf_size)
 {
 	BIO *mem;
 	char *data = NULL;
-	int datalen;
+	size_t datalen;
 	int flags = (XN_FLAG_ONELINE | XN_FLAG_RFC2253) & ~XN_FLAG_SPC_EQ;
 
 	if (!sess || !sess->peer_cert || !sess->peer_cert->subj_dn.dn)
