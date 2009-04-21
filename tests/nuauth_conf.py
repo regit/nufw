@@ -4,6 +4,7 @@ from logging import info
 from config import NUAUTH_CONF
 from os.path import abspath, dirname, join, exists
 from subprocess import call, Popen
+import sys
 
 class NuauthConf(ReplaceFile):
     def __init__(self):
