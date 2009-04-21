@@ -1,1 +1,1 @@
-SUBDIRS = luser
+SUBDIRS = luser multi
