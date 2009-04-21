@@ -31,7 +31,6 @@
 #define POSTAUTH_DEFAULT_MODE 0
 
 struct postauth_localuser_params {
-	gchar *username;
 	int require_capa;
 	int capa_index;
 };
@@ -184,9 +183,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "Postauth_localuser module");
 
-	params->username = nuauth_config_table_get_or_default("postauth_localuser_default_username", POSTAUTH_DEFAULT_USERNAME);
 	params->require_capa = nuauth_config_table_get_or_default_int("postauth_localuser_require_capa", POSTAUTH_DEFAULT_MODE);
-
 
 	if (register_client_capa(LUSER_EXT_NAME, &(params->capa_index)) != NU_EXIT_OK) {
 		log_message(WARNING, DEBUG_AREA_MAIN,
