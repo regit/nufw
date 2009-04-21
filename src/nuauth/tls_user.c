@@ -718,6 +718,7 @@ int tls_user_init(struct tls_user_context_t *context)
 	/*const unsigned int nb_params = sizeof(nuauth_tls_vars) / sizeof(confparams_t);*/
 	int int_authcert;
 	int int_requestcert;
+	char *dh_params_file;
 
 	context->sck_inet = nuauth_bind(&errmsg, context->addr, context->port, "user");
 	if (context->sck_inet < 0) {
@@ -751,6 +752,7 @@ int tls_user_init(struct tls_user_context_t *context)
 	/* ssl related conf */
 	int_requestcert = nuauth_config_table_get_or_default_int("nuauth_tls_request_cert", 2);
 	int_authcert = nuauth_config_table_get_or_default_int("nuauth_tls_auth_by_cert", FALSE);
+	dh_params_file = nuauth_config_table_get("nuauth_tls_dh_params");
 
 	if (!tls_user_setcert_auth_params(int_requestcert, int_authcert)) {
 		log_message(FATAL, DEBUG_AREA_MAIN,
@@ -771,7 +773,12 @@ int tls_user_init(struct tls_user_context_t *context)
 		exit(EXIT_FAILURE);
 	}
 
-	if ( nussl_session_set_dh_bits(context->nussl, DH_BITS) != NUSSL_OK) {
+	ret = NUSSL_ERROR;
+	if (dh_params_file) {
+		ret = nussl_session_set_dh_file(context->nussl, dh_params_file);
+	}
+	if (ret != NUSSL_OK &&
+	    nussl_session_set_dh_bits(context->nussl, DH_BITS) != NUSSL_OK) {
 		log_message(FATAL, DEBUG_AREA_MAIN,
 			    "Unable to initialize Diffie Hellman params.");
 		exit(EXIT_FAILURE);

@@ -516,6 +516,7 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 	int ret;
 	int int_requestcert;
 	int int_disable_fqdn_check;
+	char *dh_params_file;
 
 	context->sck_inet = nuauth_bind(&errmsg, context->addr, context->port, "nufw");
 	if (context->sck_inet < 0) {
@@ -599,6 +600,7 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 	/* TODO: read values specific to nufw connection */
 	nuauth_tls_max_servers = nuauth_config_table_get_or_default_int("nuauth_tls_max_servers", NUAUTH_TLS_MAX_SERVERS);
 	int_requestcert = nuauth_config_table_get_or_default_int("nuauth_tls_request_cert", FALSE);
+	dh_params_file = nuauth_config_table_get("nuauth_tls_dh_params");
 	/* {"nuauth_tls_auth_by_cert", G_TOKEN_INT, FALSE, NULL}, */
 
 	int_disable_fqdn_check = nuauth_config_table_get_or_default_int("nuauth_tls_disable_nufw_fqdn_check", FALSE);
@@ -611,7 +613,12 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 		exit(EXIT_FAILURE);
 	}
 
-	if ( nussl_session_set_dh_bits(context->server, DH_BITS) != NUSSL_OK) {
+	ret = NUSSL_ERROR;
+	if (dh_params_file) {
+		ret = nussl_session_set_dh_file(context->server, dh_params_file);
+	}
+	if (ret != NUSSL_OK &&
+		nussl_session_set_dh_bits(context->server, DH_BITS) != NUSSL_OK) {
 		log_message(FATAL, DEBUG_AREA_MAIN,
 			    "Unable to initialize Diffie Hellman params.");
 		exit(EXIT_FAILURE);
