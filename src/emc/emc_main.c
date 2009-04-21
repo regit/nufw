@@ -165,13 +165,6 @@ int main(int argc, char **argv)
 	server_ctx = g_malloc0(sizeof(struct emc_server_context));
 	nussl_init();
 
-	// XXX try to init structures (TLS, for ex) before this point, so
-	// we get a useful error message before forking
-	/* Daemon code */
-	if (daemonize == 1) {
-		emc_daemonize();
-	}
-
 	init_log_engine("emc");
 
 	log_printf(DEBUG_LEVEL_INFO, "INFO EMC server starting (version %s)", version);
@@ -183,6 +176,18 @@ int main(int argc, char **argv)
 		log_printf(DEBUG_LEVEL_FATAL, "ERROR could not load config, aborting\n");
 
 		exit(-1);
+	}
+
+	if (emc_init_server(server_ctx) != 0) {
+		log_printf(DEBUG_LEVEL_FATAL, "ERROR server initialization failed\n");
+
+		exit(-1);
+	}
+
+	/* Daemon code */
+	if (daemonize == 1) {
+		emc_daemonize();
+		init_log_engine("emc");
 	}
 
 	emc_start_server(server_ctx);

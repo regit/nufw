@@ -51,6 +51,8 @@
 #include "emc_worker.h"
 
 ev_async client_ready_signal;
+ev_signal sigint_watcher, sigterm_watcher, sigusr1_watcher;
+struct ev_loop *loop;
 
 
 /**
@@ -231,7 +233,7 @@ static void sigint_cb(struct ev_loop *loop, ev_signal *w, int revents)
 {
 	struct emc_server_context *ctx = w->data;
 
-log_printf(DEBUG_LEVEL_INFO, "INFO signal SIGINT caught, exiting");
+log_printf(DEBUG_LEVEL_INFO, "INFO termination signal caught, exiting");
 	ctx->continue_processing = 0;
 	ev_unloop (loop, EVUNLOOP_ALL);
 }
@@ -327,11 +329,9 @@ static void emc_close_servers(struct emc_server_context *ctx)
 	}
 }
 
-int emc_start_server(struct emc_server_context *ctx)
+int emc_init_server(struct emc_server_context *ctx)
 {
 	int result;
-	struct ev_loop *loop;
-	ev_signal signal_watcher, sigusr1_watcher;
 	int max_workers;
 
 	g_thread_init(NULL);
@@ -345,8 +345,11 @@ int emc_start_server(struct emc_server_context *ctx)
 		return -1;
 	}
 
-	ev_signal_init(&signal_watcher, sigint_cb, SIGINT);
-	ev_signal_start(loop, &signal_watcher);
+	ev_signal_init(&sigint_watcher, sigint_cb, SIGINT);
+	ev_signal_start(loop, &sigint_watcher);
+
+	ev_signal_init(&sigterm_watcher, sigint_cb, SIGTERM);
+	ev_signal_start(loop, &sigterm_watcher);
 
 	ev_signal_init(&sigusr1_watcher, sigusr1_cb, SIGUSR1);
 	ev_signal_start(loop, &sigusr1_watcher);
@@ -355,7 +358,8 @@ int emc_start_server(struct emc_server_context *ctx)
 	ev_async_start(loop, &client_ready_signal);
 
 	ctx->continue_processing = 1;
-	signal_watcher.data = ctx;
+	sigint_watcher.data = ctx;
+	sigterm_watcher.data = ctx;
 	sigusr1_watcher.data = ctx;
 	client_ready_signal.data = ctx;
 
@@ -372,6 +376,11 @@ int emc_start_server(struct emc_server_context *ctx)
 
 fprintf(stderr, "Max: %d\n", g_thread_pool_get_max_unused_threads());
 
+	return 0;
+}
+
+int emc_start_server(struct emc_server_context *ctx)
+{
 	log_printf(DEBUG_LEVEL_INFO, "INFO EMC server ready");
 
 	while (ctx->continue_processing)
