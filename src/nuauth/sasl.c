@@ -737,11 +737,10 @@ int sasl_user_check(user_session_t * c_session)
 	sasl_conn_t *conn = NULL;
 	sasl_security_properties_t secprops;
 	gboolean external_auth = FALSE;
-	char buf[1024];
 	char *iplocalport = NULL;
 	char ipremoteport[INET6_ADDRSTRLEN+20];
 	int len;
-	int ret, buf_size;
+	int ret;
 	sasl_callback_t internal_callbacks[] = {
 		{SASL_CB_GETOPT, &internal_get_opt, c_session},
 		{SASL_CB_SERVER_USERDB_CHECKPASS, &userdb_checkpass, c_session},
