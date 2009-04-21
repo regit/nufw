@@ -555,12 +555,7 @@ static int finish_nego(user_session_t * c_session)
 		log_message(WARNING, DEBUG_AREA_USER,
 			    "nussl_write() failure at %s:%d",
 			    __FILE__, __LINE__);
-		if (nuauthconf->push) {
-			clean_session(c_session);
-			return SASL_FAIL;
-		} else {
-			return SASL_FAIL;
-		}
+		return SASL_FAIL;
 	}
 
 	buf_size = nussl_read(c_session->nussl, buf, sizeof buf);
@@ -576,12 +571,7 @@ static int finish_nego(user_session_t * c_session)
 		log_message(WARNING, DEBUG_AREA_USER,
 			    "nussl_write() failure at %s:%d",
 			    __FILE__, __LINE__);
-		if (nuauthconf->push) {
-			clean_session(c_session);
-			return SASL_FAIL;
-		} else {
-			return SASL_FAIL;
-		}
+		return SASL_FAIL;
 	}
 	debug_log_message(DEBUG, DEBUG_AREA_USER,
 				  "user version asked");
@@ -600,12 +590,7 @@ static int finish_nego(user_session_t * c_session)
 		log_message(WARNING, DEBUG_AREA_USER,
 			    "nussl_write() failure at %s:%d",
 			    __FILE__, __LINE__);
-		if (nuauthconf->push) {
-			clean_session(c_session);
-			return SASL_FAIL;
-		} else {
-			return SASL_FAIL;
-		}
+		return SASL_FAIL;
 	}
 	debug_log_message(DEBUG, DEBUG_AREA_USER,
 				  "user capabilities asked");
@@ -621,12 +606,7 @@ static int finish_nego(user_session_t * c_session)
 	/* call module for plugin modification of protocol */
 	ret = modules_postauth_proto(c_session);
 	if (ret != SASL_OK) {
-		if (nuauthconf->push) {
-			clean_session(c_session);
-			return SASL_FAIL;
-		} else {
-			return SASL_FAIL;
-		}
+		return SASL_FAIL;
 	}
 
 	/* send mode to client */
@@ -641,12 +621,7 @@ static int finish_nego(user_session_t * c_session)
 		log_message(WARNING, DEBUG_AREA_USER,
 			    "nussl_write() failure at %s:%d",
 			    __FILE__, __LINE__);
-		if (nuauthconf->push) {
-			clean_session(c_session);
-			return SASL_FAIL;
-		} else {
-			return SASL_FAIL;
-		}
+		return SASL_FAIL;
 	}
 
 	/* send nego done */
@@ -656,12 +631,7 @@ static int finish_nego(user_session_t * c_session)
 		log_message(WARNING, DEBUG_AREA_USER,
 			    "nussl_write() failure at %s:%d",
 			    __FILE__, __LINE__);
-		if (nuauthconf->push) {
-			clean_session(c_session);
-			return SASL_FAIL;
-		} else {
-			return SASL_FAIL;
-		}
+		return SASL_FAIL;
 	}
 	debug_log_message(DEBUG, DEBUG_AREA_USER,
 				  "negotation finished");
