@@ -1234,15 +1234,31 @@ int nussl_ssl_cert_digest(const nussl_ssl_certificate * cert, char *digest)
 
 int nussl_get_peer_dn(nussl_session * sess, char *buf, size_t * buf_size)
 {
-	if (sess->peer_cert == NULL)
+	BIO *mem;
+	char *data = NULL;
+	int datalen;
+	int flags = (XN_FLAG_ONELINE | XN_FLAG_RFC2253) & ~XN_FLAG_SPC_EQ;
+
+	if (!sess || !sess->peer_cert || !sess->peer_cert->subj_dn.dn)
 		return NUSSL_ERROR;
 
-	// XXX
-#ifndef _WIN32
-#warning "Function is not yet implemented"
-#endif
+	mem = BIO_new(BIO_s_mem());
 
-	return NUSSL_OK;
+	if (X509_NAME_print_ex(mem, sess->peer_cert->subj_dn.dn, 0, flags)) {
+		datalen = BIO_get_mem_data(mem, &data);
+		if (datalen > *buf_size)
+			datalen = *buf_size;
+		memcpy(buf, data, datalen);
+		buf[datalen] = '\0';
+		*buf_size = datalen;
+		BIO_free(mem);
+
+		return NUSSL_OK;
+	}
+
+	BIO_free(mem);
+
+	return NUSSL_ERROR;
 }
 
 void *nussl_get_ctx(nussl_session * sess)
