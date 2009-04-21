@@ -2,7 +2,8 @@ import re
 from inl_tests.replace_file import ReplaceFile
 from logging import info
 from config import NUAUTH_CONF
-from os.path import abspath, dirname, join
+from os.path import abspath, dirname, join, exists
+from subprocess import call, Popen
 
 class NuauthConf(ReplaceFile):
     def __init__(self):
@@ -30,6 +31,7 @@ class NuauthConf(ReplaceFile):
         self["nuauth_tls_key"] = '"%s"' % abspath("./pki/nuauth.inl.fr.key")
         self["nuauth_tls_cert"] = '"%s"' % abspath("./pki/nuauth.inl.fr.crt")
         self["nuauth_tls_request_cert"] = "1"
+        self["nuauth_tls_auth_by_cert"] = "0"
         self["nuauth_tls_disable_nufw_fqdn_check"] = "1"
         self["nuauth_nufw_listen_addr"] = '"0.0.0.0"'
         self["nufw_gw_addr"] = None
@@ -38,6 +40,21 @@ class NuauthConf(ReplaceFile):
         self["nuauth_certificate_check_module"] = None
         # do not use CRL by default
         self["nuauth_tls_crl"] = None
+        self["nuauth_tls_dh_params"] = None
+        self.gen_dh_params("/tmp/dh512.pem")
+
+    def gen_dh_params(self, file):
+        if not exists(file):
+            try:
+                retcode = call("openssl dhparam -out %s 512" % file, shell=True)
+                if retcode < 0:
+                    print >>sys.stderr, "Child was terminated by signal", -retcode
+                else:
+                    print >>sys.stderr, "Child returned", retcode
+            except OSError, e:
+                print >>sys.stderr, "Execution failed:", e
+        self["nuauth_tls_dh_params"] = '"%s"' % file
+
 
     def parse_include(self, line):
         conf_dir = dirname(self.filename)
