@@ -24,6 +24,7 @@
 
 #include <nubase.h>
 
+#include <auth_srv.h>
 #include "nuauthconf.h"
 
 #include "mysql_auth.h"
