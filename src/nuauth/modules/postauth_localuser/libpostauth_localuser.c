@@ -158,7 +158,6 @@ G_MODULE_EXPORT gchar *unload_module_with_params(gpointer params_p)
 	struct postauth_localuser_params *params =
 	    (struct postauth_localuser_params *) params_p;
 
-	g_free(params->username);
 	g_free(params);
 
 	if (unregister_client_capa(params->capa_index) != NU_EXIT_OK) {
