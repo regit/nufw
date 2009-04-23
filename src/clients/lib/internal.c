@@ -288,6 +288,7 @@ int compare(nuauth_session_t * session, conntable_t * old, conntable_t * new,
 					/* problem when sending we exit */
 					return -1;
 				}
+				plugin_emit_event(NUCLIENT_EVENT_NEW_CONNECTION, session, (char *)bucket);
 				nb_packets++;
 			} else {
 				/* compare values of retransmit */
@@ -303,6 +304,7 @@ int compare(nuauth_session_t * session, conntable_t * old, conntable_t * new,
 						return -1;
 
 					}
+					plugin_emit_event(NUCLIENT_EVENT_RETRANSMIT_CONNECTION, session, (char *)bucket);
 					nb_packets++;
 				}
 

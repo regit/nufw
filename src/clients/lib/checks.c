@@ -270,6 +270,9 @@ int nu_client_real_check(nuauth_session_t * session, nuclient_error_t * err)
 	prg_cache_load();
 #endif
 	nb_packets = compare(session, session->ct, new, err);
+
+	plugin_emit_event(NUCLIENT_EVENT_END_CHECK, session, nb_packets);
+
 	/* free link between proc and socket inode */
 #ifdef LINUX
 	prg_cache_clear();
