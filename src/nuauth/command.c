@@ -331,9 +331,9 @@ const char* fortune()
 	return FORTUNES[(int)index];
 }
 
-static void conf_server_side_print(void *unused, char *buffer)
+static void conf_server_side_print(void *encoder, char *buffer)
 {
-	g_message("%s", buffer);	
+	encoder_add_string(encoder, buffer);
 }
 
 void command_execute(command_t * this, char *command)
@@ -361,7 +361,6 @@ void command_execute(command_t * this, char *command)
 		encoder_add_string(encoder, NUAUTH_FULL_VERSION);
 	} else if (strcmp(command, "confdump") == 0) {
 		nuauth_config_table_print(encoder, conf_server_side_print);
-		encoder_add_string(encoder, "Configuration dumped server side");
 	} else if (strcmp(command, "disconnect all") == 0) {
 		ok = command_disconnect_all(this, encoder);
 	} else if (strncmp(command, "disconnect ", 10) == 0) {
