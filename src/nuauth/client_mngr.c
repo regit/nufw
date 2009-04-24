@@ -181,13 +181,14 @@ static nu_error_t cleanup_session(user_session_t * session)
 		return NU_EXIT_ERROR;
 	}
 
+	tls_user_remove_client(session->socket);
+
 	return NU_EXIT_OK;
 }
 
 static nu_error_t delete_client_by_session(user_session_t * session)
 {
 	nu_error_t ret;
-	int socket = session->socket;
 
 	ret = cleanup_session(session);
 
@@ -195,13 +196,12 @@ static nu_error_t delete_client_by_session(user_session_t * session)
 		return ret;
 	}
 
-	tls_user_remove_client(socket);
-
 	return NU_EXIT_OK;
 }
 
 nu_error_t delete_client_by_socket_ext(int socket, int use_lock)
 {
+	gpointer key;
 	user_session_t *session;
 	nu_error_t ret;
 
@@ -231,17 +231,20 @@ nu_error_t delete_client_by_socket_ext(int socket, int use_lock)
 		return ret;
 	}
 
-	tls_user_remove_client(socket);
+	if (shutdown(socket, SHUT_RDWR) != 0) {
+		log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+				"Could not shutdown socket: %s", strerror(errno));
+	}
+	if (close(socket) != 0) {
+		log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+				"Could not close socket: %s", strerror(errno));
+	}
+
+
+	key = GINT_TO_POINTER(session->socket);
+	g_hash_table_remove(client_conn_hash, key);
 
 	if (use_lock) {
-		if (shutdown(socket, SHUT_RDWR) != 0) {
-			log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
-					"Could not shutdown socket: %s", strerror(errno));
-		}
-		if (close(socket) != 0) {
-			log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
-					"Could not close socket: %s", strerror(errno));
-		}
 		g_mutex_unlock(client_mutex);
 	}
 
