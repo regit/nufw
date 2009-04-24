@@ -167,10 +167,44 @@ static ip_sessions_t *delete_session_from_hash(ip_sessions_t *ipsessions,
 	return ipsessions;
 }
 
-nu_error_t delete_client_by_socket_ext(int socket, int use_lock)
+
+static nu_error_t cleanup_session(user_session_t * session)
 {
 	ip_sessions_t *ipsessions;
+	/* destroy entry in IP hash */
+	ipsessions =
+		g_hash_table_lookup(client_ip_hash,
+				    &session->addr);
+	if (ipsessions) {
+		delete_session_from_hash(ipsessions, session, 0);
+	} else {
+		log_message(CRITICAL, DEBUG_AREA_USER,
+			    "Could not find entry in ip hash");
+		return NU_EXIT_ERROR;
+	}
+
+	return NU_EXIT_OK;
+}
+
+static nu_error_t delete_client_by_session(user_session_t * session)
+{
+	nu_error_t ret;
+	int socket = session->socket;
+
+	ret = cleanup_session(session);
+
+	if (ret != NU_EXIT_OK) {
+		return ret;
+	}
+	tls_user_remove_client(socket);
+
+	return NU_EXIT_OK;
+}
+
+nu_error_t delete_client_by_socket_ext(int socket, int use_lock)
+{
 	user_session_t *session;
+	nu_error_t ret;
 
 
 	if (use_lock) {
@@ -189,18 +223,17 @@ nu_error_t delete_client_by_socket_ext(int socket, int use_lock)
 		return NU_EXIT_ERROR;
 	}
 
-	/* destroy entry in IP hash */
-	ipsessions =
-		g_hash_table_lookup(client_ip_hash,
-				    &session->addr);
-	if (ipsessions) {
-		delete_session_from_hash(ipsessions, session, 1);
-	} else {
-		log_message(CRITICAL, DEBUG_AREA_USER,
-			    "Could not find entry in ip hash");
+
+	ret = cleanup_session(session);
+
+	if (ret != NU_EXIT_OK) {
+		if (use_lock)
+			g_mutex_unlock(client_mutex);
+		return ret;
 	}
 
 	tls_user_remove_client(socket);
+
 	if (use_lock) {
 		if (shutdown(socket, SHUT_RDWR) != 0) {
 			log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
@@ -438,7 +471,7 @@ gboolean kill_all_clients_cb(gpointer sock, user_session_t* session, gpointer da
 	if (session->activated == FALSE)
 		return FALSE;
 
-	if (delete_client_by_socket_ext(GPOINTER_TO_INT(sock), 0) == NU_EXIT_OK)
+	if (delete_client_by_session(session) == NU_EXIT_OK)
 		return TRUE;
 	else
 		return FALSE;
