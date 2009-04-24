@@ -52,9 +52,19 @@ static uint32_t hash_ipv6(struct in6_addr *addr)
 	return jhash2(addr->s6_addr32, sizeof(*addr) / 4, 0);
 }
 
-void clean_session(user_session_t * c_session)
+/**
+ * Log and free structure relative to a user_session_t
+ *
+ * Used as destroy function for #client_conn_hash
+ */
+void log_clean_session(user_session_t * c_session)
 {
 	log_user_session(c_session, SESSION_CLOSE);
+	clean_session(c_session);
+}
+
+void clean_session(user_session_t * c_session)
+{
 	if (c_session->nussl)
 		nussl_session_destroy(c_session->nussl);
 
@@ -75,24 +85,13 @@ void clean_session(user_session_t * c_session)
 	g_free(c_session);
 }
 
-/**
- * Destroy function for #client_conn_hash
- */
-
-static void hash_clean_session(user_session_t * c_session)
-{
-	log_user_session(c_session, SESSION_CLOSE);
-	clean_session(c_session);
-}
-
-
 void init_client_struct()
 {
 	client_mutex = g_mutex_new();
 	/* build client hash */
 	client_conn_hash = g_hash_table_new_full(NULL, NULL, NULL,
 						 (GDestroyNotify)
-						 hash_clean_session);
+						 log_clean_session);
 
 	/* build client hash */
 	client_ip_hash = g_hash_table_new_full((GHashFunc)hash_ipv6,
@@ -162,7 +161,7 @@ static ip_sessions_t *delete_session_from_hash(ip_sessions_t *ipsessions,
 		/* remove entry from hash */
 		key = GINT_TO_POINTER(session->socket);
 		g_hash_table_steal(client_conn_hash, key);
-		clean_session(session);
+		log_clean_session(session);
 	}
 	return ipsessions;
 }
