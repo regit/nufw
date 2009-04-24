@@ -160,8 +160,7 @@ static ip_sessions_t *delete_session_from_hash(ip_sessions_t *ipsessions,
 	if (destroy) {
 		/* remove entry from hash */
 		key = GINT_TO_POINTER(session->socket);
-		g_hash_table_steal(client_conn_hash, key);
-		log_clean_session(session);
+		g_hash_table_remove(client_conn_hash, key);
 	}
 	return ipsessions;
 }
@@ -195,6 +194,7 @@ static nu_error_t delete_client_by_session(user_session_t * session)
 	if (ret != NU_EXIT_OK) {
 		return ret;
 	}
+
 	tls_user_remove_client(socket);
 
 	return NU_EXIT_OK;
