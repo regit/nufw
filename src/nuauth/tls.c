@@ -145,7 +145,8 @@ void tls_crl_update_each_session(GSList *session)
 
 		listrunner = g_slist_next(listrunner);
 
-	} g_slist_free(listrunner);
+	}
+	g_slist_free(listrunner);
 
 }
 
@@ -165,7 +166,6 @@ void refresh_crl_file(void)
 		stat(nuauth_tls.crl_file, &stats);
 
 		if (nuauth_tls.crl_file_mtime < stats.st_mtime) {
-
 			tls_crl_update_each_session(nuauthdatas->tls_nufw_servers);
 			tls_crl_update_each_session(nuauthdatas->tls_auth_servers);
 		}
