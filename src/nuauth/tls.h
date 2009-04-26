@@ -205,6 +205,7 @@ void tls_user_start_servers(GSList *servers);
 void tls_common_init(void);
 void tls_common_deinit(void);
 void refresh_crl_file(void);
+void force_refresh_crl_file(void);
 
 int tls_user_do_handshake(struct client_connection *current_client_conn, struct tls_user_context_t *context);
 

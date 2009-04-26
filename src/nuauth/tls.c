@@ -174,4 +174,20 @@ void refresh_crl_file(void)
 
 }
 
+void force_refresh_crl_file(void)
+{
+	struct stat stats;
+
+	if (nuauth_tls.crl_file == NULL) {
+		return;
+	}
+	stat(nuauth_tls.crl_file, &stats);
+
+	if (nuauth_tls.crl_file_mtime < stats.st_mtime) {
+		tls_crl_update_each_session(nuauthdatas->tls_nufw_servers);
+		tls_crl_update_each_session(nuauthdatas->tls_auth_servers);
+	}
+	nuauth_tls.crl_refresh_counter = 0;
+}
+
 /**@}*/
