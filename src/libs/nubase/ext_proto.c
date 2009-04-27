@@ -31,7 +31,7 @@ int process_ext_message(char *buf, int bufsize, struct llist_head * ext_proto_l,
 	char *lbuf = buf;
 	int state = EXT_PROTO_OUTSIDE;
 	int i, ret;
-	struct proto_ext_t *p_ext_proto;
+	struct proto_ext_t *p_ext_proto = NULL;
 	struct proto_ext_t *pos;
 
 	do {
