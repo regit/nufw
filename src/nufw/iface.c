@@ -1,5 +1,5 @@
 /*
- ** Copyright (C) 2007 INL
+ ** Copyright (C) 2007,2009 INL
  ** Written by Eric Leblond <regit@inl.fr>
  ** INL http://www.inl.fr/
  **
@@ -24,10 +24,16 @@
 
 
 #ifdef HAVE_NFQ_INDEV_NAME
+
+/* mutex used to get around non thread-safeness of iface resolution
+ * in libnfnetlink */
+pthread_mutex_t iface_mutex;
+
 int get_interface_information(struct nlif_handle *inst,
 			      struct queued_pckt *q_pckt,
 			      struct nfq_data *nfad)
 {
+	pthread_mutex_lock(&iface_mutex);
 	nfq_get_indev_name(inst, nfad, q_pckt->indev);
 	if (q_pckt->indev[0] == '*') {
 		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
@@ -59,12 +65,15 @@ int get_interface_information(struct nlif_handle *inst,
 				"Get physoutdev information: %s",
 				q_pckt->physoutdev);
 	}
+	pthread_mutex_unlock(&iface_mutex);
 	return 1;
 }
 
 struct nlif_handle *iface_table_open()
 {
 	struct nlif_handle *inst;
+
+	pthread_mutex_init(&iface_mutex, NULL);
 	/* opening ifname resolution handle */
 	inst = nlif_open();
 	if (inst == NULL) {
@@ -79,9 +88,14 @@ struct nlif_handle *iface_table_open()
 
 int iface_treat_message(struct nlif_handle *inst)
 {
+	int ret;
 	debug_log_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
 			 "Network interface event");
-	return nlif_catch(inst);
+
+	pthread_mutex_lock(&iface_mutex);
+	ret = nlif_catch(inst);
+	pthread_mutex_unlock(&iface_mutex);
+	return ret;
 }
 
 void iface_table_close(struct nlif_handle *inst)
