@@ -203,6 +203,11 @@ connection_t *duplicate_connection(connection_t * element)
 	conn_copy->packet_id = NULL;
 	conn_copy->cacheduserdatas = NULL;
 	conn_copy->state = AUTH_STATE_DONE;
+
+	/* copy payload */
+	conn_copy->payload_len = element->payload_len;
+	memcpy(conn_copy->payload, element->payload, conn_copy->payload_len);
+
 	return conn_copy;
 }
 

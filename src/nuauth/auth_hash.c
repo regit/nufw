@@ -228,6 +228,9 @@ void search_and_fill_complete_of_userpckt(connection_t * new,
 		packet->tls = new->tls;
 		packet->nufw_version = new->nufw_version;
 		new->tls = NULL;
+		/* copy payload to user pckt */
+		packet->payload_len = new->payload_len;
+		memcpy(packet->payload, new->payload, new->payload_len);
 
 		thread_pool_push(nuauthdatas->acl_checkers, new, NULL);
 		return;		/* don't free connection */
