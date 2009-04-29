@@ -136,12 +136,17 @@ printf("INFO Plugin %s loaded\n", instance_name);
 
 }
 
-int load_plugins(void)
+int init_plugins(void)
 {
 	_nuclient_plugin_list.handle = NULL;
 	_nuclient_plugin_list.instance_name = NULL;
 	INIT_LLIST_HEAD(&_nuclient_plugin_list.list);
 
+	return 0;
+}
+
+int load_plugins(void)
+{
 	nuclient_config_table_walk(&_nuclient_plugin_list, _nuclient_load_plugin);
 
 	return 0;
@@ -151,15 +156,15 @@ int plugin_emit_event(plugin_event_t event_id, nuauth_session_t * session, const
 {
 	struct nuclient_plugin_t *tmp;
 
-printf("DEBUG event %d (%s)\n", event_id, arg);
+	if (llist_empty(&_nuclient_plugin_list.list))
+		return 0;
+
 	/* parse table */
 	llist_for_each_entry(tmp, &_nuclient_plugin_list.list, list){
-		printf("handle: %p instance_name: %s\n", tmp->handle, tmp->instance_name);
 		if (tmp->dispatch) {
 			(tmp->dispatch)(tmp, event_id, session, arg);
 		}
 	}
-
 
 	return 0;
 }

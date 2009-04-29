@@ -148,6 +148,8 @@ int nu_client_global_init(nuclient_error_t * err)
 	INIT_LLIST_HEAD(&nu_postauth_extproto_l);
 	INIT_LLIST_HEAD(&nu_cruise_extproto_l);
 
+	init_plugins();
+
 	return 1;
 }
 
