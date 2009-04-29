@@ -379,11 +379,13 @@ static int nufw_client_func(struct pam_nufw_s *pn_s,
 		return PAM_AUTH_ERR;
 	}
 
+	nu_client_init_config();
+	nu_client_init_plugins();
+
 	/* create libnuclient session (connection to nuauth) */
-	session =
-	    do_connect(nu_client_to_utf8
-		       (user_info->username, locale_charset),
-		       nu_client_to_utf8(user_info->password,
+	session = do_connect(nu_client_to_utf8
+			(user_info->username, locale_charset),
+			nu_client_to_utf8(user_info->password,
 					 locale_charset), pn_s->err);
 	clear_user_info(user_info);
 

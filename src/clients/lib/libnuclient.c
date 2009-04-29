@@ -136,20 +136,46 @@ int nu_client_global_init(nuclient_error_t * err)
 	nu_locale_charset = nl_langinfo(CODESET);
 	if (nu_locale_charset == NULL) {
 		fprintf(stderr, "Can't get locale charset!\n");
-		exit(EXIT_FAILURE);
+		return 0;
 	}
 
 	/* init capabilities string */
 	ret = snprintf(nu_capabilities, NU_CAPABILITIES_MAXLENGTH, "%s", NU_CAPABILITIES);
 	if (ret <= 0) {
-		exit(EXIT_FAILURE);
+		return 0;
 	}
 
 	INIT_LLIST_HEAD(&nu_postauth_extproto_l);
 	INIT_LLIST_HEAD(&nu_cruise_extproto_l);
 
+	return 1;
+}
+
+/**
+ * \ingroup nuclientAPI
+ * \brief Initialization: load config file
+ *
+ * This function loads the config file, and must be called after nu_client_global_init()
+ *
+ * \warning To be called only once.
+ */
+int nu_client_init_config()
+{
 	load_sys_config();
 
+	return 1;
+}
+
+/**
+ * \ingroup nuclientAPI
+ * \brief Initialization: load plugins
+ *
+ * This function loads the plugins, and must be called after nu_client_global_init() and nu_client_init_config
+ *
+ * \warning To be called only once.
+ */
+int nu_client_init_plugins()
+{
 	load_plugins();
 
 	return 1;
