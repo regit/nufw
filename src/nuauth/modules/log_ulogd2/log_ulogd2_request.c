@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2008 INL
+ ** Copyright(C) 2008-2009 INL
  ** Written by  Pierre Chifflier <chifflier@inl.fr>
  **
  ** $Id$
@@ -94,12 +94,6 @@ ssize_t ulogd2_request_format(struct ulogd2_request *req, unsigned char*buf, uns
 
 	/* Options, in KLV (Key Length Value) format */
 	llist_for_each_entry_safe(opt, optbkp, &req->options->list, list) {
-		/* TODO remove this, debug */
-		fprintf(stderr, "Option: %d, value: '%s', length %d\n",
-			opt->opt,
-			(char*)opt->value,
-			opt->length);
-
 		/* Key ID */
 		*(u_int16_t*)(buf + ret) = htons(opt->opt);
 		ret += sizeof(u_int16_t);

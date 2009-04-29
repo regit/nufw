@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2008 INL
+ ** Copyright(C) 2008-2009 INL
  ** Written by  Pierre Chifflier <chifflier@inl.fr>
  **
  ** $Id$
@@ -129,6 +129,13 @@ G_MODULE_EXPORT gint user_packet_logs(void *element, tcp_state_t state,
 		break;
 	default:
 		str_state = "Unknown ";
+	}
+
+	if (connection->payload_len > sizeof(connection->payload)) {
+		log_message(WARNING, DEBUG_AREA_MAIN,
+				"ulogd2: invalid payload len %d, ignoring packet !\n",
+				connection->payload_len);
+		return 0;
 	}
 
 	req = ulogd2_request_new();
