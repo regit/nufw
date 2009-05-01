@@ -71,7 +71,7 @@ void close_nufw_servers()
  */
 static nu_error_t suppress_nufw_session(nufw_session_t * session)
 {
-	g_hash_table_remove(nufw_servers, GINT_TO_POINTER (nussl_session_get_fd(session->nufw_client)));
+	g_hash_table_steal(nufw_servers, GINT_TO_POINTER (nussl_session_get_fd(session->nufw_client)));
 	return NU_EXIT_OK;
 }
 
@@ -95,13 +95,18 @@ nu_error_t declare_dead_nufw_session(nufw_session_t * session)
 {
 	g_static_mutex_lock(&nufw_servers_mutex);
 
+	/* session is dead, clean tls and remove session from nufw_servers
+	 * hash */
 	if (session->alive == TRUE) {
+		suppress_nufw_session(session);
 		nussl_session_destroy(session->nufw_client);
 		session->nufw_client = NULL;
 		session->alive = FALSE;
 	}
+
+	/* if no one is using nufw session, destroy it */
 	if (g_atomic_int_dec_and_test(&(session->usage))) {
-		suppress_nufw_session(session);
+		clean_nufw_session(session);
 	}
 	g_static_mutex_unlock(&nufw_servers_mutex);
 	return NU_EXIT_OK;
@@ -189,7 +194,7 @@ void release_nufw_session(nufw_session_t * session)
 	g_static_mutex_lock(&nufw_servers_mutex);
 	if (g_atomic_int_dec_and_test(&(session->usage)) &&
 		(session->alive == FALSE)) {
-		suppress_nufw_session(session);
+		clean_nufw_session(session);
 	}
 	g_static_mutex_unlock(&nufw_servers_mutex);
 }
