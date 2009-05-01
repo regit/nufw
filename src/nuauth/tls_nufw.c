@@ -475,7 +475,10 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex * mutex)
 						  c);
 
 				c_session = acquire_nufw_session_by_socket(c);
-				g_assert(c_session);
+				if (! c_session) {
+					FD_CLR(c, &context->tls_rx_set);
+					continue;
+				}
 				if (treat_nufw_request(c_session) == NU_EXIT_ERROR) {
 					/* get session link with c */
 					debug_log_message(DEBUG, DEBUG_AREA_GW,
@@ -483,9 +486,9 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex * mutex)
 							  c);
 					FD_CLR(c, &context->tls_rx_set);
 					declare_dead_nufw_session(c_session);
-				}
-				else
+				} else {
 					release_nufw_session(c_session);
+				}
 			}
 		}
 

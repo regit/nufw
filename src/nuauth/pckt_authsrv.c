@@ -406,7 +406,7 @@ nu_error_t authpckt_decode(unsigned char **pdgram,
 			if (ret == NU_EXIT_ERROR) {
 				return NU_EXIT_ERROR;
 			}
-			
+
 			if (ntohs(header->msg_length) < dgram_size) {
 				*pdgram_size =
 				    dgram_size - ntohs(header->msg_length);
