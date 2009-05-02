@@ -245,7 +245,7 @@ gboolean nuauth_reload(int signum)
 	/* Reload the configuration file */
 	retval = nuauth_parse_configuration(nuauthconf->configfile);
 	if (retval != 0) {
-		log_message(DEBUG_LEVEL_CRITICAL, DEBUG_AREA_MAIN,
+		log_message(CRITICAL, DEBUG_AREA_MAIN,
 			    "Cannot reload configuration (file '%s')",
 			    nuauthconf->configfile);
 		return -1;
