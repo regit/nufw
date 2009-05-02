@@ -763,8 +763,11 @@ void configure_app(int argc, char **argv)
 	}
 
 	ret = nuauth_parse_configuration(nuauthconf->configfile);
-	if (ret > 0) {
-		g_error("Cannot load configuration (file '%s')", nuauthconf->configfile);
+	if (ret < 0) {
+		log_message(FATAL, DEBUG_AREA_MAIN,
+			    "Cannot load configuration (file '%s')",
+			    nuauthconf->configfile);
+		exit(EXIT_FAILURE);
 	}
 
 	/* load configuration */
