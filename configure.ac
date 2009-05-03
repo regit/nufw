@@ -107,7 +107,7 @@ dnl
 dnl We can force the use of OpenSSL
 AC_ARG_WITH(openssl,   [AC_HELP_STRING(--with-openssl, Build with openssl support *EXPERIMENTAL*.)],build_openssl=$enableval, build_openssl="no" )
 
-if test $build_openssl = yes; then
+if test "${build_openssl}" != "no"; then
    PKG_PROG_PKG_CONFIG
    PKG_CHECK_MODULES(OPENSSL, openssl)
    AC_DEFINE_UNQUOTED([HAVE_OPENSSL],[1],[Will use openssl support instead of gnutls])
@@ -346,7 +346,7 @@ AM_CONDITIONAL(HAVE_NFQUEUE_ONLY, test x$have_nfqueue = xyes && test x$have_conn
 AM_CONDITIONAL(HAVE_NFQUEUE_CONNTRACK,test x$have_conntrack = xyes && test x$have_nfqueue = xyes )
 AM_CONDITIONAL(HAVE_CONNTRACK_ONLY, test x$have_nfqueue = x && test x$have_conntrack = xyes  )
 
-AM_CONDITIONAL(USE_OPENSSL, test x$build_openssl = xyes)
+AM_CONDITIONAL(USE_OPENSSL, test x$build_openssl != xno)
 AM_CONDITIONAL(USE_GNUTLS, test x$build_openssl = xno)
 
 if test "x$GCC" = "xyes"; then
@@ -494,7 +494,7 @@ if test "$debug"; then
 	AC_MSG_RESULT([* Compiling with developement DEBUG support])
 fi
 
-if test $build_openssl = yes; then
+if test "${build_openssl}" != "no"; then
 	AC_MSG_RESULT([* Compiling with OpenSSL])
 else
 	AC_MSG_RESULT([* Compiling with GnuTLS])
