@@ -102,7 +102,10 @@ void iface_table_close(struct nlif_handle *inst)
 {
 	debug_log_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
 			 "Free iface resolution instance");
+	pthread_mutex_lock(&iface_mutex);
 	nlif_close(inst);
+	pthread_mutex_unlock(&iface_mutex);
+	pthread_mutex_destroy(&iface_mutex);
 }
 
 #endif				/* #ifdef HAVE_NFQ_INDEV_NAME */
