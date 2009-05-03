@@ -110,6 +110,30 @@ gboolean tracking_equal(const tracking_t *trck1, const tracking_t *trck2)
 	}
 }
 
+
+
+nu_error_t merge_nufw_session(connection_t * old, connection_t * new)
+{
+	int usage;
+	if (old->tls == new->tls) {
+		return NU_EXIT_OK;
+	}
+
+	/* initiate merge */
+	usage = g_slist_length(old->packet_id);
+	g_atomic_int_exchange_and_add(&(new->tls->usage), usage);
+	if (usage > 1) {
+		g_atomic_int_exchange_and_add(&(old->tls->usage), -usage + 1);
+	}
+	release_nufw_session(old->tls);
+
+	/* swap tls entry */
+	old->tls = new->tls;
+
+	return NU_EXIT_OK;
+}
+
+
 /**
  * Send the a #WARN_MESSAGE to nuauthdatas->tls_push_queue (see ::push_worker()).
  */
@@ -148,6 +172,10 @@ void search_and_fill_complete_of_authreq(connection_t * new,
 				  "Complete authreq: Adding a packet_id to a connection (id=%u)",
 				  GPOINTER_TO_UINT((new->packet_id)->data)
 				  );
+
+		/* merge TLS */
+		merge_nufw_session(packet, new);
+
 		packet->packet_id =
 		    g_slist_prepend(packet->packet_id,
 				    GUINT_TO_POINTER((new->packet_id)->
