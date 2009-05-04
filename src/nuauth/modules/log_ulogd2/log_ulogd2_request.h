@@ -28,6 +28,7 @@ enum ulogd2_option_type {
 	ULOGD2_OPT_PREFIX,	/* log prefix (string) */
 	ULOGD2_OPT_OOB_IN,	/* input device (string) */
 	ULOGD2_OPT_OOB_OUT,	/* output device (string) */
+	ULOGD2_OPT_OOB_TIME_SEC,	/* packet arrival time (u_int32_t) */
 
 	/* NuFW specific options */
 	ULOGD2_OPT_USER=200,	/* user name (string) */

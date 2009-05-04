@@ -112,6 +112,7 @@ G_MODULE_EXPORT gint user_packet_logs(void *element, tcp_state_t state,
 	char *str_state;
 	const connection_t *connection = element;
 	struct ulogd2_request *req;
+	u_int32_t u_time_sec;
 
 	/* contruct request */
 	switch (state) {
@@ -148,6 +149,12 @@ G_MODULE_EXPORT gint user_packet_logs(void *element, tcp_state_t state,
 		ulogd2_request_add_option(req, ULOGD2_OPT_PREFIX,
 				str_state, strlen(str_state));
 	}
+
+	/* this will work until 2038 */
+	u_time_sec = (u_int32_t)connection->timestamp;
+	ulogd2_request_add_option(req, ULOGD2_OPT_OOB_TIME_SEC,
+			(void*)&u_time_sec,
+			sizeof(u_int32_t));
 
 	if (connection->iface_nfo.indev[0] != '\0'
 	    || connection->iface_nfo.outdev[0] != '\0') {
