@@ -871,7 +871,7 @@ void *push_worker(GMutex * mutex)
 			    ((tracking_t *) message->datas)->saddr;
 			global_msg->found = FALSE;
 			/* search in client array */
-			warn_clients(global_msg);
+			warn_clients(global_msg, NULL, NULL);
 			/* do we have found something */
 			if (!ipv6_equal(&global_msg->addr, &in6addr_any)) {
 				if (global_msg->found == FALSE) {

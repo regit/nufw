@@ -350,7 +350,9 @@ gboolean test_username_count_vs_max(const gchar * username, int maxcount)
  * \param global_msg Address set of clients
  * \return Returns 0 on error, 1 otherwise
  */
-char warn_clients(struct msg_addr_set *global_msg)
+char warn_clients(struct msg_addr_set *global_msg,
+		  user_session_check_t *scheck,
+		  gpointer data)
 {
 	ip_sessions_t *ipsessions = NULL;
 	GSList *ipsockets = NULL;
@@ -386,13 +388,15 @@ char warn_clients(struct msg_addr_set *global_msg)
 			user_session_t *session = (user_session_t *)ipsockets->data;
 			int ret;
 
-			ret = nussl_write(session->nussl,
-					(char*)global_msg->msg,
-					ntohs(global_msg->msg->length));
-			if (ret < 0) {
-				log_message(WARNING, DEBUG_AREA_USER,
-						"Failed to send warning to client(s): %s", nussl_get_error(session->nussl));
-				badsockets = g_slist_prepend(badsockets, GINT_TO_POINTER(ipsockets->data));
+			if ((!scheck) || scheck(session, data)) {
+				ret = nussl_write(session->nussl,
+						(char*)global_msg->msg,
+						ntohs(global_msg->msg->length));
+				if (ret < 0) {
+					log_message(WARNING, DEBUG_AREA_USER,
+							"Failed to send warning to client(s): %s", nussl_get_error(session->nussl));
+					badsockets = g_slist_prepend(badsockets, GINT_TO_POINTER(ipsockets->data));
+				}
 			}
 		}
 		if (badsockets) {

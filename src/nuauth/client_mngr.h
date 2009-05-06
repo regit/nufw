@@ -51,8 +51,10 @@ struct msg_addr_set {
 	gboolean found;
 };
 
+typedef gboolean user_session_check_t(user_session_t * session, gpointer data);
 
-char warn_clients(struct msg_addr_set *global_msg);
+char warn_clients(struct msg_addr_set *global_msg, user_session_check_t *scheck,
+		  gpointer data);
 
 void close_clients();
 
