@@ -189,8 +189,20 @@ static int connect_to_emc(struct multi_mode_params *params)
 	return 1;
 }
 
+static gboolean capa_check(user_session_t *session, gpointer data)
+{
+	struct multi_mode_params *params =
+	    (struct multi_mode_params *) data;
+	if (session->capa_flags & (1 << params->capa_index)) {
+		return TRUE;
+	}
+	return FALSE;
+}
 
-static void multi_warn_client(struct in6_addr *saddr, const char *connect_string)
+static void multi_warn_clients(struct in6_addr *saddr,
+			      const char *connect_string,
+			      struct multi_mode_params *params
+			      )
 {
 	char buf[1024];
 	struct nu_header * header = (struct nu_header *) buf;
@@ -213,7 +225,7 @@ static void multi_warn_client(struct in6_addr *saddr, const char *connect_string
 	global_msg.addr = *saddr;
 	global_msg.found = FALSE;
 
-	warn_clients(&global_msg);
+	warn_clients(&global_msg, capa_check, params);
 }
 
 
@@ -239,7 +251,7 @@ void emc_thread(void *params_p )
 	/*	test if there is a user at IP */
 
 	/*	send connection request if necessary */
-	multi_warn_clients(saddr, conninfo);
+	multi_warn_clients(saddr, conninfo, params);
 
 
 	/*	else forget packet */
