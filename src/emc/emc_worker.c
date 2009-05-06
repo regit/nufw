@@ -3,8 +3,6 @@
  ** Written by Pierre Chifflier <chifflier@inl.fr>
  **     INL : http://www.inl.fr/
  **
- ** $Id$
- **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
  ** the Free Software Foundation, version 3 of the License.
@@ -48,6 +46,8 @@
 #include "emc_server.h"
 #include "emc_tls.h"
 #include "emc_worker.h"
+
+#include "emc_proto.h"
 
 extern ev_async client_ready_signal;
 
@@ -124,6 +124,7 @@ log_printf(DEBUG_LEVEL_DEBUG, "DEBUG client connection added");
 void emc_worker_reader(gpointer userdata, gpointer data)
 {
 	ev_io *w = (ev_io*)userdata;
+	struct emc_message_header_t msg;
 	struct emc_client_context *client_ctx;
 	nussl_session *nussl_sess;
 	char buffer[4096];
@@ -133,7 +134,20 @@ fprintf(stderr, "[%s] : %lx\n", __func__, (long)pthread_self());
 	client_ctx = (struct emc_client_context *)w->data;
 	nussl_sess = client_ctx->nussl;
 
-	len = nussl_read(client_ctx->nussl, buffer, sizeof(buffer));
+	len = nussl_read(client_ctx->nussl, &msg, sizeof(msg));
+	if (len < 0 || len != sizeof(msg)) {
+		log_printf(DEBUG_LEVEL_WARNING, "nussl_error, removing connection [%s]\n", nussl_get_error(client_ctx->nussl));
+		ev_io_stop(EV_DEFAULT_ w);
+		nussl_session_destroy(client_ctx->nussl);
+		free(client_ctx);
+		free(w);
+		return;
+	}
+
+log_printf(DEBUG_LEVEL_DEBUG, "Header: command (%d) length (%d)", msg.command, msg.length);
+	// XXX assert(msg.length < sizeof(buffer))
+
+	len = nussl_read(client_ctx->nussl, buffer, msg.length);
 	if (len < 0) {
 		log_printf(DEBUG_LEVEL_WARNING, "nussl_error, removing connection [%s]\n", nussl_get_error(client_ctx->nussl));
 		ev_io_stop(EV_DEFAULT_ w);

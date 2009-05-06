@@ -20,11 +20,11 @@
 
 #include <nussl.h>
 
+#include <emc_proto.h>
+
 #include "nuauthconf.h"
 
 extern struct nuauth_tls_t nuauth_tls;
-
-#define GROSDEBUG 1
 
 /**
  * \ingroup NuauthModules
@@ -39,6 +39,8 @@ struct multi_mode_params {
 	nussl_session *nussl;
 	/* multi capability index */
 	unsigned char capa_index;
+
+	int is_connected;
 };
 
 static int connect_to_emc(struct multi_mode_params *params);
@@ -178,13 +180,18 @@ static int connect_to_emc(struct multi_mode_params *params)
 		return -1;
 	}
 
-#ifdef GROSDEBUG
 	{
-		const char msg[] = "Hello from multi_mode";
-		nussl_write(params->nussl, msg, sizeof(msg));
-	}
-#endif
+		const char text[] = "Hello from multi_mode";
+		struct emc_message_header_t msg;
 
+		msg.command = EMC_HELLO;
+		msg.length = strlen(text);
+
+		nussl_write(params->nussl, (char*)&msg, sizeof(msg));
+		nussl_write(params->nussl, text, sizeof(text));
+	}
+
+	params->is_connected = 1;
 
 	return 1;
 }
