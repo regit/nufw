@@ -52,9 +52,19 @@ static uint32_t hash_ipv6(struct in6_addr *addr)
 	return jhash2(addr->s6_addr32, sizeof(*addr) / 4, 0);
 }
 
-void clean_session(user_session_t * c_session)
+/**
+ * Log and free structure relative to a user_session_t
+ *
+ * Used as destroy function for #client_conn_hash
+ */
+void log_clean_session(user_session_t * c_session)
 {
 	log_user_session(c_session, SESSION_CLOSE);
+	clean_session(c_session);
+}
+
+void clean_session(user_session_t * c_session)
+{
 	if (c_session->nussl)
 		nussl_session_destroy(c_session->nussl);
 
@@ -75,24 +85,13 @@ void clean_session(user_session_t * c_session)
 	g_free(c_session);
 }
 
-/**
- * Destroy function for #client_conn_hash
- */
-
-static void hash_clean_session(user_session_t * c_session)
-{
-	log_user_session(c_session, SESSION_CLOSE);
-	clean_session(c_session);
-}
-
-
 void init_client_struct()
 {
 	client_mutex = g_mutex_new();
 	/* build client hash */
 	client_conn_hash = g_hash_table_new_full(NULL, NULL, NULL,
 						 (GDestroyNotify)
-						 hash_clean_session);
+						 log_clean_session);
 
 	/* build client hash */
 	client_ip_hash = g_hash_table_new_full((GHashFunc)hash_ipv6,
@@ -161,16 +160,50 @@ static ip_sessions_t *delete_session_from_hash(ip_sessions_t *ipsessions,
 	if (destroy) {
 		/* remove entry from hash */
 		key = GINT_TO_POINTER(session->socket);
-		g_hash_table_steal(client_conn_hash, key);
-		clean_session(session);
+		g_hash_table_remove(client_conn_hash, key);
 	}
 	return ipsessions;
 }
 
-nu_error_t delete_client_by_socket_ext(int socket, int use_lock)
+
+static nu_error_t cleanup_session(user_session_t * session)
 {
 	ip_sessions_t *ipsessions;
+	/* destroy entry in IP hash */
+	ipsessions =
+		g_hash_table_lookup(client_ip_hash,
+				    &session->addr);
+	if (ipsessions) {
+		delete_session_from_hash(ipsessions, session, 0);
+	} else {
+		log_message(CRITICAL, DEBUG_AREA_USER,
+			    "Could not find entry in ip hash");
+		return NU_EXIT_ERROR;
+	}
+
+	tls_user_remove_client(session->socket);
+
+	return NU_EXIT_OK;
+}
+
+static nu_error_t delete_client_by_session(user_session_t * session)
+{
+	nu_error_t ret;
+
+	ret = cleanup_session(session);
+
+	if (ret != NU_EXIT_OK) {
+		return ret;
+	}
+
+	return NU_EXIT_OK;
+}
+
+nu_error_t delete_client_by_socket_ext(int socket, int use_lock)
+{
+	gpointer key;
 	user_session_t *session;
+	nu_error_t ret;
 
 
 	if (use_lock) {
@@ -189,27 +222,29 @@ nu_error_t delete_client_by_socket_ext(int socket, int use_lock)
 		return NU_EXIT_ERROR;
 	}
 
-	/* destroy entry in IP hash */
-	ipsessions =
-		g_hash_table_lookup(client_ip_hash,
-				    &session->addr);
-	if (ipsessions) {
-		delete_session_from_hash(ipsessions, session, 1);
-	} else {
-		log_message(CRITICAL, DEBUG_AREA_USER,
-			    "Could not find entry in ip hash");
+
+	ret = cleanup_session(session);
+
+	if (ret != NU_EXIT_OK) {
+		if (use_lock)
+			g_mutex_unlock(client_mutex);
+		return ret;
 	}
 
-	tls_user_remove_client(socket);
+	if (shutdown(socket, SHUT_RDWR) != 0) {
+		log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+				"Could not shutdown socket: %s", strerror(errno));
+	}
+	if (close(socket) != 0) {
+		log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+				"Could not close socket: %s", strerror(errno));
+	}
+
+
+	key = GINT_TO_POINTER(session->socket);
+	g_hash_table_remove(client_conn_hash, key);
+
 	if (use_lock) {
-		if (shutdown(socket, SHUT_RDWR) != 0) {
-			log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
-					"Could not shutdown socket: %s", strerror(errno));
-		}
-		if (close(socket) != 0) {
-			log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
-					"Could not close socket: %s", strerror(errno));
-		}
 		g_mutex_unlock(client_mutex);
 	}
 
@@ -338,7 +373,7 @@ char warn_clients(struct msg_addr_set *global_msg)
 
 		if (ipsessions->proto_version >= PROTO_VERSION_V22_1) {
 			timeval_substract(&interval, &timestamp, &(ipsessions->last_message));
-			if (interval.tv_sec || (interval.tv_usec < nuauthconf->push_delay)) {
+			if (interval.tv_sec || ((unsigned)interval.tv_usec < nuauthconf->push_delay)) {
 				g_mutex_unlock(client_mutex);
 				return 1;
 			} else {
@@ -438,7 +473,7 @@ gboolean kill_all_clients_cb(gpointer sock, user_session_t* session, gpointer da
 	if (session->activated == FALSE)
 		return FALSE;
 
-	if (delete_client_by_socket_ext(GPOINTER_TO_INT(sock), 0) == NU_EXIT_OK)
+	if (delete_client_by_session(session) == NU_EXIT_OK)
 		return TRUE;
 	else
 		return FALSE;

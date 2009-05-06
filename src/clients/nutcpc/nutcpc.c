@@ -67,6 +67,8 @@ int forced_reconnect = 0;
 int connected;
 static int suppress_ca_warning = 0;
 static int suppress_fqdn_verif = 0;
+static int do_not_load_config  = 0;
+static int do_not_load_plugins = 0;
 
 void panic(const char *fmt, ...)
 #ifdef __GNUC__
@@ -419,6 +421,8 @@ static struct option long_options[] = {
 	{"crl", 1, NULL, 'R'},
 	{"no-warn-ca", 0, NULL, 'Q'},
 	{"no-error-fqdn", 0, NULL, 'N'},
+	{"no-config", 0, NULL, 'F'},
+	{"no-plugins", 0, NULL, 'G'},
 	{"krb-service", 1, NULL, 'Z'},
 	{"port", 1, NULL, 'p'},
 	{"auth-dn", 1, NULL, 'a'},
@@ -455,6 +459,8 @@ static void usage(void)
 	fprintf(stderr, "  -R (--crl          ) CRLFILE: crl filename\n");
 	fprintf(stderr, "  -Q (--no-warn-ca   ): suppress warning if no certificate authority is configured\n");
 	fprintf(stderr, "  -N (--no-error-fqdn): suppress error if server FQDN does not match certificate CN.\n");
+	fprintf(stderr, "  -F (--no-config    ): do not load config file (implies -G).\n");
+	fprintf(stderr, "  -G (--no-plugins   ): do not loadplugins.\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "SASL options:\n");
 	fprintf(stderr, "  -Z (--krb-service  ) SERVICE: Kerberos service name (nuauth)\n");
@@ -795,7 +801,7 @@ void parse_cmdline_options(int argc, char **argv,
 
 	/* Parse all command line arguments */
 	opterr = 0;
-	while ((ch = getopt_long(argc, argv, "kcldqNQVu:H:I:U:p:P:a:K:C:A:R:W:S:Z:", long_options, NULL)) != -1) {
+	while ((ch = getopt_long(argc, argv, "kcldqNQFGVu:H:I:U:p:P:a:K:C:A:R:W:S:Z:", long_options, NULL)) != -1) {
 		switch (ch) {
 		case 'H':
 			SECURE_STRNCPY(context->srv_addr, optarg,
@@ -851,6 +857,13 @@ void parse_cmdline_options(int argc, char **argv,
 			break;
 		case 'Q':
 			suppress_ca_warning = 1;
+			break;
+		case 'F':
+			do_not_load_config = 1;
+			do_not_load_plugins = 1;
+			break;
+		case 'G':
+			do_not_load_plugins = 1;
 			break;
 		case 'a':
 			SECURE_STRNCPY(context->nuauthdn, optarg,
@@ -926,6 +939,13 @@ void init_library(nutcpc_context_t * context, char *username)
 		printf("Unable to initiate nuclient library!\n");
 		printf("Problem: %s\n", nu_client_strerror(session, err));
 		exit(EXIT_FAILURE);
+	}
+
+	if (do_not_load_config != 1) {
+		nu_client_init_config();
+
+		if (do_not_load_plugins != 1)
+			nu_client_init_plugins();
 	}
 
 	/* options specificied on command line are taken prior

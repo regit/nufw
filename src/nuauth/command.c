@@ -47,6 +47,7 @@ const char* COMMAND_HELP =
 "firewalls: list connected nufw firewalls\n"
 "packets count: display number of decision waiting packets\n"
 "refresh cache: refresh all caches\n"
+"refresh crl: refresh the TLS crl file\n"
 "disconnect ID: disconnect an user with his session identifier\n"
 "disconnect all: disconnect all users\n"
 "uptime: display nuauth starting time and uptime\n"
@@ -331,9 +332,9 @@ const char* fortune()
 	return FORTUNES[(int)index];
 }
 
-static void conf_server_side_print(void *unused, char *buffer)
+static void conf_server_side_print(void *encoder, char *buffer)
 {
-	g_message("%s", buffer);	
+	encoder_add_string(encoder, buffer);
 }
 
 void command_execute(command_t * this, char *command)
@@ -361,11 +362,12 @@ void command_execute(command_t * this, char *command)
 		encoder_add_string(encoder, NUAUTH_FULL_VERSION);
 	} else if (strcmp(command, "confdump") == 0) {
 		nuauth_config_table_print(encoder, conf_server_side_print);
-		encoder_add_string(encoder, "Configuration dumped server side");
 	} else if (strcmp(command, "disconnect all") == 0) {
 		ok = command_disconnect_all(this, encoder);
+		force_refresh_crl_file();
 	} else if (strncmp(command, "disconnect ", 10) == 0) {
 		ok = command_disconnect(this, encoder, command+10);
+		force_refresh_crl_file();
 	} else if (strcmp(command, "reload") == 0) {
 		gboolean restart = nuauth_reload(0);
 		if (restart) {
@@ -383,6 +385,9 @@ void command_execute(command_t * this, char *command)
 		} else {
 			encoder_add_string(encoder, "Cache disabled");
 		}
+	} else if (strcmp(command, "refresh crl") == 0) {
+		force_refresh_crl_file();
+		encoder_add_string(encoder, "Refresh of CRL file done");
 	} else if (strncmp(command, "debug_level ", 12) == 0) {
 		int debug_level = atoi(command+12);
 		if ((0 < debug_level) && (debug_level <= 9)) {

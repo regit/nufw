@@ -78,9 +78,11 @@ void user_check_and_decide(gpointer user_session, gpointer data)
 	conn_elts = userpckt_decode(userdata);
 
 	if (conn_elts == NULL) {
+		if (((struct nu_header *) userdata->buffer)->msg_type != EXTENDED_PROTO) {
+			log_message(INFO, DEBUG_AREA_USER,
+					"User packet decoding failed");
+		}
 		free_buffer_read(userdata);
-		log_message(INFO, DEBUG_AREA_USER,
-			    "User packet decoding failed");
 		return;
 	}
 
@@ -484,6 +486,38 @@ GSList *user_request(struct tls_buffer_read * data)
 	return conn_elts;
 }
 
+static GSList *treat_extended_proto(struct tls_buffer_read *data)
+{
+	int ret;
+	struct nu_header *header = (struct nu_header *) data->buffer;
+
+	/* FIXME double check this */
+	if (sizeof(*header) > (size_t)data->buffer_len) {
+		log_message(WARNING, DEBUG_AREA_USER,
+				"Error: too small message");
+		return NULL;
+	}
+	if (ntohs(header->length) > data->buffer_len) {
+		log_message(WARNING, DEBUG_AREA_USER,
+				"Error: message bigger than buffer");
+		return NULL;
+	}
+	if (! llist_empty(&(nuauthdatas->ext_proto_l))) {
+		ret = process_ext_message(data->buffer + sizeof(struct nu_header),
+				data->buffer_len - sizeof(struct nu_header),
+				&(nuauthdatas->ext_proto_l),
+				NULL);
+		if (ret != SASL_OK) {
+			log_message(WARNING, DEBUG_AREA_USER,
+					"Error when processing extended proto message");
+		}
+	} else {
+		log_message(WARNING, DEBUG_AREA_USER,
+				"No protocol extension supported but extended proto message");
+	}
+	return NULL;
+}
+
 /**
  * Decode user datagram packet and fill a connection with data
  * (called by user_check_and_decide()).
@@ -520,9 +554,13 @@ static GSList *userpckt_decode(struct tls_buffer_read *data)
 		return NULL;
 	}
 
-	if (header->msg_type != USER_REQUEST) {
-		log_message(WARNING, DEBUG_AREA_USER, "Unsupported message type");
-		return NULL;
+	switch (header->msg_type) {
+		case USER_REQUEST:
+			return user_request(data);
+		case EXTENDED_PROTO:
+			return treat_extended_proto(data);
+		default:
+			log_message(WARNING, DEBUG_AREA_USER, "Unsupported message type");
+			return NULL;
 	}
-	return user_request(data);
 }

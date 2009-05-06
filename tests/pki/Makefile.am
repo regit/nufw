@@ -1,5 +1,5 @@
 
-EXTRA_DIST = gen_certs.sh gen_config.sh gen_server_cnf.sh gen_user_cnf.sh
+EXTRA_DIST = gen_certs.sh gen_config.sh gen_server_cnf.sh gen_user_cnf.sh gen_subca_cnf.sh
 
 KEY_SIZE = 1024
 CA_PASS = mypassword

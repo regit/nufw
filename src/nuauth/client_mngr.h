@@ -40,6 +40,7 @@ user_session_t *look_for_username(const gchar * username);
 
 gboolean test_username_count_vs_max(const gchar * username, int maxcount);
 
+void log_clean_session(user_session_t *);
 void clean_session(user_session_t *);
 
 void foreach_session(GHFunc callback, void *data);

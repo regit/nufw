@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2008 INL
+ ** Copyright(C) 2008-2009 INL
  ** Written by  Pierre Chifflier <chifflier@inl.fr>
  **
  ** $Id$
@@ -112,6 +112,8 @@ G_MODULE_EXPORT gint user_packet_logs(void *element, tcp_state_t state,
 	char *str_state;
 	const connection_t *connection = element;
 	struct ulogd2_request *req;
+	u_int32_t u_time_sec;
+	u_int8_t u_state;
 
 	/* contruct request */
 	switch (state) {
@@ -131,6 +133,13 @@ G_MODULE_EXPORT gint user_packet_logs(void *element, tcp_state_t state,
 		str_state = "Unknown ";
 	}
 
+	if (connection->payload_len > sizeof(connection->payload)) {
+		log_message(WARNING, DEBUG_AREA_MAIN,
+				"ulogd2: invalid payload len %d, ignoring packet !\n",
+				connection->payload_len);
+		return 0;
+	}
+
 	req = ulogd2_request_new();
 	ulogd2_request_set_payload(req, (unsigned char*)connection->payload, connection->payload_len);
 
@@ -141,6 +150,17 @@ G_MODULE_EXPORT gint user_packet_logs(void *element, tcp_state_t state,
 		ulogd2_request_add_option(req, ULOGD2_OPT_PREFIX,
 				str_state, strlen(str_state));
 	}
+
+	u_state = (u_int8_t)state;
+	ulogd2_request_add_option(req, ULOGD2_OPT_STATE,
+			(void*)&u_state,
+			sizeof(u_int8_t));
+
+	/* this will work until 2038 */
+	u_time_sec = (u_int32_t)connection->timestamp;
+	ulogd2_request_add_option(req, ULOGD2_OPT_OOB_TIME_SEC,
+			(void*)&u_time_sec,
+			sizeof(u_int32_t));
 
 	if (connection->iface_nfo.indev[0] != '\0'
 	    || connection->iface_nfo.outdev[0] != '\0') {

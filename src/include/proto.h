@@ -141,7 +141,8 @@ typedef enum {
 	USER_HELLO,
 	AUTH_CONN_DESTROY,
 	AUTH_CONN_UPDATE,
-	AUTH_CONN_FIXED_TIMEOUT
+	AUTH_CONN_FIXED_TIMEOUT,
+	EXTENDED_PROTO,
 } nufw_message_t;
 
 
@@ -153,6 +154,7 @@ typedef enum {
 	VERSION_FIELD,
 	HELLO_FIELD,
 	CAPA_FIELD,
+	EXTENDED_PROTO_FIELD,
 } nu_field_identifier_t;
 
 struct nu_authreq {
@@ -226,7 +228,8 @@ typedef enum {
 	SRV_REQUIRED_DISCONNECT,
 	SRV_REQUIRED_HELLO,
 	SRV_REQUIRED_INFO,
-	SRV_INIT
+	SRV_EXTENDED_PROTO,
+	SRV_INIT,
 } nu_type_t;
 
 /** Server mode, value of with #SRV_TYPE (::nuv2_srv_message) message type */

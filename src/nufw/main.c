@@ -402,8 +402,8 @@ static struct option long_options[] = {
 	{"help", 0, NULL, 'h'},
 	{"version", 0, NULL, 'V'},
 	{"daemon", 0, NULL, 'D'},
-	{"strict", 0, NULL, 's'},
-	{"no-strict", 0, NULL, 'S'},
+	{"no-strict", 0, NULL, 's'},
+	{"strict", 0, NULL, 'S'},
 	{"no-fqdn", 0, NULL, 'N'},
 	{"key", 1, NULL, 'k'},
 	{"cert", 1, NULL, 'c'},
@@ -445,9 +445,9 @@ void display_usage(void)
 \t-V (--version    ): display version and exit\n\
 \t-D (--daemon     ): daemonize\n\
 \t-f (--config     ): use specific config file\n\
-\t-s (--strict     ): do not enforce strict checking of TLS certificates\n\
-\t-S (--no-strict  ): this option does nothing, it is here for backward compatibility\n\
-\t-N (--no-fqdn): do not check nuauth fqdn (-d params) against provided certificate\n\
+\t-s (--no-strict  ): do not enforce strict checking of TLS certificates\n\
+\t-S (--strict     ): this option does nothing, it is here for backward compatibility\n\
+\t-N (--no-fqdn    ): do not check nuauth fqdn (-d params) against provided certificate\n\
 \t-k (--key        ): certificate key file\n\
 \t-c (--cert       ): certificate file\n\
 \t-a (--ca         ): certificate authority file (strict checking is done if selected) (default: none)\n\

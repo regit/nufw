@@ -221,6 +221,9 @@ struct nuauth_datas {
 	gint hello_capa;
 	gint tcp_capa;
 	gint udp_capa;
+
+	/* protocol extension */
+	struct llist_head ext_proto_l;
 };
 
 struct nuauth_params *nuauthconf;

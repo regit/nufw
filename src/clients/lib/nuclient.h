@@ -100,6 +100,9 @@ const char *nu_client_strerror(nuauth_session_t *session, nuclient_error_t *err)
 int nu_client_global_init(nuclient_error_t *err);
 void nu_client_global_deinit();
 
+int nu_client_init_config();
+int nu_client_init_plugins();
+
 nuauth_session_t *nu_client_new(const char *username,
 		const char *password,
 		unsigned char diffie_hellman,

@@ -110,6 +110,10 @@ typedef int (*nuclient_plugin_init_func)(unsigned int, struct nuclient_plugin_t 
 #define NUCLIENT_PLUGIN_INIT		nuclient_plugin_init
 #define NUCLIENT_PLUGIN_INIT_STR	"nuclient_plugin_init"
 
+/** \brief Init plugins infrastructure
+ */
+int init_plugins(void);
+
 /** \brief Load all plugins (from configuration file)
  */
 int load_plugins(void);

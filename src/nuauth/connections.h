@@ -102,7 +102,7 @@ typedef struct {
 /**
  * \brief Size of payload we keep for parsing (must be > headers)
  */
-#define STORED_PAYLOAD_SIZE	64
+#define STORED_PAYLOAD_SIZE	128
 
 /**
  * This is a packet blocked by NuFW and waiting for an authentication

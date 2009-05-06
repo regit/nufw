@@ -231,6 +231,8 @@ struct nuauth_session {
 	int suppress_cert_verif;
 };
 
+struct llist_head nu_postauth_extproto_l;
+struct llist_head nu_cruise_extproto_l;
 
 /* Funstions declarations */
 
