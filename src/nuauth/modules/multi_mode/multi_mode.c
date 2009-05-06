@@ -129,17 +129,17 @@ static int connect_to_emc(struct multi_mode_params *params)
 			}
 		}
 	}
-#if 0
-	if (crlfile && *crlfile) {
-		ret = nussl_ssl_set_crl_file(params->nussl, crlfile, cafile);
+
+	if (nuauth_tls.crl_file != NULL) {
+		ret = nussl_ssl_set_crl_file(params->nussl, nuauth_tls.crl_file, nuauth_tls.ca);
 		if (ret != NUSSL_OK) {
 			fprintf(stderr,"TLS error with CRL: %s",
 				nussl_get_error(params->nussl));
 			return 0;
 		}
-		printf("Using crl: %s\n", crlfile);
+		printf("Using crl: %s\n", nuauth_tls.crl_file);
 	}
-#endif
+
 
 
 
