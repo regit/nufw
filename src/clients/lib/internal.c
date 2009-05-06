@@ -22,6 +22,7 @@
 
 #include "nufw_source.h"
 #include "libnuclient.h"
+#include "nuclient_plugins.h"
 #include "sending.h"
 #include "tcptable.h"
 #include <sasl/saslutil.h>
@@ -226,7 +227,7 @@ int mysasl_negotiate(nuauth_session_t * session, sasl_conn_t * conn,
 	return SASL_OK;
 }
 
-static int add_packet_to_send(nuauth_session_t * session, conn_t ** auth,
+int add_packet_to_send(nuauth_session_t * session, conn_t ** auth,
 			      int *count_p, conn_t * bucket)
 {
 	int count = *count_p;
