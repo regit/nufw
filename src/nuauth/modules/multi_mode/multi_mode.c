@@ -32,6 +32,11 @@ extern struct nuauth_tls_t nuauth_tls;
 
 #define EMC_NODE "127.0.0.1"
 
+#define MULTI_EXT_NAME "MULTI"
+#define MULTI_CONNECT_CMD "CONNECT"
+#define MULTI_CONNLIST_CMD "CONNLIST"
+#define MULTI_CONNECTED_CMD "CONNECTED"
+
 struct multi_mode_params {
 	/* FIXME switch to list */
 	gchar *emc_node;
@@ -196,6 +201,34 @@ static int connect_to_emc(struct multi_mode_params *params)
 	return 1;
 }
 
+
+static void multi_warn_client(struct in6_addr *saddr, const char *connect_string)
+{
+	char buf[1024];
+	struct nu_header * header = (struct nu_header *) buf;
+	char * enc_field = buf + sizeof(* header);
+	struct msg_addr_set global_msg;
+	int ret;
+
+	header->proto = PROTO_VERSION;
+	header->msg_type = EXTENDED_PROTO;
+	header->option = 0;
+
+	ret = snprintf(enc_field, sizeof(buf) - sizeof(*header),
+				"BEGIN\n" MULTI_EXT_NAME "\n" MULTI_CONNECTED_CMD " %s\nEND\n",
+				connect_string);
+
+	header->length = sizeof(struct nu_header) + ret;
+	header->length = htons(header->length);
+
+	global_msg.msg = (struct nu_srv_message *) header;
+	global_msg.addr = *saddr;
+	global_msg.found = FALSE;
+
+	warn_clients(&global_msg);
+}
+
+
 void emc_thread(void *params_p )
 {
 	struct multi_mode_params *params =
@@ -203,6 +236,7 @@ void emc_thread(void *params_p )
 	/* connect to EMC via nussl */
 	connect_to_emc(params);
 	/* "endless" loop */
+
 #if 0
 	while ( ) {
 	/* get data */
@@ -217,96 +251,13 @@ void emc_thread(void *params_p )
 	/*	test if there is a user at IP */
 
 	/*	send connection request if necessary */
-	global_msg->addr =
-		((tracking_t *) message->datas)->saddr;
-	global_msg->found = FALSE;
-	/* search in client array */
-	ask_clients_connection(global_msg, params);
+	multi_warn_clients(saddr, conninfo);
 
 
 	/*	else forget packet */
 	}
 #endif
 }
-
-/**
- * Ask each client of global_msg address set to send their new connections
- * (connections in stage "SYN SENT").
- *
- * \param global_msg Address set of clients
- * \return Returns 0 on error, 1 otherwise
- */
-char ask_clients_connection(struct msg_addr_set *global_msg, gpointer params_p)
-{
-	struct multi_mode_params *params =
-	    (struct multi_mode_params *) params_p;
-#if 0
-	ip_sessions_t *ipsessions = NULL;
-	GSList *ipsockets = NULL;
-	GSList *badsockets = NULL;
-	struct timeval timestamp;
-	struct timeval interval;
-#if DEBUG_ENABLE
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG, DEBUG_AREA_USER)) {
-		char addr_ascii[INET6_ADDRSTRLEN];
-		format_ipv6(&global_msg->addr, addr_ascii, INET6_ADDRSTRLEN, NULL);
-		g_message("Warn client(s) on IP %s", addr_ascii);
-	}
-#endif
-
-	g_mutex_lock(client_mutex);
-	ipsessions = g_hash_table_lookup(client_ip_hash, &global_msg->addr);
-	if (ipsessions) {
-		global_msg->found = TRUE;
-		gettimeofday(&timestamp, NULL);
-
-		if (ipsessions->proto_version >= PROTO_VERSION_V22_1) {
-			timeval_substract(&interval, &timestamp, &(ipsessions->last_message));
-			if (interval.tv_sec || (interval.tv_usec < nuauthconf->push_delay)) {
-				g_mutex_unlock(client_mutex);
-				return 1;
-			} else {
-				ipsessions->last_message.tv_sec = timestamp.tv_sec;
-				ipsessions->last_message.tv_usec = timestamp.tv_usec;
-			}
-		}
-
-		for (ipsockets = ipsessions->sessions; ipsockets; ipsockets = ipsockets->next) {
-			user_session_t *session = (user_session_t *)ipsockets->data;
-			/* check if client has MULTI capability */
-			if (session->capa_flags & (1 << params->capa_index)) {
-				int ret;
-				ret = nussl_write(session->nussl,
-						(char*)global_msg->msg,
-						ntohs(global_msg->msg->length));
-				if (ret < 0) {
-					log_message(WARNING, DEBUG_AREA_USER,
-							"Failed to send warning to client(s): %s", nussl_get_error(session->nussl));
-					badsockets = g_slist_prepend(badsockets, GINT_TO_POINTER(ipsockets->data));
-				}
-			}
-		}
-		if (badsockets) {
-			for (; badsockets; badsockets = badsockets->next) {
-				int sockno = GPOINTER_TO_INT(badsockets->data);
-				nu_error_t ret = delete_client_by_socket_ext(sockno, 0);
-				if (ret != NU_EXIT_OK) {
-					log_message(WARNING, DEBUG_AREA_USER,
-						"Fails to destroy socket in hash.");
-				}
-			}
-			g_slist_free(badsockets);
-		}
-		g_mutex_unlock(client_mutex);
-		return 1;
-	} else {
-		global_msg->found = FALSE;
-		g_mutex_unlock(client_mutex);
-		return 0;
-	}
-#endif
-}
-
 
 
 /**
