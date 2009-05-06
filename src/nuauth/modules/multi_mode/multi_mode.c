@@ -24,6 +24,8 @@
 
 extern struct nuauth_tls_t nuauth_tls;
 
+#define GROSDEBUG 1
+
 /**
  * \ingroup NuauthModules
  */
@@ -38,6 +40,8 @@ struct multi_mode_params {
 	/* multi capability index */
 	unsigned char capa_index;
 };
+
+static int connect_to_emc(struct multi_mode_params *params);
 
 /*
  * Returns version of nuauth API
@@ -81,14 +85,18 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	/* register protocol function */
 
 	/* start EMC connected thread */
+	/* XXX use a thread */
+	connect_to_emc(params);
 
 	return TRUE;
 }
 
-int connect_to_emc(struct multi_mode_params *params)
+static int connect_to_emc(struct multi_mode_params *params)
 {
 	int ret;
 	int exit_on_error = 0;
+	int port = 4140; // XXX hardcoded value
+	int suppress_cert_verif = 1; // XXX hardcoded value
 
 	if (params->nussl) {
 		return -1;
@@ -135,14 +143,13 @@ int connect_to_emc(struct multi_mode_params *params)
 
 
 
-#if 0
-	if (session->suppress_cert_verif)
-		nussl_ssl_disable_certificate_check(session->nussl,1);
+	if (suppress_cert_verif)
+		nussl_ssl_disable_certificate_check(params->nussl,1);
 
+#if 0
 	if (session->suppress_fqdn_verif)
 		nussl_set_session_flag(session->nussl, NUSSL_SESSFLAG_IGNORE_ID_MISMATCH, 1);
 
-	nussl_set_hostinfo(session->nussl, hostname, port);
 	if (session->pkcs12_file) {
 		if (!nu_client_load_pkcs12(session, session->pkcs12_file, session->pkcs12_password, err))
 			return 0;
@@ -160,6 +167,8 @@ int connect_to_emc(struct multi_mode_params *params)
 	}
 #endif
 
+	nussl_set_hostinfo(params->nussl, params->emc_node, port);
+
 	ret = nussl_open_connection(params->nussl);
 	if (ret != NUSSL_OK) {
 		nussl_session_destroy(params->nussl);
@@ -169,6 +178,12 @@ int connect_to_emc(struct multi_mode_params *params)
 		return -1;
 	}
 
+#ifdef GROSDEBUG
+	{
+		const char msg[] = "Hello from multi_mode";
+		nussl_write(params->nussl, msg, sizeof(msg));
+	}
+#endif
 
 
 	return 1;
