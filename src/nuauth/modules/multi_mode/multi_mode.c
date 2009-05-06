@@ -1,8 +1,7 @@
 /*
  ** Copyright(C) 2009 INL
  ** written by Eric Leblond <eleblond@inl.fr>
- **
- ** $Id$
+ **            Pierre Chifflier <chifflier@inl.fr>
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -19,7 +18,11 @@
  */
 #include <auth_srv.h>
 
+#include <nussl.h>
+
 #include "nuauthconf.h"
+
+extern struct nuauth_tls_t nuauth_tls;
 
 /**
  * \ingroup NuauthModules
@@ -31,7 +34,7 @@ struct multi_mode_params {
 	/* FIXME switch to list */
 	gchar *emc_node;
 	/* session to EMC */
-	nussl *session;
+	nussl_session *nussl;
 	/* multi capability index */
 	unsigned char capa_index;
 };
@@ -82,54 +85,57 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	return TRUE;
 }
 
-void connect_to_emc(struct multi_mode_params *params)
+int connect_to_emc(struct multi_mode_params *params)
 {
+	int ret;
+	int exit_on_error = 0;
+
 	if (params->nussl) {
-		return;
+		return -1;
 	}
 
 	params->nussl = nussl_session_create(NUSSL_SSL_CTX_CLIENT);
 
-	if (nuauthdatas->certfile != NULL || nuauthdatas->keyfile != NULL) {
-		ret = nussl_ssl_set_keypair(params->nussl, certfile, keyfile);
+	if (nuauth_tls.cert != NULL || nuauth_tls.key != NULL) {
+		ret = nussl_ssl_set_keypair(params->nussl, nuauth_tls.cert, nuauth_tls.key);
 
 		if (ret != NUSSL_OK) {
 				printf("Warning: Failed to load default certificate and key.\n");
 		}
 	}
-	if (cafile != NULL) {
-		ret = nussl_ssl_trust_cert_file(session->nussl, cafile);
+	if (nuauth_tls.ca != NULL) {
+		ret = nussl_ssl_trust_cert_file(params->nussl, nuauth_tls.ca);
 		if (ret != NUSSL_OK) {
 			if (exit_on_error) {
-				if (home)
-					free(home);
-				SET_ERROR(err, NUSSL_ERR, ret);
-				return 0;
+				log_message(FATAL, DEBUG_AREA_MAIN,
+						"Unable to set CA");
+				return -1;
 			}
 			else {
-				if (!session->suppress_ca_warning) {
-					fprintf(stderr,"\nWARNING: you have not provided any certificate authority.\n"
-							"nutcpc will *NOT* verify server certificate trust.\n"
-							"Use the -A <cafile> option to set up CA.\n\n"
-					       );
-				}
-				session->suppress_fqdn_verif = 1;
-				nussl_set_session_flag(session->nussl, NUSSL_SESSFLAG_IGNORE_ID_MISMATCH, 1);
+				fprintf(stderr,"\nWARNING: you have not provided any certificate authority.\n"
+						"multi_mode will *NOT* verify server certificate trust.\n"
+						"Use the -A <cafile> option to set up CA.\n\n"
+				       );
+				//session->suppress_fqdn_verif = 1;
+				nussl_set_session_flag(params->nussl, NUSSL_SESSFLAG_IGNORE_ID_MISMATCH, 1);
 			}
 		}
 	}
+#if 0
 	if (crlfile && *crlfile) {
-		ret = nussl_ssl_set_crl_file(session->nussl, crlfile, cafile);
+		ret = nussl_ssl_set_crl_file(params->nussl, crlfile, cafile);
 		if (ret != NUSSL_OK) {
 			fprintf(stderr,"TLS error with CRL: %s",
-				nussl_get_error(session->nussl));
+				nussl_get_error(params->nussl));
 			return 0;
 		}
 		printf("Using crl: %s\n", crlfile);
 	}
+#endif
 
 
 
+#if 0
 	if (session->suppress_cert_verif)
 		nussl_ssl_disable_certificate_check(session->nussl,1);
 
@@ -152,32 +158,36 @@ void connect_to_emc(struct multi_mode_params *params)
 		if (!nu_client_load_crl(session, session->pem_crl, session->pem_ca, err))
 			return 0;
 	}
+#endif
 
-	ret = nussl_open_connection(session->nussl);
+	ret = nussl_open_connection(params->nussl);
 	if (ret != NUSSL_OK) {
-		nussl_session_destroy(session->nussl);
-		session->nussl = NULL;
-		SET_ERROR(err, NUSSL_ERR, ret);
-		return 0;
+		nussl_session_destroy(params->nussl);
+		params->nussl = NULL;
+		log_message(FATAL, DEBUG_AREA_MAIN,
+				"Could not open connection");
+		return -1;
 	}
 
 
 
+	return 1;
 }
 
-void emc_thread( )
+void emc_thread(void *params_p )
 {
 	struct multi_mode_params *params =
 	    (struct multi_mode_params *) params_p;
 	/* connect to EMC via nussl */
-	connect_to_emc();
+	connect_to_emc(params);
 	/* "endless" loop */
+#if 0
 	while ( ) {
 	/* get data */
 		bufsize = nussl_read(session->nussl, buf, sizeof(buf));
 		if (bufsize <= 0) {
 			/* error */
-			connect_to_emc();
+			connect_to_emc(params);
 		}
 		switch (message->type) {
 	/* if connection asked */
@@ -194,6 +204,7 @@ void emc_thread( )
 
 	/*	else forget packet */
 	}
+#endif
 }
 
 /**
@@ -207,6 +218,7 @@ char ask_clients_connection(struct msg_addr_set *global_msg, gpointer params_p)
 {
 	struct multi_mode_params *params =
 	    (struct multi_mode_params *) params_p;
+#if 0
 	ip_sessions_t *ipsessions = NULL;
 	GSList *ipsockets = NULL;
 	GSList *badsockets = NULL;
@@ -270,6 +282,7 @@ char ask_clients_connection(struct msg_addr_set *global_msg, gpointer params_p)
 		g_mutex_unlock(client_mutex);
 		return 0;
 	}
+#endif
 }
 
 
