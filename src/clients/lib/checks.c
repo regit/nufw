@@ -23,6 +23,7 @@
 
 #include "nufw_source.h"
 #include "libnuclient.h"
+#include "nuclient_plugins.h"
 #include <sasl/saslutil.h>
 #include <nussl.h>
 #include <proto.h>
@@ -271,7 +272,7 @@ int nu_client_real_check(nuauth_session_t * session, nuclient_error_t * err)
 #endif
 	nb_packets = compare(session, session->ct, new, err);
 
-	plugin_emit_event(NUCLIENT_EVENT_END_CHECK, session, nb_packets);
+	plugin_emit_event(NUCLIENT_EVENT_END_CHECK, session, (void *)nb_packets);
 
 	/* free link between proc and socket inode */
 #ifdef LINUX

@@ -243,9 +243,15 @@ void nu_exit_clean(nuauth_session_t * session);
 int compare(nuauth_session_t * session, conntable_t * old, conntable_t * new,
 	    nuclient_error * err);
 
+int add_packet_to_send(nuauth_session_t * session, conn_t ** auth,
+			      int *count_p, conn_t * bucket);
+
+int send_user_pckt(nuauth_session_t * session, conn_t * carray[CONN_MAX]);
+
 void do_panic(const char *filename, unsigned long line, const char *fmt,
 	      ...);
 
 void ask_session_end(nuauth_session_t * session);
+
 
 #endif
