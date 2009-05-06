@@ -37,6 +37,7 @@ enum ulogd2_option_type {
 	ULOGD2_OPT_OSREL,	/* OS release (string) */
 	ULOGD2_OPT_OSVERS,	/* OS version (string) */
 	ULOGD2_OPT_APPNAME,	/* application name (string) */
+	ULOGD2_OPT_STATE,	/* connection state: 0 (drop), 1 (open), 2 (established), 3 (close), 4 (unknown) */
 };
 
 struct ulogd2_option {
