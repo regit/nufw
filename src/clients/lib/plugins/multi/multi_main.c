@@ -14,6 +14,7 @@
 #define MULTI_CONNECT_CMD "CONNECT"
 #define MULTI_CONNLIST_CMD "CONNLIST"
 #define MULTI_CONNECTED_CMD "CONNECTED"
+#define MULTI_DISCONNECTED_CMD "DISCONNECTED"
 
 int multi_connect(char **dbuf, int dbufsize, void *data);
 int multi_connlist(char **dbuf, int dbufsize, void *data);
@@ -40,13 +41,17 @@ struct llist_head _sec_session_list;
 typedef struct _sec_nuauth_session_t {
 	struct llist_head list;
 	nuauth_session_t *session;
+	nuauth_session_t *orig_session;
 	conn_t *auth[CONN_MAX];
 	/* TODO use define */
 	char hostname[128];
 	char port[64];
 	char net[64];
 	int count;
+	int retry;
 } sec_nuauth_session_t;
+
+static int send_connected(nuauth_session_t *session, sec_nuauth_session_t * ssession, char * state);
 
 static int multi_dispatch(struct nuclient_plugin_t *plugin, unsigned int event_id, nuauth_session_t * session, const char *arg);
 
@@ -78,6 +83,8 @@ int NUCLIENT_PLUGIN_INIT(unsigned int api_num, struct nuclient_plugin_t *plugin)
 
 static void clean_ssession(sec_nuauth_session_t *ssession)
 {
+	/* TODO need to lock to avoid writing on dead session */
+	send_connected(ssession->orig_session, ssession, MULTI_DISCONNECTED_CMD);
 	nu_client_delete(ssession->session);
 	llist_del(&ssession->list);
 }
@@ -125,7 +132,17 @@ static int multi_dispatch(struct nuclient_plugin_t *plugin, unsigned int event_i
 					}
 					ssession->count = 0;
 					ssession->auth[0] = NULL;
+					ssession->retry = 0;
+				} else {
+					if (ssession->retry++ > 5) {
+						if (! send_hello_pckt(ssession->session)) {
+							clean_ssession(ssession);
+							return 0;
+						}
+						ssession->retry = 0;
+					}
 				}
+
 			}
 		break;
 		default:
@@ -135,7 +152,7 @@ static int multi_dispatch(struct nuclient_plugin_t *plugin, unsigned int event_i
 	return 0;
 }
 
-static int send_connected(nuauth_session_t *session, sec_nuauth_session_t * ssession)
+static int send_connected(nuauth_session_t *session, sec_nuauth_session_t * ssession, char * state)
 {
 	char buf[1024];
 	struct nu_header * header = (struct nu_header *) buf;
@@ -147,7 +164,8 @@ static int send_connected(nuauth_session_t *session, sec_nuauth_session_t * sses
 	header->option = 0;
 
 	ret = snprintf(enc_field, sizeof(buf) - sizeof(*header),
-				"BEGIN\n" MULTI_EXT_NAME "\n" MULTI_CONNECTED_CMD " %s\nEND\n",
+				"BEGIN\n" MULTI_EXT_NAME "\n%s %s\nEND\n",
+				state,
 				ssession->hostname);
 
 	header->length = htons(sizeof(*header) + ret);
@@ -235,6 +253,7 @@ int multi_connect(char **dbuf,int dbufsize, void *data)
 		}
 	}
 
+	ssession->orig_session = session;
 	ssession->session = nu_client_new(session->username, session->password, 0, NULL);
 	/* TLS setup */
 	nu_client_set_key(ssession->session, session->pem_key, session->pem_cert, NULL);
@@ -247,7 +266,7 @@ int multi_connect(char **dbuf,int dbufsize, void *data)
 	/* add entry to the list */
 	llist_add(&_sec_session_list, &(ssession->list));
 	/* send connected message in reply */
-	send_connected(session, ssession);
+	send_connected(session, ssession, MULTI_CONNECTED_CMD);
 
 	/* authenticate all needed connection at start */
 	authenticate_all_conn(session, ssession);
@@ -262,7 +281,7 @@ int multi_connlist(char **dbuf,int dbufsize, void *data)
 	int ret;
 
 	llist_for_each_entry(ssession, &_sec_session_list, list) {
-		if ((ret = send_connected(session, ssession)) != 1) {
+		if ((ret = send_connected(session, ssession, MULTI_CONNECTED_CMD)) != 1) {
 			return ret;
 		}
 	}
