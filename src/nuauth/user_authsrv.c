@@ -506,7 +506,7 @@ static GSList *treat_extended_proto(struct tls_buffer_read *data)
 		ret = process_ext_message(data->buffer + sizeof(struct nu_header),
 				data->buffer_len - sizeof(struct nu_header),
 				&(nuauthdatas->ext_proto_l),
-				NULL);
+				data);
 		if (ret != SASL_OK) {
 			log_message(WARNING, DEBUG_AREA_USER,
 					"Error when processing extended proto message");
