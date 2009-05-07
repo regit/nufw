@@ -76,6 +76,12 @@ int NUCLIENT_PLUGIN_INIT(unsigned int api_num, struct nuclient_plugin_t *plugin)
 	return 0;
 }
 
+static void clean_ssession(sec_nuauth_session_t *ssession)
+{
+	nu_client_delete(ssession->session);
+	llist_del(&ssession->list);
+}
+
 static int multi_send_packet(struct nuclient_plugin_t * plugin, conn_t * arg)
 {
 	sec_nuauth_session_t *ssession;
@@ -90,7 +96,7 @@ static int multi_send_packet(struct nuclient_plugin_t * plugin, conn_t * arg)
 		if (add_packet_to_send
 				(ssession->session, (ssession->auth), &(ssession->count),
 				 arg) == -1) {
-			/* TODO kill session if needed */
+			clean_ssession(ssession);
 		}
 		/* */
 	}
@@ -114,7 +120,8 @@ static int multi_dispatch(struct nuclient_plugin_t *plugin, unsigned int event_i
 					}
 					if (send_user_pckt(ssession->session, ssession->auth) != 1) {
 						/* error sending */
-						/* TODO Destroy session; */
+						clean_ssession(ssession);
+						return 0;
 					}
 					ssession->count = 0;
 					ssession->auth[0] = NULL;
@@ -149,9 +156,7 @@ static int send_connected(nuauth_session_t *session, sec_nuauth_session_t * sses
 	if (ret < 0) {
 		if (session->verbose)
 			printf("Error sending tls data: ...");
-		/*
-		SET_ERROR(err, NUSSL_ERR, ret);
-		*/
+		clean_ssession(ssession);
 		return 0;
 	}
 	return 1;
@@ -159,7 +164,7 @@ static int send_connected(nuauth_session_t *session, sec_nuauth_session_t * sses
 
 
 static int authenticate_all_conn(nuauth_session_t *session,
-				 sec_nuauth_session_t * sesssion)
+				 sec_nuauth_session_t * ssession)
 {
 	int i;
 	int count = 0;
@@ -172,6 +177,7 @@ static int authenticate_all_conn(nuauth_session_t *session,
 			if (add_packet_to_send(session, auth, &count,
 					 bucket) == -1) {
 				/* problem when sending we exit */
+				clean_ssession(ssession);
 				return -1;
 			}
 
@@ -184,6 +190,7 @@ static int authenticate_all_conn(nuauth_session_t *session,
 		}
 		if (send_user_pckt(session, auth) != 1) {
 			/* error sending */
+			clean_ssession(ssession);
 			return -1;
 		}
 	}
