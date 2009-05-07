@@ -84,7 +84,7 @@ static void _nuclient_load_plugin(void *data, char *key, char *val)
 	struct nuclient_plugin_t *tmp;
 	char *plugins_path = "/usr/lib/nuclient"; // XXX harcoded value
 	void * handle;
-	int dlopen_args = RTLD_LOCAL;
+	int dlopen_args = RTLD_LAZY|RTLD_LOCAL;
 	const char *section_prefix = "plugins/";
 	const char *instance_name = NULL;
 
