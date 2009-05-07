@@ -32,7 +32,7 @@
 
 struct postauth_localuser_params {
 	int require_capa;
-	int capa_index;
+	unsigned int capa_index;
 };
 
 /*

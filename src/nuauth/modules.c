@@ -778,7 +778,7 @@ void block_on_conf_reload()
  * \brief Register client capabilities (for plugin)
  */
 
-nu_error_t register_client_capa(const char * name, int * index)
+nu_error_t register_client_capa(const char * name, unsigned int * index)
 {
 	int i;
 
