@@ -48,6 +48,7 @@ nu_error_t recv_message(nuauth_session_t *session, nuclient_error_t *err)
 {
 	int ret;
 	char dgram[512];
+	struct nu_header * hdr = dgram;
 	const size_t message_length =
 	    sizeof(struct nu_header) + sizeof(struct nu_authfield_hello) +
 	    sizeof(struct nu_authreq);
@@ -87,7 +88,7 @@ nu_error_t recv_message(nuauth_session_t *session, nuclient_error_t *err)
 		return NU_EXIT_ERROR;
 	}
 
-	switch (dgram[0]) {
+	switch (hdr->msg_type) {
 		case SRV_REQUIRED_PACKET:
 			if (session->debug_mode) {
 				printf("[+] Client is asked to send new connections.\n");
@@ -114,9 +115,14 @@ nu_error_t recv_message(nuauth_session_t *session, nuclient_error_t *err)
 				return NU_EXIT_ERROR;
 			}
 			break;
-
+		case EXTENDED_PROTO:
+			process_ext_message(dgram + sizeof(struct nu_srv_message),
+					ret - sizeof(struct nu_srv_message),
+					&nu_cruise_extproto_l,
+					session);
+			break;
 		default:
-			printf("unknown message\n");
+			printf("unknown message %d\n", hdr->msg_type);
 			return NU_EXIT_CONTINUE;
 	}
 	return NU_EXIT_OK;
