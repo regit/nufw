@@ -218,9 +218,9 @@ struct nuauth_datas {
 	struct sigaction old_sighup_hdl;
 
 	/* capabilities index */
-	gint hello_capa;
-	gint tcp_capa;
-	gint udp_capa;
+	guint hello_capa;
+	guint tcp_capa;
+	guint udp_capa;
 
 	/* protocol extension */
 	struct llist_head ext_proto_l;
