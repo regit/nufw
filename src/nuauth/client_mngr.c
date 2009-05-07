@@ -371,9 +371,9 @@ char warn_clients(struct msg_addr_set *global_msg,
 	ipsessions = g_hash_table_lookup(client_ip_hash, &global_msg->addr);
 	if (ipsessions) {
 		global_msg->found = TRUE;
-		gettimeofday(&timestamp, NULL);
 
-		if (ipsessions->proto_version >= PROTO_VERSION_V22_1) {
+		if ((!scheck) && ipsessions->proto_version >= PROTO_VERSION_V22_1) {
+			gettimeofday(&timestamp, NULL);
 			timeval_substract(&interval, &timestamp, &(ipsessions->last_message));
 			if (interval.tv_sec || ((unsigned)interval.tv_usec < nuauthconf->push_delay)) {
 				g_mutex_unlock(client_mutex);
