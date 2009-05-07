@@ -491,17 +491,20 @@ static GSList *treat_extended_proto(struct tls_buffer_read *data)
 	int ret;
 	struct nu_header *header = (struct nu_header *) data->buffer;
 
-	/* FIXME double check this */
 	if (sizeof(*header) > (size_t)data->buffer_len) {
 		log_message(WARNING, DEBUG_AREA_USER,
 				"Error: too small message");
 		return NULL;
 	}
-	if (ntohs(header->length) > data->buffer_len) {
+
+	if (header->length > data->buffer_len) {
 		log_message(WARNING, DEBUG_AREA_USER,
-				"Error: message bigger than buffer");
+				"Error: message bigger than buffer (%d vs %d)",
+				header->length,
+				data->buffer_len);
 		return NULL;
 	}
+
 	if (! llist_empty(&(nuauthdatas->ext_proto_l))) {
 		ret = process_ext_message(data->buffer + sizeof(struct nu_header),
 				data->buffer_len - sizeof(struct nu_header),
