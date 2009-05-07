@@ -33,4 +33,6 @@ struct emc_netmask_t {
 	u_int16_t length;
 };
 
+int emc_netmask_order_func (gconstpointer a, gconstpointer b);
+
 #endif /* __EMC_DIRECTORY_H__ */

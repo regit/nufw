@@ -44,6 +44,7 @@ struct emc_server_context {
 	int continue_processing;
 
 	GList *tls_server_list;
+	GTree *nuauth_directory; /**< list of emc_netmask_t elements */
 
 	GThreadPool *pool_tls_handshake;
 	GThreadPool *pool_reader;

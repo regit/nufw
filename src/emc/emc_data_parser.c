@@ -77,11 +77,15 @@ static struct emc_netmask_t * _convert_str_to_netmask(char *mask, unsigned int m
 
 	if ( res->ai_family == AF_INET ) {
 		peer4 = (struct sockaddr_in *)res->ai_addr;
-		netmask->u.u4 = (u_int32_t)peer4->sin_addr.s_addr;
+		netmask->u.u4 = ntohl((u_int32_t)peer4->sin_addr.s_addr);
 	}
 	else if ( res->ai_family == AF_INET6 ) {
+		int i;
 		peer6 = (struct sockaddr_in6 *)res->ai_addr;
 		memcpy(&netmask->u.u16, peer6->sin6_addr.s6_addr, sizeof(netmask->u.u16));
+		for (i=0; i<4; i++) {
+			netmask->u.u16[i] = ntohl( netmask->u.u16[i] );
+		}
 	}
 
 	netmask->length = (u_int16_t)masklen;
@@ -178,7 +182,9 @@ int emc_parse_datafile(struct emc_server_context *ctx, const char *file)
 		netmask = _emc_parse_line(buf);
 		if (netmask == NULL) {
 			log_printf(DEBUG_LEVEL_CRITICAL, "ERROR invalid line is:\n%s", buf);
+			continue;
 		}
+		g_tree_insert(ctx->nuauth_directory, netmask, netmask);
 	}
 
 	fclose(fp);

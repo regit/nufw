@@ -49,6 +49,7 @@
 #include "emc_worker.h"
 
 #include "emc_data_parser.h"
+#include "emc_directory.h"
 
 ev_async client_ready_signal;
 ev_signal sigint_watcher, sigterm_watcher, sigusr1_watcher;
@@ -340,6 +341,8 @@ int emc_init_server(struct emc_server_context *ctx)
 	max_workers = emc_config_table_get_or_default_int("emc_max_workers", EMC_DEFAULT_MAX_WORKERS);
 	emc_data_file = emc_config_table_get("emc_data_file");
 
+	ctx->nuauth_directory = g_tree_new( emc_netmask_order_func );
+
 	result = emc_parse_datafile(ctx, emc_data_file);
 	if (result < 0) {
 		return -1;
@@ -398,6 +401,8 @@ int emc_start_server(struct emc_server_context *ctx)
 	g_thread_pool_free(ctx->pool_tls_handshake, TRUE, TRUE);
 	g_thread_pool_free(ctx->pool_reader, TRUE, TRUE);
 	g_async_queue_unref(ctx->work_queue);
+
+	g_tree_destroy(ctx->nuauth_directory);
 
 	ev_default_destroy();
 
