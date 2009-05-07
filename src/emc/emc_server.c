@@ -3,8 +3,6 @@
  ** Written by Pierre Chifflier <chifflier@inl.fr>
  **     INL : http://www.inl.fr/
  **
- ** $Id$
- **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
  ** the Free Software Foundation, version 3 of the License.
@@ -49,6 +47,8 @@
 #include "emc_server.h"
 #include "emc_tls.h"
 #include "emc_worker.h"
+
+#include "emc_data_parser.h"
 
 ev_async client_ready_signal;
 ev_signal sigint_watcher, sigterm_watcher, sigusr1_watcher;
@@ -333,10 +333,17 @@ int emc_init_server(struct emc_server_context *ctx)
 {
 	int result;
 	int max_workers;
+	char *emc_data_file;
 
 	g_thread_init(NULL);
 
 	max_workers = emc_config_table_get_or_default_int("emc_max_workers", EMC_DEFAULT_MAX_WORKERS);
+	emc_data_file = emc_config_table_get("emc_data_file");
+
+	result = emc_parse_datafile(ctx, emc_data_file);
+	if (result < 0) {
+		return -1;
+	}
 
 	loop = ev_default_loop(0);
 
