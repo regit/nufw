@@ -29,6 +29,7 @@ extern struct nuauth_tls_t nuauth_tls;
 struct multi_mode_params {
 	/* FIXME switch to list */
 	gchar *emc_node;
+	struct nuauth_thread_t emc_thread;
 	/* session to EMC */
 	nussl_session *nussl;
 	/* multi capability index */
@@ -38,6 +39,7 @@ struct multi_mode_params {
 };
 
 static int connect_to_emc(struct multi_mode_params *params);
+static void *emc_thread(struct nuauth_thread_t *data);
 
 /*
  * Returns version of nuauth API
@@ -53,7 +55,8 @@ G_MODULE_EXPORT gchar *unload_module_with_params(gpointer params_p)
 	struct multi_mode_params *params =
 	    (struct multi_mode_params *) params_p;
 
-	/* FIXME close EMC thread */
+	thread_stop(&(params->emc_thread));
+	nussl_session_destroy(params->nussl);
 	g_free(params->emc_node);
 	g_free(params);
 
@@ -82,7 +85,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 
 	/* start EMC connected thread */
 	/* XXX use a thread */
-	connect_to_emc(params);
+	thread_new_wdata(&(params->emc_thread), "multi_mode EMC thread", params, &emc_thread);
 
 	return TRUE;
 }
@@ -131,7 +134,7 @@ static int connect_to_emc(struct multi_mode_params *params)
 		if (ret != NUSSL_OK) {
 			fprintf(stderr,"TLS error with CRL: %s",
 				nussl_get_error(params->nussl));
-			return 0;
+			return -1;
 		}
 		printf("Using crl: %s\n", nuauth_tls.crl_file);
 	}
@@ -232,34 +235,58 @@ static void multi_warn_clients(struct in6_addr *saddr,
 }
 
 
-void emc_thread(void *params_p )
+static void* emc_thread(struct nuauth_thread_t *thread)
 {
 	struct multi_mode_params *params =
-	    (struct multi_mode_params *) params_p;
-	/* connect to EMC via nussl */
-	connect_to_emc(params);
+	    (struct multi_mode_params *) thread->data;
+	fd_set wk_set;		/* working set */
+	int mx;
+	int bufsize;
+	int ret;
+	char buf[1024];
+	struct nu_header *msg = buf;
+
 	/* "endless" loop */
+	while (g_mutex_trylock(thread->mutex)) {
+		g_mutex_unlock(thread->mutex);
+
+		if (params->nussl == NULL) {
+			do {
+				ret = connect_to_emc(params);
+				if (ret < 0) {
+					sleep(2);
+				}
+			} while (ret < 0);
+			mx = nussl_session_get_fd(params->nussl);
+
+		}
+		FD_ZERO(&wk_set);
+		FD_SET(mx, &wk_set);
+		select(mx + 1, &wk_set, NULL, NULL, NULL);
+		/* get data */
+		bufsize = nussl_read(params->nussl, buf, sizeof(buf));
+		if (bufsize <= 0) {
+			nussl_session_destroy(params->nussl);
+			params->nussl = NULL;
+				continue;
+		}
+
+		log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
+				"msg: proto=%d, type=%d, option=%d, length=%d",
+				msg->proto, msg->msg_type, msg->option, ntohs(msg->length));
 
 #if 0
-	while ( ) {
-	/* get data */
-		bufsize = nussl_read(session->nussl, buf, sizeof(buf));
-		if (bufsize <= 0) {
-			/* error */
-			connect_to_emc(params);
-		}
-		switch (message->type) {
-	/* if connection asked */
-			case SRV_REQUIRED_INFO:
-	/*	test if there is a user at IP */
+		/* parse message */
 
-	/*	send connection request if necessary */
-	multi_warn_clients(saddr, conninfo, params);
+		/* build saddr */
 
+		/* build conninfo */
 
+		multi_warn_clients(saddr, conninfo, params);
+#endif
 	/*	else forget packet */
 	}
-#endif
+	return NULL;
 }
 
 
@@ -270,7 +297,7 @@ G_MODULE_EXPORT gchar *ip_authentication(tracking_t * header,
 					 struct multi_mode_params *
 					 params)
 {
-	/* test if source is not a direct net */
+	/* TODO test if source is not a direct net */
 
 	/* if not in direct net send packet to EMC */
 
