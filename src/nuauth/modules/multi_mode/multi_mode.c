@@ -26,6 +26,11 @@ extern struct nuauth_tls_t nuauth_tls;
 #define MULTI_CONNLIST_CMD "CONNLIST"
 #define MULTI_CONNECTED_CMD "CONNECTED"
 
+
+#define NUAUTH_EMC_KEYFILE CONFIG_DIR "/nuauth-emc-key.pem"
+#define NUAUTH_EMC_CERTFILE CONFIG_DIR "/nuauth-emc-cert.pem"
+#define NUAUTH_EMC_CAFILE CONFIG_DIR "/NuFW-cacert.pem"
+
 struct multi_mode_params {
 	/* FIXME switch to list */
 	gchar *emc_node;
@@ -33,7 +38,10 @@ struct multi_mode_params {
 	/* session to EMC */
 	nussl_session *nussl;
 	/* multi capability index */
-	unsigned char capa_index;
+	unsigned int capa_index;
+	char * tls_key;
+	char * tls_cert;
+	char * tls_ca;
 
 	int is_connected;
 };
@@ -72,6 +80,10 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 		    "multi_mode module ($Revision$)");
 
 	params->emc_node = nuauth_config_table_get_or_default("multi_mode_emc_node", EMC_NODE);
+	params->tls_key = nuauth_config_table_get_or_default("nuauth_emc_tls_key", NUAUTH_EMC_KEYFILE);
+	params->tls_cert = nuauth_config_table_get_or_default("nuauth_emc_tls_cert", NUAUTH_EMC_CERTFILE);
+	params->tls_ca = nuauth_config_table_get_or_default("nuauth_emc_tls_cacert", NUAUTH_EMC_CAFILE);
+
 
 	if (register_client_capa("MULTI", &(params->capa_index)) != NU_EXIT_OK) {
 		log_message(WARNING, DEBUG_AREA_MAIN,
@@ -81,10 +93,9 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 
 	module->params = (gpointer) params;
 
-	/* register protocol function */
+	/* TODO register protocol function */
 
 	/* start EMC connected thread */
-	/* XXX use a thread */
 	thread_new_wdata(&(params->emc_thread), "multi_mode EMC thread", params, &emc_thread);
 
 	return TRUE;
@@ -103,14 +114,17 @@ static int connect_to_emc(struct multi_mode_params *params)
 
 	params->nussl = nussl_session_create(NUSSL_SSL_CTX_CLIENT);
 
-	if (nuauth_tls.cert != NULL || nuauth_tls.key != NULL) {
-		ret = nussl_ssl_set_keypair(params->nussl, nuauth_tls.cert, nuauth_tls.key);
+	printf("key %s cert %s\n", params->tls_key, params->tls_cert);
+	ret = nussl_ssl_set_keypair(params->nussl, params->tls_cert, params->tls_key);
 
-		if (ret != NUSSL_OK) {
-				printf("Warning: Failed to load default certificate and key.\n");
-		}
+	if (ret != NUSSL_OK) {
+		printf("Warning: Failed to load default certificate and key.\n");
+		nussl_session_destroy(params->nussl);
+		params->nussl = NULL;
+		return -1;
 	}
-	if (nuauth_tls.ca != NULL) {
+
+	if (params->tls_ca != NULL) {
 		ret = nussl_ssl_trust_cert_file(params->nussl, nuauth_tls.ca);
 		if (ret != NUSSL_OK) {
 			if (exit_on_error) {
@@ -127,6 +141,8 @@ static int connect_to_emc(struct multi_mode_params *params)
 				nussl_set_session_flag(params->nussl, NUSSL_SESSFLAG_IGNORE_ID_MISMATCH, 1);
 			}
 		}
+	} else {
+		printf("NO CA Warning: Failed to load default certificate and key.\n");
 	}
 
 	if (nuauth_tls.crl_file != NULL) {
@@ -170,9 +186,9 @@ static int connect_to_emc(struct multi_mode_params *params)
 
 	ret = nussl_open_connection(params->nussl);
 	if (ret != NUSSL_OK) {
-		nussl_session_destroy(params->nussl);
+		nussl_close_connection(params->nussl);
 		params->nussl = NULL;
-		log_message(FATAL, DEBUG_AREA_MAIN,
+		log_message(CRITICAL, DEBUG_AREA_MAIN,
 				"Could not open connection");
 		return -1;
 	}
@@ -244,7 +260,7 @@ static void* emc_thread(struct nuauth_thread_t *thread)
 	int bufsize;
 	int ret;
 	char buf[1024];
-	struct nu_header *msg = buf;
+	struct nu_header *msg = (struct nu_header *) buf;
 
 	/* "endless" loop */
 	while (g_mutex_trylock(thread->mutex)) {
@@ -254,6 +270,7 @@ static void* emc_thread(struct nuauth_thread_t *thread)
 			do {
 				ret = connect_to_emc(params);
 				if (ret < 0) {
+					params->nussl = NULL;
 					sleep(2);
 				}
 			} while (ret < 0);
@@ -266,9 +283,9 @@ static void* emc_thread(struct nuauth_thread_t *thread)
 		/* get data */
 		bufsize = nussl_read(params->nussl, buf, sizeof(buf));
 		if (bufsize <= 0) {
-			nussl_session_destroy(params->nussl);
 			params->nussl = NULL;
-				continue;
+			params->is_connected = 0;
+			continue;
 		}
 
 		log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
