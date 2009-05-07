@@ -114,6 +114,7 @@ G_MODULE_EXPORT int postauth_proto(user_session_t * session, struct postauth_loc
 		/* FIXME add test on type of field */
 		INIT_LLIST_HEAD(&prot_list);
 		INIT_LLIST_HEAD(&localuser_ext.list);
+		/* add protocol modification to local list to be able to use process_ext_message */
 		llist_add(&prot_list, &localuser_ext.list);
 		ret = process_ext_message(buf + sizeof(struct nu_authfield),
 				buf_size - sizeof(struct nu_authfield),
@@ -163,13 +164,13 @@ G_MODULE_EXPORT gchar *unload_module_with_params(gpointer params_p)
 	if (unregister_client_capa(params->capa_index) != NU_EXIT_OK) {
 		log_message(WARNING, DEBUG_AREA_MAIN,
 			    "Unable to unregister capability LUSER");
-		return FALSE;
+		return NULL;
 	}
 
 	if (unregister_protocol_extension(&localuser_ext) != NU_EXIT_OK) {
 		log_message(WARNING, DEBUG_AREA_MAIN,
 			    "Unable to unregister protocol extension for LUSER");
-		return FALSE;
+		return NULL;
 	}
 	return NULL;
 }
