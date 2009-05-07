@@ -25,18 +25,26 @@ extern struct nuauth_tls_t nuauth_tls;
 #define MULTI_CONNECT_CMD "CONNECT"
 #define MULTI_CONNLIST_CMD "CONNLIST"
 #define MULTI_CONNECTED_CMD "CONNECTED"
+#define MULTI_DISCONNECTED_CMD "DISCONNECTED"
 
 static int connect_info(char **buf, int bufsize, void *data);
+static int disconnect_info(char **buf, int bufsize, void *data);
 
 struct proto_ext_t _multi_ext = {
 	.name = MULTI_EXT_NAME,
-	.ncmd = 1,
+	.ncmd = 2,
 	.cmd = {
 		{
 		.cmdname = MULTI_CONNECTED_CMD,
 		.nargs = 1,
 		.callback = &connect_info,
 		},
+		{
+		.cmdname = MULTI_DISCONNECTED_CMD,
+		.nargs = 1,
+		.callback = &disconnect_info,
+		},
+
 	}
 };
 
@@ -340,11 +348,27 @@ static int connect_info(char **buf, int bufsize, void *data)
 	 * on multiuser systems */
 
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
-		    "User %s is connected to %s", tdata->user_name, *buf);
+		    "Secondary session for user \"%s\" to %s", tdata->user_name, *buf);
 	*buf = *buf + strlen(*buf);
 
 	return SASL_OK;
 }
+
+static int disconnect_info(char **buf, int bufsize, void *data)
+{
+	struct tls_buffer_read * tdata = (struct tls_buffer_read *) data;
+
+	/* TODO handle connection list to be able to work nice
+	 * on multiuser systems */
+
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+		    "End of secondary session for user \"%s\" to %s", tdata->user_name, *buf);
+	*buf = *buf + strlen(*buf);
+
+	return SASL_OK;
+}
+
+
 
 /**
  * @{ */
