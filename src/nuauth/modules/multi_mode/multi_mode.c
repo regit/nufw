@@ -8,6 +8,7 @@
 
 #include <nussl.h>
 
+#include <proto.h>
 #include <emc_proto.h>
 
 #include "nuauthconf.h"
@@ -175,9 +176,11 @@ static int connect_to_emc(struct multi_mode_params *params)
 
 	{
 		const char text[] = "Hello from multi_mode";
-		struct emc_message_header_t msg;
+		struct nu_header msg;
 
-		msg.command = EMC_HELLO;
+		msg.proto = PROTO_VERSION_EMC_V1;
+		msg.msg_type = EMC_HELLO;
+		msg.option = 0;
 		msg.length = strlen(text);
 
 		nussl_write(params->nussl, (char*)&msg, sizeof(msg));

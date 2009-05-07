@@ -22,14 +22,13 @@
 #ifndef __EMC_PROTO_H__
 #define __EMC_PROTO_H__
 
-enum emc_command_t {
-	EMC_HELLO=0,
+enum emc_proto_version_t {
+	PROTO_VERSION_EMC_V1 = 1,
 };
 
-struct emc_message_header_t {
-	u_int8_t command;
-
-	u_int32_t length;
+enum emc_command_t {
+	EMC_NOP = 0,
+	EMC_HELLO,
 };
 
 #endif /* __EMC_PROTO_H__ */

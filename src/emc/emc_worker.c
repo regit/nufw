@@ -47,6 +47,7 @@
 #include "emc_tls.h"
 #include "emc_worker.h"
 
+#include <proto.h>
 #include "emc_proto.h"
 
 extern ev_async client_ready_signal;
@@ -124,7 +125,7 @@ log_printf(DEBUG_LEVEL_DEBUG, "DEBUG client connection added");
 void emc_worker_reader(gpointer userdata, gpointer data)
 {
 	ev_io *w = (ev_io*)userdata;
-	struct emc_message_header_t msg;
+	struct nu_header msg;
 	struct emc_client_context *client_ctx;
 	nussl_session *nussl_sess;
 	char buffer[4096];
@@ -144,7 +145,7 @@ fprintf(stderr, "[%s] : %lx\n", __func__, (long)pthread_self());
 		return;
 	}
 
-log_printf(DEBUG_LEVEL_DEBUG, "Header: command (%d) length (%d)", msg.command, msg.length);
+log_printf(DEBUG_LEVEL_DEBUG, "Header: proto (%d) command (%d) option(%d) length (%d)", msg.proto, msg.msg_type, msg.option, msg.length);
 	// XXX assert(msg.length < sizeof(buffer))
 
 	len = nussl_read(client_ctx->nussl, buffer, msg.length);
