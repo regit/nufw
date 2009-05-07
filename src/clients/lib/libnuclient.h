@@ -247,6 +247,7 @@ int add_packet_to_send(nuauth_session_t * session, conn_t ** auth,
 			      int *count_p, conn_t * bucket);
 
 int send_user_pckt(nuauth_session_t * session, conn_t * carray[CONN_MAX]);
+int send_hello_pckt(nuauth_session_t * session);
 
 void do_panic(const char *filename, unsigned long line, const char *fmt,
 	      ...);
