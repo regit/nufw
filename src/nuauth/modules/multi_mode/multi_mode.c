@@ -262,7 +262,7 @@ static void multi_warn_clients(struct in6_addr *saddr,
 	header->option = 0;
 
 	ret = snprintf(enc_field, sizeof(buf) - sizeof(*header),
-				"BEGIN\n" MULTI_EXT_NAME "\n" MULTI_CONNECTED_CMD " %s\nEND\n",
+				"BEGIN\n" MULTI_EXT_NAME "\n" MULTI_CONNECT_CMD " %s\nEND\n",
 				connect_string);
 
 	header->length = sizeof(struct nu_header) + ret;
@@ -272,7 +272,7 @@ static void multi_warn_clients(struct in6_addr *saddr,
 	global_msg.addr = *saddr;
 	global_msg.found = FALSE;
 
-	warn_clients(&global_msg, capa_check, params);
+	warn_clients(&global_msg, &capa_check, params);
 }
 
 
