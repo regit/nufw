@@ -26,6 +26,21 @@ extern struct nuauth_tls_t nuauth_tls;
 #define MULTI_CONNLIST_CMD "CONNLIST"
 #define MULTI_CONNECTED_CMD "CONNECTED"
 
+static int connect_info(char **buf, int bufsize, void *data);
+
+struct proto_ext_t _multi_ext = {
+	.name = MULTI_EXT_NAME,
+	.ncmd = 1,
+	.cmd = {
+		{
+		.cmdname = MULTI_CONNECTED_CMD,
+		.nargs = 1,
+		.callback = &connect_info,
+		},
+	}
+};
+
+
 
 #define NUAUTH_EMC_KEYFILE CONFIG_DIR "/nuauth-emc-key.pem"
 #define NUAUTH_EMC_CERTFILE CONFIG_DIR "/nuauth-emc-cert.pem"
@@ -68,6 +83,12 @@ G_MODULE_EXPORT gchar *unload_module_with_params(gpointer params_p)
 	g_free(params->emc_node);
 	g_free(params);
 
+	if (unregister_protocol_extension(&_multi_ext) != NU_EXIT_OK) {
+		log_message(WARNING, DEBUG_AREA_MAIN,
+			    "Unable to unregister protocol extension for MULTI");
+		return NULL;
+	}
+
 	return NULL;
 }
 
@@ -93,7 +114,11 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 
 	module->params = (gpointer) params;
 
-	/* TODO register protocol function */
+	if (register_protocol_extension(nuauthdatas, &_multi_ext) != NU_EXIT_OK) {
+		log_message(WARNING, DEBUG_AREA_MAIN,
+			    "Unable to register protocol extension for MULTI");
+		return FALSE;
+	}
 
 	/* start EMC connected thread */
 	thread_new_wdata(&(params->emc_thread), "multi_mode EMC thread", params, &emc_thread);
@@ -256,7 +281,7 @@ static void* emc_thread(struct nuauth_thread_t *thread)
 	struct multi_mode_params *params =
 	    (struct multi_mode_params *) thread->data;
 	fd_set wk_set;		/* working set */
-	int mx;
+	int mx = 0;
 	int bufsize;
 	int ret;
 	char buf[1024];
@@ -306,6 +331,20 @@ static void* emc_thread(struct nuauth_thread_t *thread)
 	return NULL;
 }
 
+
+static int connect_info(char **buf, int bufsize, void *data)
+{
+	struct tls_buffer_read * tdata = (struct tls_buffer_read *) data;
+
+	/* TODO handle connection list to be able to work nice
+	 * on multiuser systems */
+
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+		    "User %s is connected to %s", tdata->user_name, *buf);
+	*buf = *buf + strlen(*buf);
+
+	return SASL_OK;
+}
 
 /**
  * @{ */
