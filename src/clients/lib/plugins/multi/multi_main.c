@@ -69,7 +69,7 @@ int NUCLIENT_PLUGIN_INIT(unsigned int api_num, struct nuclient_plugin_t *plugin)
 	nu_client_set_capability(MULTI_EXT_NAME);
 	/* register cruise  protocol extension */
 	INIT_LLIST_HEAD(&(multi_ext.list));
-	llist_add(&nu_postauth_extproto_l, &(multi_ext.list));
+	llist_add(&nu_cruise_extproto_l, &(multi_ext.list));
 
 	INIT_LLIST_HEAD(&_sec_session_list);
 
@@ -116,7 +116,8 @@ static int multi_dispatch(struct nuclient_plugin_t *plugin, unsigned int event_i
 						/* error sending */
 						/* TODO Destroy session; */
 					}
-
+					ssession->count = 0;
+					ssession->auth[0] = NULL;
 				}
 			}
 		break;
@@ -129,7 +130,7 @@ static int multi_dispatch(struct nuclient_plugin_t *plugin, unsigned int event_i
 
 static int send_connected(nuauth_session_t *session, sec_nuauth_session_t * ssession)
 {
-	char buf[2048];
+	char buf[1024];
 	struct nu_header * header = (struct nu_header *) buf;
 	char * enc_field = buf + sizeof(* header);
 	int ret;
@@ -142,8 +143,7 @@ static int send_connected(nuauth_session_t *session, sec_nuauth_session_t * sses
 				"BEGIN\n" MULTI_EXT_NAME "\n" MULTI_CONNECTED_CMD " %s\nEND\n",
 				ssession->hostname);
 
-	header->length = sizeof(struct nu_header) + ret;
-	header->length = htons(header->length);
+	header->length = htons(sizeof(*header) + ret);
 
 	ret = nussl_write(session->nussl, buf, ntohs(header->length));
 	if (ret < 0) {
@@ -204,6 +204,7 @@ int multi_connect(char **dbuf,int dbufsize, void *data)
 {
 	nuauth_session_t * session = (nuauth_session_t *) data;
 	sec_nuauth_session_t * ssession;
+	sec_nuauth_session_t * psession;
 
 	ssession = calloc(1, sizeof(*ssession));
 	/* get IP from command */
@@ -218,21 +219,30 @@ int multi_connect(char **dbuf,int dbufsize, void *data)
 		ssession->net[0] = 0;
 	}
 	/* initiate connection to IP if needed */
+	llist_for_each_entry(psession, &_sec_session_list, list) {
+		if (!strcmp(psession->hostname, ssession->hostname)) {
+			if (!strcmp(psession->port, ssession->port)) {
+				free(ssession);
+				return 0;
+			}
+		}
+	}
 
 	ssession->session = nu_client_new(session->username, session->password, 0, NULL);
 	/* TLS setup */
-
+	nu_client_set_key(ssession->session, session->pem_key, session->pem_cert, NULL);
+	nu_client_set_ca(ssession->session, session->pem_ca, NULL);
+	ssession->session->suppress_fqdn_verif = session->suppress_fqdn_verif;
 	/* connection */
 	nu_client_connect(ssession->session, ssession->hostname, ssession->port, NULL);
 	/* initiate list entry */
 	INIT_LLIST_HEAD(&(ssession->list));
 	/* add entry to the list */
 	llist_add(&_sec_session_list, &(ssession->list));
-
 	/* send connected message in reply */
 	send_connected(session, ssession);
 
-	/* TODO authenticate all needed connection at start */
+	/* authenticate all needed connection at start */
 	authenticate_all_conn(session, ssession);
 
 	return 0;
