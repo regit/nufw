@@ -312,10 +312,17 @@ static void* emc_thread(struct nuauth_thread_t *thread)
 		}
 		FD_ZERO(&wk_set);
 		FD_SET(mx, &wk_set);
-		select(mx + 1, &wk_set, NULL, NULL, NULL);
+		ret = select(mx + 1, &wk_set, NULL, NULL, NULL);
+		if (ret == -1) {
+			nussl_close_connection(params->nussl);
+			params->nussl = NULL;
+			params->is_connected = 0;
+			continue;
+		}
 		/* get data */
 		bufsize = nussl_read(params->nussl, buf, sizeof(buf));
 		if (bufsize <= 0) {
+			nussl_close_connection(params->nussl);
 			params->nussl = NULL;
 			params->is_connected = 0;
 			continue;
