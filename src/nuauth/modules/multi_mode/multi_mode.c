@@ -227,7 +227,7 @@ static int connect_to_emc(struct multi_mode_params *params)
 	}
 
 	{
-		const char text[] = "Hello from multi_mode";
+		char text[] = "Hello from multi_mode";
 		struct nu_header msg;
 
 		msg.proto = PROTO_VERSION_EMC_V1;
