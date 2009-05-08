@@ -70,6 +70,8 @@ struct emc_client_context {
 	struct emc_tls_server_context *tls_server_ctx;
 };
 
+int emc_init_server(struct emc_server_context *ctx);
+
 int emc_start_server(struct emc_server_context *ctx);
 
 extern struct emc_server_context *server_ctx;
