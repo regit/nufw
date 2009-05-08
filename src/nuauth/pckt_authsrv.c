@@ -1,8 +1,7 @@
 /*
- ** Copyright(C) 2003-2008 Eric Leblond <regit@inl.fr>
+ ** Copyright(C) 2003-2009 INL
+ ** Written by Eric Leblond <eleblond@inl.fr>
  ** INL http://www.inl.fr/
- **
- ** $Id$
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -74,8 +73,7 @@ nu_error_t parse_dgram(connection_t * connection, unsigned char *dgram,
 	/* get saddr and daddr */
 	/* check if proto is in Hello mode list (when hello authentication is used) */
 	if (nuauthconf->hello_authentication
-	    && localid_authenticated_protocol(connection->tracking.
-					      protocol)) {
+	    && localid_authenticated_protocol(connection)) {
 		connection->state = AUTH_STATE_HELLOMODE;
 		*conn = connection;
 	} else {

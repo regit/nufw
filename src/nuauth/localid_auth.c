@@ -1,8 +1,7 @@
 /*
- ** Copyright(C) 2005 Eric Leblond <regit@inl.fr>
+ ** Copyright(C) 2005, 2009 INL
+ ** Written by Eric Leblond <eleblond@inl.fr>
  ** INL : http://www.inl.fr/
- **
- ** $Id$
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -26,9 +25,9 @@
  * @{
  */
 
-char localid_authenticated_protocol(int protocol)
+char localid_authenticated_protocol(connection_t *conn)
 {
-	if (protocol != IPPROTO_TCP) {
+	if (conn->tracking.protocol != IPPROTO_TCP) {
 		return TRUE;
 	}
 	return FALSE;

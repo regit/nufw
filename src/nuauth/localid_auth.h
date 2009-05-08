@@ -1,7 +1,6 @@
 /*
-** Copyright(C) 2005 Eric Leblond <regit@inl.fr>
-**
-** $Id$
+** Copyright(C) 2005,2009 INL
+** Written by Eric Leblond <eleblond@inl.fr>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,7 +20,7 @@
 #define LOCALID_AUTH_H
 
 /* from localid_auth */
-char localid_authenticated_protocol(int protocol);
+char localid_authenticated_protocol(connection_t *conn);
 void *localid_auth(GMutex * mutex);
 
 #endif
