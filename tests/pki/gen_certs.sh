@@ -11,6 +11,7 @@ make CA
 make cert NAME="nuauth.inl.fr" CERT_TYPE=server
 make cert NAME="nufw.inl.fr" CERT_TYPE=user
 make cert NAME="client.inl.fr" CERT_TYPE=user
+make cert NAME="nuauth-emc.inl.fr" CERT_TYPE=user
 
 make cert NAME="nuauth-expired.inl.fr" CERT_TYPE=server CERT_DAYS=-1
 make cert NAME="nufw-expired.inl.fr" CERT_TYPE=user CERT_DAYS=-1
