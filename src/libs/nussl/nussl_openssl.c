@@ -1435,21 +1435,22 @@ int nussl_ssl_accept(nussl_ssl_socket * ssl_sock, unsigned int timeout)
 					FD_SET(sock,&fd_w);
 					break;
 				default:
-					//out_log(LEVEL_HIGH,"Error accepting connection: ret %d error code %d : %s\n",status,sslerr,
-					//		ERR_error_string(SSL_get_error(context->ssl->obj,status),NULL));
-					//out_log(LEVEL_HIGH,"Error accepting connection: ret %d error code %ld : %s\n",status,ERR_get_error(),
-					//		ERR_error_string(ERR_get_error(),NULL));
+					fprintf(stderr, "Error accepting connection: ret %d error code %d : %s\n",status,sslerr,
+							ERR_error_string(SSL_get_error(ssl,status),NULL));
+					fprintf(stderr,"Error accepting connection: ret %d error code %ld : %s\n",status,ERR_get_error(),
+							ERR_error_string(ERR_get_error(),NULL));
 					ret = -1; /* error */
-					break;
+					goto exit_accept_handshake;
 			}
 			ret = select(sock + 1, &fd_r, &fd_w, NULL, &tv);
 			if ( ! (FD_ISSET(sock,&fd_r) || FD_ISSET(sock,&fd_w)) ) { /* timeout */
 				ret = 0; /* timeout */
-				break;
+				goto exit_accept_handshake;
 			}
 		}
 	} while (status == -1 && ret != 0);
 
+exit_accept_handshake:
 	/* restore blocking state */
 	fcntl(sock,F_SETFL,blocking_state);
 
