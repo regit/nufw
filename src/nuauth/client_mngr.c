@@ -342,6 +342,38 @@ gboolean test_username_count_vs_max(const gchar * username, int maxcount)
 }
 
 /**
+ * Property check
+ */
+
+gboolean check_property_clients(struct in6_addr *addr, user_session_check_t *scheck, int mode, gpointer data)
+{
+	gboolean cst = FALSE;
+	ip_sessions_t *ipsessions = NULL;
+	GSList *ipsockets = NULL;
+
+	g_mutex_lock(client_mutex);
+	ipsessions = g_hash_table_lookup(client_ip_hash, addr);
+	if (ipsessions) {
+		for (ipsockets = ipsessions->sessions; ipsockets; ipsockets = ipsockets->next) {
+			user_session_t *session = (user_session_t *)ipsockets->data;
+			cst = scheck(session, data);
+			if (mode) {
+				if (cst == TRUE) {
+					g_mutex_unlock(client_mutex);
+					return TRUE;
+				}
+			}
+		}
+		return cst;
+	} else {
+		g_mutex_unlock(client_mutex);
+		return FALSE;
+	}
+	g_mutex_unlock(client_mutex);
+	return FALSE;
+}
+
+/**
  * Ask each client of global_msg address set to send their new connections
  * (connections in stage "SYN SENT").
  *
