@@ -25,12 +25,33 @@
  * @{
  */
 
-char localid_authenticated_protocol(connection_t *conn)
+gboolean proto_support_check(user_session_t * session, gpointer data)
 {
-	if (conn->tracking.protocol != IPPROTO_TCP) {
+	if (session->capa_flags & (1 << GPOINTER_TO_INT(data))) {
 		return TRUE;
 	}
 	return FALSE;
+}
+
+char localid_authenticated_protocol(connection_t *conn)
+{
+	int protocol = conn->tracking.protocol;
+	int capa = 0;
+
+	switch (protocol) {
+		case IPPROTO_TCP:
+			capa = nuauthdatas->tcp_capa;
+			break;
+		case IPPROTO_UDP:
+			capa = nuauthdatas->udp_capa;
+			break;
+		default:
+			/* we don't support it, hello is the only choice */
+			return TRUE;
+	}
+	return ! check_property_clients(&conn->tracking.saddr,
+					&proto_support_check, 1,
+					GINT_TO_POINTER(capa));
 }
 
 /**
