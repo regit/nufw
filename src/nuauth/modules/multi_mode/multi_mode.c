@@ -137,7 +137,6 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 static int connect_to_emc(struct multi_mode_params *params)
 {
 	int ret;
-	int exit_on_error = 0;
 	int port = 4140; // XXX hardcoded value
 	int suppress_cert_verif = 1; // XXX hardcoded value
 
@@ -147,45 +146,49 @@ static int connect_to_emc(struct multi_mode_params *params)
 
 	params->nussl = nussl_session_create(NUSSL_SSL_CTX_CLIENT);
 
-	printf("key %s cert %s\n", params->tls_key, params->tls_cert);
 	ret = nussl_ssl_set_keypair(params->nussl, params->tls_cert, params->tls_key);
 
 	if (ret != NUSSL_OK) {
-		printf("Warning: Failed to load default certificate and key.\n");
+		log_message(FATAL, DEBUG_AREA_MAIN,
+				"Warning: Failed to load default certificate and key.\n");
 		nussl_session_destroy(params->nussl);
 		params->nussl = NULL;
 		return -1;
 	}
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
+			"multi_mode Using certificate: %s key %s",
+			params->tls_cert, params->tls_key);
 
 	if (params->tls_ca != NULL) {
-		ret = nussl_ssl_trust_cert_file(params->nussl, nuauth_tls.ca);
+		ret = nussl_ssl_trust_cert_file(params->nussl, params->tls_ca);
 		if (ret != NUSSL_OK) {
-			if (exit_on_error) {
-				log_message(FATAL, DEBUG_AREA_MAIN,
-						"Unable to set CA");
-				return -1;
-			}
-			else {
-				fprintf(stderr,"\nWARNING: you have not provided any certificate authority.\n"
-						"multi_mode will *NOT* verify server certificate trust.\n"
-						"Use the -A <cafile> option to set up CA.\n\n"
-				       );
-				//session->suppress_fqdn_verif = 1;
-				nussl_set_session_flag(params->nussl, NUSSL_SESSFLAG_IGNORE_ID_MISMATCH, 1);
-			}
+			log_message(FATAL, DEBUG_AREA_MAIN,
+					"multi_mode Unable to load certificate authority, aborting");
+			return -1;
 		}
 	} else {
-		printf("NO CA Warning: Failed to load default certificate and key.\n");
+		log_message(WARNING, DEBUG_AREA_MAIN,
+				"\nWARNING: you have not provided any certificate authority.\n"
+				"multi_mode will *NOT* verify server certificate trust.\n"
+				"Use the -A <cafile> option to set up CA.\n\n"
+		       );
+		//session->suppress_fqdn_verif = 1;
+		nussl_set_session_flag(params->nussl, NUSSL_SESSFLAG_IGNORE_ID_MISMATCH, 1);
 	}
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
+			"multi_mode Using CA: %s",
+			params->tls_ca);
+
 
 	if (nuauth_tls.crl_file != NULL) {
 		ret = nussl_ssl_set_crl_file(params->nussl, nuauth_tls.crl_file, nuauth_tls.ca);
 		if (ret != NUSSL_OK) {
-			fprintf(stderr,"TLS error with CRL: %s",
-				nussl_get_error(params->nussl));
+			log_message(FATAL, DEBUG_AREA_MAIN,
+					"TLS error with CRL: %s", nussl_get_error(params->nussl));
 			return -1;
 		}
-		printf("Using crl: %s\n", nuauth_tls.crl_file);
+		log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
+				"multi_mode Using crl: %s", nuauth_tls.crl_file);
 	}
 
 
@@ -217,12 +220,15 @@ static int connect_to_emc(struct multi_mode_params *params)
 
 	nussl_set_hostinfo(params->nussl, params->emc_node, port);
 
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
+		    "multi_mode connecting to EMC node %s:%d", params->emc_node, port);
+
 	ret = nussl_open_connection(params->nussl);
 	if (ret != NUSSL_OK) {
 		nussl_close_connection(params->nussl);
 		params->nussl = NULL;
-		log_message(CRITICAL, DEBUG_AREA_MAIN,
-				"Could not open connection");
+		log_message(WARNING, DEBUG_AREA_MAIN,
+				"Could not open connection to EMC node %s:%d", params->emc_node, port);
 		return -1;
 	}
 
@@ -240,6 +246,9 @@ static int connect_to_emc(struct multi_mode_params *params)
 	}
 
 	params->is_connected = 1;
+
+	log_message(INFO, DEBUG_AREA_MAIN,
+		    "multi_mode connected to EMC node %s:%d", params->emc_node, port);
 
 	return 1;
 }
