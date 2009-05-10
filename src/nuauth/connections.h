@@ -74,6 +74,7 @@ typedef enum {
 
 typedef enum {
 	AUTHQ_BYIP,
+	AUTHQ_HELLO,
 	AUTHQ_SASL,
 	AUTHQ_SSL,
 } auth_quality_t;

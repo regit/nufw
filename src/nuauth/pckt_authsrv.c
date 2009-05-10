@@ -75,6 +75,7 @@ nu_error_t parse_dgram(connection_t * connection, unsigned char *dgram,
 	if (nuauthconf->hello_authentication
 	    && localid_authenticated_protocol(connection)) {
 		connection->state = AUTH_STATE_HELLOMODE;
+		connection->auth_quality = AUTHQ_HELLO;
 		*conn = connection;
 	} else {
 		connection->state = AUTH_STATE_AUTHREQ;

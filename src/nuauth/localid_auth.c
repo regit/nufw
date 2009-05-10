@@ -110,6 +110,7 @@ void localid_insert_message(connection_t * pckt,
 				element->mark = pckt->mark;
 				element->username = pckt->username;
 				element->user_groups = pckt->user_groups;
+				element->auth_quality = AUTHQ_HELLO;
 				pckt->user_groups = NULL;
 				/* do asynchronous call to acl check */
 				thread_pool_push(nuauthdatas->
