@@ -27,6 +27,8 @@
 
 gboolean proto_support_check(user_session_t * session, gpointer data)
 {
+	if (session->proto_version < PROTO_VERSION_V22_1)
+		return TRUE;
 	if (session->capa_flags & (1 << GPOINTER_TO_INT(data))) {
 		return TRUE;
 	}
