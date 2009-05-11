@@ -129,6 +129,7 @@ log_printf(DEBUG_LEVEL_DEBUG, "DEBUG client connection added");
 static void _emc_handle_message(struct emc_client_context *client_ctx, struct nu_header *msg, char *buf, size_t bufsz)
 {
 	char hostname[512];
+	char nuauth_name[512];
 
 	buf[bufsz] = '\0';
 	while (strlen(buf)>0 && buf[strlen(buf)-1] == '\n')
@@ -139,8 +140,9 @@ static void _emc_handle_message(struct emc_client_context *client_ctx, struct nu
 		log_printf(DEBUG_LEVEL_DEBUG, "\tconnection request");
 		log_printf(DEBUG_LEVEL_DEBUG, "\tnussl_read: %zu [%s]", bufsz, buf);
 
-		sscanf(buf, "%s", hostname);
+		sscanf(buf, "%s %s", hostname, nuauth_name);
 		log_printf(DEBUG_LEVEL_DEBUG, "\thostname is: %s", hostname);
+		log_printf(DEBUG_LEVEL_DEBUG, "\tnuauth is  : %s", nuauth_name);
 		/* XXX schedule write in another worker thread ?
 		 * We should remove the file descriptors from the global list, else
 		 * nussl_write may trigger bad things ..
@@ -157,7 +159,7 @@ static void _emc_handle_message(struct emc_client_context *client_ctx, struct nu
 			/* XXX list iteration should be protected by a mutex */
 			for (it=g_list_first(list); it != NULL; it=g_list_next(it)) {
 				ctx = (struct emc_client_context*)it->data;
-				if (strcmp(ctx->address, hostname)!=0) {
+				if (strcmp(ctx->address, nuauth_name)!=0) {
 					log_printf(DEBUG_LEVEL_DEBUG, "  EMC: forwarding request to host: %s", ctx->address);
 
 					msg->length = htons(bufsz);

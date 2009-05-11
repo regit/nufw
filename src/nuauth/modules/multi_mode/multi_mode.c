@@ -393,9 +393,29 @@ G_MODULE_EXPORT gchar *ip_authentication(tracking_t * header,
 					 struct multi_mode_params *
 					 params)
 {
+	char buf[1024];
+	struct nu_header *msg = (struct nu_header *) buf;
+	/* XXX find my own address ! */
+	char * conninfo=" 192.168.33.184 4129";
+	char connbuffer[1024];
+
 	/* TODO test if source is not a direct net */
 
 	/* if not in direct net send packet to EMC */
+	format_ipv6(&header->saddr, connbuffer, sizeof(connbuffer), NULL);
+	strcat(connbuffer, conninfo);
+
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+		"connbuffer: [%s]", connbuffer);
+
+	msg->proto = PROTO_VERSION_EMC_V1;
+	msg->msg_type = EMC_CLIENT_CONNECTION_REQUEST;
+	msg->option = 0;
+	msg->length = htons(strlen(connbuffer));
+
+	nussl_write(params->nussl, (char*)msg, sizeof(struct nu_header));
+	nussl_write(params->nussl, connbuffer, strlen(connbuffer));
+
 
 	return NULL;
 }
