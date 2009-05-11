@@ -46,6 +46,9 @@ struct emc_server_context {
 	GList *tls_server_list;
 	GTree *nuauth_directory; /**< list of emc_netmask_t elements */
 
+	GList *tls_client_list;  /**< list of connected nuauth servers */
+	GMutex *tls_client_list_mutex;
+
 	GThreadPool *pool_tls_handshake;
 	GThreadPool *pool_reader;
 	GAsyncQueue *work_queue;

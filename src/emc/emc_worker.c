@@ -115,11 +115,61 @@ fprintf(stderr, "[%s] : %lx\n", __func__, (long)pthread_self());
 
 	ev_io_init(client_watcher, emc_client_cb, socket, EV_READ);
 
+	g_mutex_lock(server_ctx->tls_client_list_mutex);
+	server_ctx->tls_client_list = g_list_append(server_ctx->tls_client_list, client_ctx);
+	g_mutex_unlock(server_ctx->tls_client_list_mutex);
+
 	g_async_queue_push(server_ctx->work_queue, client_watcher);
 
 	ev_async_send (EV_DEFAULT_ &client_ready_signal);
 
 log_printf(DEBUG_LEVEL_DEBUG, "DEBUG client connection added");
+}
+
+static void _emc_handle_message(struct emc_client_context *client_ctx, struct nu_header *msg, char *buf, size_t bufsz)
+{
+	char hostname[512];
+
+	buf[bufsz] = '\0';
+	while (strlen(buf)>0 && buf[strlen(buf)-1] == '\n')
+		buf[strlen(buf)-1] = '\0';
+
+	switch (msg->msg_type) {
+	case EMC_CLIENT_CONNECTION_REQUEST:
+		log_printf(DEBUG_LEVEL_DEBUG, "\tconnection request");
+		log_printf(DEBUG_LEVEL_DEBUG, "\tnussl_read: %zu [%s]", bufsz, buf);
+
+		sscanf(buf, "%s", hostname);
+		log_printf(DEBUG_LEVEL_DEBUG, "\thostname is: %s", hostname);
+		/* XXX schedule write in another worker thread ?
+		 * We should remove the file descriptors from the global list, else
+		 * nussl_write may trigger bad things ..
+		 */
+		{
+			GList *it;
+			GList *list = server_ctx->tls_client_list;
+			struct emc_client_context *ctx;
+
+			/* XXX we don't actually have the parameters (source ip etc.) to decide which nuauth
+			 * server to choose. So we send the message to all nuauth servers except
+			 * the one who sent the request
+			 */
+			/* XXX list iteration should be protected by a mutex */
+			for (it=g_list_first(list); it != NULL; it=g_list_next(it)) {
+				ctx = (struct emc_client_context*)it->data;
+				if (strcmp(ctx->address, hostname)!=0) {
+					log_printf(DEBUG_LEVEL_DEBUG, "  EMC: forwarding request to host: %s", ctx->address);
+
+					msg->length = htons(bufsz);
+					nussl_write(ctx->nussl, (char*)msg, sizeof(struct nu_header));
+					nussl_write(ctx->nussl, buf, bufsz);
+				}
+			}
+		}
+		break;
+	default:
+		log_printf(DEBUG_LEVEL_DEBUG, "\tnussl_read: %zu [%s]", bufsz, buf);
+	};
 }
 
 void emc_worker_reader(gpointer userdata, gpointer data)
@@ -130,6 +180,7 @@ void emc_worker_reader(gpointer userdata, gpointer data)
 	nussl_session *nussl_sess;
 	char buffer[4096];
 	int len;
+	int msg_length;
 
 fprintf(stderr, "[%s] : %lx\n", __func__, (long)pthread_self());
 	client_ctx = (struct emc_client_context *)w->data;
@@ -137,7 +188,16 @@ fprintf(stderr, "[%s] : %lx\n", __func__, (long)pthread_self());
 
 	len = nussl_read(client_ctx->nussl, &msg, sizeof(msg));
 	if (len < 0 || len != sizeof(msg)) {
+		GList *it;
 		log_printf(DEBUG_LEVEL_WARNING, "nussl_error, removing connection [%s]\n", nussl_get_error(client_ctx->nussl));
+
+		g_mutex_lock(server_ctx->tls_client_list_mutex);
+		it = g_list_find(server_ctx->tls_client_list, client_ctx);
+		log_printf(DEBUG_LEVEL_DEBUG, "Removing List item %p", it);
+		if (it != NULL)
+			server_ctx->tls_client_list = g_list_remove_link(server_ctx->tls_client_list, it);
+		g_mutex_unlock(server_ctx->tls_client_list_mutex);
+
 		ev_io_stop(EV_DEFAULT_ w);
 		nussl_session_destroy(client_ctx->nussl);
 		free(client_ctx);
@@ -145,22 +205,30 @@ fprintf(stderr, "[%s] : %lx\n", __func__, (long)pthread_self());
 		return;
 	}
 
-log_printf(DEBUG_LEVEL_DEBUG, "Header: proto (%d) command (%d) option(%d) length (%d)", msg.proto, msg.msg_type, msg.option, msg.length);
-	// XXX assert(msg.length < sizeof(buffer))
+	msg_length = ntohs(msg.length);
+log_printf(DEBUG_LEVEL_DEBUG, "Header: proto (%d) command (%d) option(%d) length (%d)", msg.proto, msg.msg_type, msg.option, msg_length);
+	// XXX assert(msg_length < sizeof(buffer))
 
-	len = nussl_read(client_ctx->nussl, buffer, msg.length);
+	len = nussl_read(client_ctx->nussl, buffer, msg_length);
 	if (len < 0) {
+		GList *it;
 		log_printf(DEBUG_LEVEL_WARNING, "nussl_error, removing connection [%s]\n", nussl_get_error(client_ctx->nussl));
+
+		g_mutex_lock(server_ctx->tls_client_list_mutex);
+		it = g_list_find(server_ctx->tls_client_list, client_ctx);
+		log_printf(DEBUG_LEVEL_DEBUG, "Removing List item %p", it);
+		if (it != NULL)
+			server_ctx->tls_client_list = g_list_remove_link(server_ctx->tls_client_list, it);
+		g_mutex_unlock(server_ctx->tls_client_list_mutex);
+
 		ev_io_stop(EV_DEFAULT_ w);
 		nussl_session_destroy(client_ctx->nussl);
 		free(client_ctx);
 		free(w);
 		return;
 	}
-	buffer[len] = '\0';
-	while (strlen(buffer)>0 && buffer[strlen(buffer)-1] == '\n')
-		buffer[strlen(buffer)-1] = '\0';
-log_printf(DEBUG_LEVEL_DEBUG, "\tnussl_read: %d  [%s]", len, buffer);
+
+	_emc_handle_message(client_ctx, &msg, buffer, len);
 
 	/* re-schedule reader */
 	g_async_queue_push(server_ctx->work_queue, client_ctx->ev);

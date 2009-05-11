@@ -384,6 +384,8 @@ int emc_init_server(struct emc_server_context *ctx)
 
 	ctx->work_queue = g_async_queue_new();
 
+	ctx->tls_client_list_mutex = g_mutex_new();
+
 fprintf(stderr, "Max: %d\n", g_thread_pool_get_max_unused_threads());
 
 	return 0;
@@ -401,6 +403,7 @@ int emc_start_server(struct emc_server_context *ctx)
 	g_thread_pool_free(ctx->pool_tls_handshake, TRUE, TRUE);
 	g_thread_pool_free(ctx->pool_reader, TRUE, TRUE);
 	g_async_queue_unref(ctx->work_queue);
+	g_mutex_free(ctx->tls_client_list_mutex);
 
 	g_tree_destroy(ctx->nuauth_directory);
 

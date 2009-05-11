@@ -29,6 +29,7 @@ enum emc_proto_version_t {
 enum emc_command_t {
 	EMC_NOP = 0,
 	EMC_HELLO,
+	EMC_CLIENT_CONNECTION_REQUEST,
 };
 
 #endif /* __EMC_PROTO_H__ */
