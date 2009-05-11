@@ -20,6 +20,7 @@ extern struct nuauth_tls_t nuauth_tls;
  */
 
 #define EMC_NODE "127.0.0.1"
+#define NUAUTH_EMC_CONNINFO "192.168.33.184 4129"
 
 #define MULTI_EXT_NAME "MULTI"
 #define MULTI_CONNECT_CMD "CONNECT"
@@ -65,6 +66,7 @@ struct multi_mode_params {
 	char * tls_key;
 	char * tls_cert;
 	char * tls_ca;
+	char * conninfo;
 
 	int is_connected;
 };
@@ -112,6 +114,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	params->tls_key = nuauth_config_table_get_or_default("nuauth_emc_tls_key", NUAUTH_EMC_KEYFILE);
 	params->tls_cert = nuauth_config_table_get_or_default("nuauth_emc_tls_cert", NUAUTH_EMC_CERTFILE);
 	params->tls_ca = nuauth_config_table_get_or_default("nuauth_emc_tls_cacert", NUAUTH_EMC_CAFILE);
+	params->conninfo = nuauth_config_table_get_or_default("nuauth_emc_conninfo", NUAUTH_EMC_CONNINFO);
 
 
 	if (register_client_capa("MULTI", &(params->capa_index)) != NU_EXIT_OK) {
@@ -308,7 +311,6 @@ static void* emc_thread(struct nuauth_thread_t *thread)
 	struct in6_addr saddr;
 	struct in_addr paddr;
 	char *conninfo;
-	char nuauth_addr[1024];
 	char client_addr[1024];
 
 	/* "endless" loop */
@@ -422,14 +424,15 @@ G_MODULE_EXPORT gchar *ip_authentication(tracking_t * header,
 	char buf[1024];
 	struct nu_header *msg = (struct nu_header *) buf;
 	/* XXX find my own address ! */
-	char * conninfo=" 192.168.33.184 4129";
 	char connbuffer[1024];
 
 	/* TODO test if source is not a direct net */
 
 	/* if not in direct net send packet to EMC */
 	format_ipv6(&header->saddr, connbuffer, sizeof(connbuffer), NULL);
-	strcat(connbuffer, conninfo);
+	connbuffer[strlen(connbuffer)] = ' ';
+	connbuffer[strlen(connbuffer) + 1] = '\0';
+	strcat(connbuffer, params->conninfo);
 
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 		"connbuffer: [%s]", connbuffer);
