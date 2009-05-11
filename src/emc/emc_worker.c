@@ -113,7 +113,7 @@ fprintf(stderr, "[%s] : %lx\n", __func__, (long)pthread_self());
 
 	client_ctx->state = EMC_CLIENT_STATE_READY;
 
-	ev_io_init(client_watcher, emc_client_cb, socket, EV_READ | EV_TIMEOUT | EV_ERROR);
+	ev_io_init(client_watcher, emc_client_cb, socket, EV_READ);
 
 	g_async_queue_push(server_ctx->work_queue, client_watcher);
 
