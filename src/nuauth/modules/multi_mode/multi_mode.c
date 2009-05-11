@@ -239,10 +239,10 @@ static int connect_to_emc(struct multi_mode_params *params)
 		msg.proto = PROTO_VERSION_EMC_V1;
 		msg.msg_type = EMC_HELLO;
 		msg.option = 0;
-		msg.length = strlen(text);
+		msg.length = htons(strlen(text));
 
 		nussl_write(params->nussl, (char*)&msg, sizeof(msg));
-		nussl_write(params->nussl, text, sizeof(text));
+		nussl_write(params->nussl, text, strlen(text));
 	}
 
 	params->is_connected = 1;
