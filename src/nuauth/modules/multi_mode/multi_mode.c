@@ -302,7 +302,14 @@ static void* emc_thread(struct nuauth_thread_t *thread)
 	int bufsize;
 	int ret;
 	char buf[1024];
+	char data[1024];
+	int len;
 	struct nu_header *msg = (struct nu_header *) buf;
+	struct in6_addr saddr;
+	struct in_addr paddr;
+	char *conninfo;
+	char nuauth_addr[1024];
+	char client_addr[1024];
 
 	/* "endless" loop */
 	while (g_mutex_trylock(thread->mutex)) {
@@ -340,16 +347,35 @@ static void* emc_thread(struct nuauth_thread_t *thread)
 		log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 				"msg: proto=%d, type=%d, option=%d, length=%d",
 				msg->proto, msg->msg_type, msg->option, ntohs(msg->length));
+		len = nussl_read(params->nussl, data, ntohs(msg->length));
+		if (bufsize <= 0) {
+			nussl_close_connection(params->nussl);
+			params->nussl = NULL;
+			params->is_connected = 0;
+			continue;
+		}
 
-#if 0
+		data[len] = '\0';
+		log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
+				"msg: data=%s",
+				data);
+
 		/* parse message */
+		if (msg->msg_type != EMC_CLIENT_CONNECTION_REQUEST) {
+			log_message(WARNING, DEBUG_AREA_MAIN,
+					"multi: invalid message type %d", msg->msg_type);
+			continue;
+		}
 
 		/* build saddr */
+		sscanf(data, "%s", client_addr);
+		inet_aton(client_addr, &paddr);
+		uint32_to_ipv6(paddr.s_addr, &saddr);
 
 		/* build conninfo */
+		conninfo = data + strlen(client_addr) + 1;;
 
-		multi_warn_clients(saddr, conninfo, params);
-#endif
+		multi_warn_clients(&saddr, conninfo, params);
 	/*	else forget packet */
 	}
 	return NULL;
