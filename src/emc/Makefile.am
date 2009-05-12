@@ -21,4 +21,7 @@ emc_SOURCES = emc_main.c \
 
 emc_LDADD = $(GLIB_LIBS) ../libs/nussl/libnussl.la ../libs/nuconfparser/libnuconfparser.la ../libs/nubase/libnubase.la -lev
 
+install-exec-local:
+	install -d "$(DESTDIR)$(localstatedir)/run/emc/"
+
 endif

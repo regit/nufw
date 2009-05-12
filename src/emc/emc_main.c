@@ -38,7 +38,7 @@
 
 /*! Name of pid file prefixed by LOCAL_STATE_DIR (variable defined
  * during compilation/installation) */
-#define EMC_PID_FILE  LOCAL_STATE_DIR "/run/emc.pid"
+#define EMC_PID_FILE  LOCAL_STATE_DIR "/run/emc/emc.pid"
 
 struct emc_server_context *server_ctx;
 
