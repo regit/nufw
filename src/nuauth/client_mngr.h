@@ -56,6 +56,8 @@ typedef gboolean user_session_check_t(user_session_t * session, gpointer data);
 char warn_clients(struct msg_addr_set *global_msg, user_session_check_t *scheck,
 		  gpointer data);
 
+void clean_client_session_bycallback(GHRFunc cb, gpointer data);
+
 void close_clients();
 
 nu_error_t kill_all_clients();
