@@ -15,6 +15,7 @@ install-data-am:
 install-conf:
 	install -d $(sysconfdir)
 	test -e $(sysconfdir)/nufw.conf || install -m 600 $(top_srcdir)/conf/nufw.conf $(sysconfdir)
+	test -e $(sysconfdir)/emc.conf || install -m 600 $(top_srcdir)/conf/emc.conf $(sysconfdir)
 	install -d $(sysconfdir)/nuauth.d
 	test -e $(sysconfdir)/nuauth.conf || install -m 600 $(top_srcdir)/conf/nuauth.conf $(sysconfdir)
 	test -e $(sysconfdir)/nuauth.d/nuauth_ldap.conf || install -m 600 $(top_srcdir)/conf/nuauth.d/nuauth_ldap.conf $(sysconfdir)/nuauth.d
