@@ -277,10 +277,10 @@ char *nu_get_user_name()
  * \return 0 if ok, < 0 if not
  */
 
-int nu_client_set_capability(const char *capa)
+static int _nu_client_set_capability(char *pcapa, const char *capa)
 {
-	strncat(nu_capabilities, ";", NU_CAPABILITIES_MAXLENGTH - strlen(nu_capabilities));
-	strncat(nu_capabilities, capa, NU_CAPABILITIES_MAXLENGTH - strlen(nu_capabilities));
+	strncat(pcapa, ";", NU_CAPABILITIES_MAXLENGTH - strlen(pcapa));
+	strncat(pcapa, capa, NU_CAPABILITIES_MAXLENGTH - strlen(pcapa));
 
 	return 0;
 }
@@ -292,20 +292,45 @@ int nu_client_set_capability(const char *capa)
  * \return 0 if ok, < 0 if not
  */
 
-int nu_client_unset_capability(const char *capa)
+static int _nu_client_unset_capability(char *pcapa, const char *capa)
 {
 	char * start, * end;
-	start = strstr(nu_capabilities, capa);
+	start = strstr(pcapa, capa);
 	if (start == NULL) {
 		return -ENOSTR;
 	}
 	end = strstr(start, ";");
 	*(start - 1) = '\0';
 	if (end != NULL) {
-		strcat(nu_capabilities, end);
+		strcat(pcapa, end);
 	}
 	return 0;
 }
+
+int nu_client_set_capability(const char *capa)
+{
+	return _nu_client_set_capability(nu_capabilities, capa);
+}
+
+int nu_client_unset_capability(const char *capa)
+{
+	return _nu_client_unset_capability(nu_capabilities, capa);
+}
+
+int nu_client_set_session_capability(nuauth_session_t *session, const char *capa)
+{
+	if (session->nu_capabilities[0] == 0) {
+		strcpy(session->nu_capabilities, nu_capabilities);
+	}
+	return _nu_client_set_capability(session->nu_capabilities, capa);
+}
+
+int nu_client_unset_session_capability(nuauth_session_t *session, const char *capa)
+{
+	return _nu_client_unset_capability(session->nu_capabilities, capa);
+}
+
+
 
 void nu_client_set_client_info(nuauth_session_t *session,
 		const char *client_name, const char *client_version)
@@ -787,6 +812,7 @@ nuauth_session_t *nu_client_new(const char *username,
 
 	session->username = secure_str_copy(username);
 	session->password = secure_str_copy(password);
+	session->nu_capabilities[0] = 0;
 	if (session->username == NULL || session->password == NULL) {
 		SET_ERROR(err, INTERNAL_ERROR, MEMORY_ERR);
 		return NULL;
