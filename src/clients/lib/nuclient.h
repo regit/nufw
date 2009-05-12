@@ -197,6 +197,9 @@ void nu_client_set_max_delay(nuauth_session_t * session, unsigned int delay);
 int nu_client_set_capability(const char *capa);
 int nu_client_unset_capability(const char *capa);
 
+int nu_client_session_set_capability(nuauth_session_t * session, const char *capa);
+int nu_client_session_unset_capability(nuauth_session_t * session, const char *capa);
+
 char *nu_get_home_dir();
 char *nu_get_user_name();
 
