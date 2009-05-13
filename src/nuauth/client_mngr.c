@@ -453,13 +453,17 @@ gboolean is_expired_client(gpointer key,
 	}
 }
 
+void clean_client_session_bycallback(GHRFunc cb, gpointer data)
+{
+	g_mutex_lock(client_mutex);
+	g_hash_table_foreach_remove(client_conn_hash, cb, data);
+	g_mutex_unlock(client_mutex);
+}
+
 void kill_expired_clients_session()
 {
 	time_t current_time = time(NULL);
-	g_mutex_lock(client_mutex);
-	g_hash_table_foreach_remove(client_conn_hash, is_expired_client,
-				    &current_time);
-	g_mutex_unlock(client_mutex);
+	clean_client_session_bycallback(is_expired_client, &current_time);
 }
 
 /**

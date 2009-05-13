@@ -79,6 +79,7 @@ typedef struct {
 	auth_type_t auth_type;
 	int auth_quality;
 	time_t connect_timestamp;
+	time_t last_request;
 	gboolean activated;	/*!< \brief TRUE if user server listen for event for this session */
 } user_session_t;
 

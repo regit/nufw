@@ -229,6 +229,8 @@ struct nuauth_session {
 
 	/** Suppress certificate verification */
 	int suppress_cert_verif;
+
+	char nu_capabilities[NU_CAPABILITIES_MAXLENGTH];
 };
 
 struct llist_head nu_postauth_extproto_l;

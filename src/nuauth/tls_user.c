@@ -231,6 +231,9 @@ nu_error_t treat_user_request(user_session_t * c_session,
 		return NU_EXIT_CONTINUE;
 	}
 
+	/* looks like a regular auth attempt, update last_request */
+	c_session->last_request = time(NULL);
+
 	/* check authorization if we're facing a multi user packet */
 	if (header->option == 0x0) {
 		/* this is an authorized packet we fill the buffer_read structure */

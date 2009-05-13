@@ -54,6 +54,7 @@ struct proto_ext_t _multi_ext = {
 #define NUAUTH_EMC_KEYFILE CONFIG_DIR "/nuauth-emc-key.pem"
 #define NUAUTH_EMC_CERTFILE CONFIG_DIR "/nuauth-emc-cert.pem"
 #define NUAUTH_EMC_CAFILE CONFIG_DIR "/NuFW-cacert.pem"
+#define MULTI_INACTIVITY_DELAY 30
 
 struct multi_mode_params {
 	/* FIXME switch to list */
@@ -63,6 +64,7 @@ struct multi_mode_params {
 	nussl_session *nussl;
 	/* multi capability index */
 	unsigned int capa_index;
+	unsigned int secondary_index;
 	char * tls_key;
 	char * tls_cert;
 	char * tls_ca;
@@ -82,6 +84,29 @@ G_MODULE_EXPORT uint32_t get_api_version()
 	return NUAUTH_API_VERSION;
 }
 
+unsigned int secondary_index;
+
+static gboolean is_inactive_client(gpointer key,
+			   gpointer value, gpointer user_data)
+{
+	if (((user_session_t *) value)->capa_flags & (1 << secondary_index)) {
+		return FALSE;
+	}
+
+	if (((user_session_t *) value)->last_request <
+			*((time_t *) user_data - MULTI_INACTIVITY_DELAY)) {
+		return TRUE;
+	}
+	return FALSE;
+}
+
+static void clean_inactive_session()
+{
+	time_t current_time = time(NULL);
+	clean_client_session_bycallback(is_inactive_client, &current_time);
+}
+
+
 
 G_MODULE_EXPORT gchar *unload_module_with_params(gpointer params_p)
 {
@@ -92,6 +117,8 @@ G_MODULE_EXPORT gchar *unload_module_with_params(gpointer params_p)
 	nussl_session_destroy(params->nussl);
 	g_free(params->emc_node);
 	g_free(params);
+
+	cleanup_func_remove(&clean_inactive_session);
 
 	if (unregister_protocol_extension(&_multi_ext) != NU_EXIT_OK) {
 		log_message(WARNING, DEBUG_AREA_MAIN,
@@ -122,6 +149,11 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 			    "Unable to register capability MULTI");
 		return FALSE;
 	}
+	if (register_client_capa("SECONDARY", &secondary_index) != NU_EXIT_OK) {
+		log_message(WARNING, DEBUG_AREA_MAIN,
+			    "Unable to register capability SECONDARY");
+		return FALSE;
+	}
 
 	module->params = (gpointer) params;
 
@@ -130,6 +162,8 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 			    "Unable to register protocol extension for MULTI");
 		return FALSE;
 	}
+
+	cleanup_func_push(&clean_inactive_session);
 
 	/* start EMC connected thread */
 	thread_new_wdata(&(params->emc_thread), "multi_mode EMC thread", params, &emc_thread);
