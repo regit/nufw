@@ -116,10 +116,16 @@ void emc_daemonize()
 	/* set log engine */
 	log_engine = LOG_TO_SYSLOG;
 
-	/* Close stdin, stdout, stderr. */
-	(void) close(0);
-	(void) close(1);
-	(void) close(2);
+	{
+		/* warning: do not close fd (0 1 2), or this will create problems when trying
+		 * to create child process with a pipe (dup2 fails with error EBADF)
+		 */
+		int fd = open("/dev/null",O_RDWR);
+		dup2(fd,0);
+		dup2(fd,1);
+		dup2(fd,2);
+		close(fd);
+	}
 }
 
 
