@@ -31,6 +31,10 @@
 # include <getopt.h>
 #endif
 
+#ifdef HAVE_FCNTL_H
+# include <fcntl.h>
+#endif
+
 #include <nubase.h>
 
 #include "emc_server.h"
