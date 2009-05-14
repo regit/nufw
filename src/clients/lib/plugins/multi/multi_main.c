@@ -192,13 +192,13 @@ static int authenticate_all_conn(nuauth_session_t *session,
 
 		bucket = session->ct->buckets[i];
 		while (bucket != NULL) {
-			if (add_packet_to_send(session, auth, &count,
+			if (add_packet_to_send(ssession->session, auth, &count,
 					 bucket) == -1) {
 				/* problem when sending we exit */
 				clean_ssession(ssession);
 				return -1;
 			}
-
+			bucket = bucket->next;
 		}
 	}
 
@@ -255,7 +255,7 @@ int multi_connect(char **dbuf,int dbufsize, void *data)
 
 	ssession->orig_session = session;
 	ssession->session = nu_client_new(session->username, session->password, 0, NULL);
-	nu_client_session_set_capability(ssession->session, "SECONDARY");
+	nu_client_set_session_capability(ssession->session, "SECONDARY");
 	/* TLS setup */
 	nu_client_set_key(ssession->session, session->pem_key, session->pem_cert, NULL);
 	nu_client_set_ca(ssession->session, session->pem_ca, NULL);
