@@ -158,7 +158,7 @@ nu_error_t parse_dgram(connection_t * connection, unsigned char *dgram,
 		connection->payload_len = STORED_PAYLOAD_SIZE;
 	else
 		connection->payload_len = orig_dgram_size;
-	memcpy(connection->payload, orig_dgram, orig_dgram_size);
+	memcpy(connection->payload, orig_dgram, connection->payload_len);
 
 	return NU_EXIT_CONTINUE;
 }
