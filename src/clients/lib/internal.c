@@ -112,7 +112,7 @@ static unsigned samp_recv(nuauth_session_t* session, char *buf, int bufsize,
 
 	tls_len = nussl_read(session->nussl, buf, bufsize);
 	if (tls_len <= 0) {
-		printf("ERROR nussl_read returned %d (requested %d bytes)\n", tls_len, bufsize);
+		log_printf(DEBUG_LEVEL_CRITICAL, "ERROR nussl_read returned %d (requested %d bytes)\n", tls_len, bufsize);
 		SET_ERROR(err, NUSSL_ERR, tls_len);
 		return 0;
 	}
@@ -120,7 +120,7 @@ static unsigned samp_recv(nuauth_session_t* session, char *buf, int bufsize,
 	result = sasl_decode64(buf + 3, (unsigned) strlen(buf + 3), buf,
 			       bufsize, &len);
 	if (result != SASL_OK) {
-		printf("ERROR sasl_decode64 returned %d\n", result);
+		log_printf(DEBUG_LEVEL_CRITICAL, "ERROR sasl_decode64 returned %d\n", result);
 		SET_ERROR(err, SASL_ERROR, result);
 		return 0;
 	}
@@ -151,13 +151,13 @@ int mysasl_negotiate(nuauth_session_t * session, sasl_conn_t * conn,
 				   buf, NULL, &data, &len, &chosenmech);
 
 	if (session->verbose) {
-		printf("Using mechanism %s\n", chosenmech);
+		log_printf(DEBUG_LEVEL_INFO, "Using mechanism %s\n", chosenmech);
 	}
 
 	if (result != SASL_OK && result != SASL_CONTINUE) {
 		if (session->verbose) {
-			printf("Error starting SASL negotiation");
-			printf("\n%s\n", sasl_errdetail(conn));
+			log_printf(DEBUG_LEVEL_CRITICAL, "Error starting SASL negotiation");
+			log_printf(DEBUG_LEVEL_CRITICAL, "\n%s\n", sasl_errdetail(conn));
 		}
 		SET_ERROR(err, SASL_ERROR, result);
 		return SASL_FAIL;
@@ -181,19 +181,19 @@ int mysasl_negotiate(nuauth_session_t * session, sasl_conn_t * conn,
 
 	while (result == SASL_CONTINUE) {
 		if (session->verbose) {
-			printf("Waiting for server reply...\n");
+			log_printf(DEBUG_LEVEL_DEBUG, "Waiting for server reply...\n");
 		}
 		memset(buf, 0, sizeof(buf));
 		len = samp_recv(session, buf, sizeof(buf), err);
 		if (len <= 0) {
-			printf("server problem, recv fail...\n");
+			log_printf(DEBUG_LEVEL_CRITICAL, "server problem, recv fail...\n");
 			return SASL_FAIL;
 		}
 		result =
 		    sasl_client_step(conn, buf, len, NULL, &data, &len);
 		if (result != SASL_OK && result != SASL_CONTINUE) {
 			if (session->verbose)
-				printf("Performing SASL negotiation\n");
+				log_printf(DEBUG_LEVEL_DEBUG, "Performing SASL negotiation\n");
 			SET_ERROR(err, SASL_ERROR, result);
 		}
 		if (data && len) {
@@ -240,7 +240,7 @@ int add_packet_to_send(nuauth_session_t * session, conn_t ** auth,
 		if (send_user_pckt(session, auth) != 1) {
 			/* error sending */
 #if DEBUG
-			printf("error when sending\n");
+			log_printf(DEBUG_LEVEL_CRITICAL, "error when sending\n");
 #endif
 
 			return -1;
@@ -281,7 +281,7 @@ int compare(nuauth_session_t * session, conntable_t * old, conntable_t * new,
 			same_bucket = tcptable_find(old, bucket);
 			if (same_bucket == NULL) {
 #if DEBUG
-				printf("sending new\n");
+				log_printf(DEBUG_LEVEL_DEBUG, "sending new\n");
 #endif
 				if (add_packet_to_send
 				    (session, auth, &count,
@@ -296,7 +296,7 @@ int compare(nuauth_session_t * session, conntable_t * old, conntable_t * new,
 				if (bucket->retransmit >
 				    same_bucket->retransmit) {
 #if DEBUG
-					printf("sending retransmit\n");
+					log_printf(DEBUG_LEVEL_DEBUG, "sending retransmit\n");
 #endif
 					if (add_packet_to_send
 					    (session, auth, &count,
@@ -315,8 +315,8 @@ int compare(nuauth_session_t * session, conntable_t * old, conntable_t * new,
 					if (same_bucket->createtime <
 					    time(NULL) - UDP_TIMEOUT) {
 #if DEBUG
-						printf
-						    ("working on timeout issue\n");
+						log_printf(DEBUG_LEVEL_DEBUG,
+						    "working on timeout issue\n");
 #endif
 						if (add_packet_to_send
 						    (session, auth, &count,
@@ -394,7 +394,7 @@ int send_os(nuauth_session_t * session, nuclient_error_t * err)
 	ret = nussl_write(session->nussl, buf, ntohs(osfield->length));
 	if (ret < 0) {
 		if (session->verbose)
-			printf("Error sending tls data: ...");
+			log_printf(DEBUG_LEVEL_CRITICAL, "Error sending tls data: ...");
 		SET_ERROR(err, NUSSL_ERR, ret);
 		return 0;
 	}
@@ -441,7 +441,7 @@ int send_client(nuauth_session_t * session, nuclient_error_t * err)
 	ret = nussl_write(session->nussl, buf, ntohs(vfield->length));
 	if (ret < 0) {
 		if (session->verbose)
-			printf("Error sending tls data: ...");
+			log_printf(DEBUG_LEVEL_CRITICAL, "Error sending tls data: ...");
 		SET_ERROR(err, NUSSL_ERR, ret);
 		return 0;
 	}
@@ -484,7 +484,7 @@ int send_capa(nuauth_session_t * session, nuclient_error_t * err)
 	ret = nussl_write(session->nussl, buf, ntohs(vfield->length));
 	if (ret < 0) {
 		if (session->verbose)
-			printf("Error sending tls data: ...");
+			log_printf(DEBUG_LEVEL_CRITICAL, "Error sending tls data: ...");
 		SET_ERROR(err, NUSSL_ERR, ret);
 		return 0;
 	}
@@ -505,7 +505,7 @@ static int nu_get_usersecret(sasl_conn_t * conn __attribute__ ((unused)),
 	nuauth_session_t *session = (nuauth_session_t *) context;
 	if (id != SASL_CB_PASS) {
 		if (session->verbose)
-			printf("getsecret not looking for pass");
+			log_printf(DEBUG_LEVEL_CRITICAL, "getsecret not looking for pass");
 		return SASL_BADPARAM;
 	}
 	if ((session->password == NULL) && session->passwd_callback) {
@@ -618,7 +618,7 @@ int init_sasl(nuauth_session_t * session, const char *hostname, nuclient_error_t
 	ret = sasl_client_new(krb5_service, server_fqdn, NULL, NULL, callbacks, 0, &conn);
 	if (ret != SASL_OK) {
 		if (session->verbose)
-			printf("Failed allocating connection state");
+			log_printf(DEBUG_LEVEL_CRITICAL, "Failed allocating connection state");
 		errno = EAGAIN;
 		SET_ERROR(err, SASL_ERROR, ret);
 		return 0;
@@ -630,7 +630,7 @@ int init_sasl(nuauth_session_t * session, const char *hostname, nuclient_error_t
 			session->username = session->username_callback();
 		} else {
 			if (session->verbose)
-				printf("Can't call username callback\n");
+				log_printf(DEBUG_LEVEL_CRITICAL, "Can't call username callback\n");
 		}
 	}
 

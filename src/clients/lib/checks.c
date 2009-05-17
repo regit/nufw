@@ -1,11 +1,8 @@
 /*
- ** Copyright 2005 - INL
+ ** Copyright 2005-2009 - INL
  ** Written by Eric Leblond <regit@inl.fr>
  **            Vincent Deffontaines <vincent@inl.fr>
  ** INL http://www.inl.fr/
- **
- ** $Id$
- **
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -91,7 +88,7 @@ nu_error_t recv_message(nuauth_session_t *session, nuclient_error_t *err)
 	switch (hdr->msg_type) {
 		case SRV_REQUIRED_PACKET:
 			if (session->debug_mode) {
-				printf("[+] Client is asked to send new connections.\n");
+				log_printf(DEBUG_LEVEL_INFO, "[+] Client is asked to send new connections.\n");
 			}
 			nu_client_real_check(session, err);
 			break;
@@ -100,14 +97,14 @@ nu_error_t recv_message(nuauth_session_t *session, nuclient_error_t *err)
 			hellofield->helloid =
 				((struct nu_srv_helloreq *) dgram)->helloid;
 			if (session->debug_mode) {
-				printf("[+] Send HELLO\n");
+				log_printf(DEBUG_LEVEL_INFO, "[+] Send HELLO\n");
 			}
 
 			/*  send it */
 			ret = nussl_write(session->nussl, message, message_length);
 			if (ret < 0) {
 #if DEBUG_ENABLE
-				printf("write failed at %s:%d\n",
+				log_printf(DEBUG_LEVEL_CRITICAL, "write failed at %s:%d\n",
 						__FILE__, __LINE__);
 #endif
 				ask_session_end(session);
@@ -122,7 +119,7 @@ nu_error_t recv_message(nuauth_session_t *session, nuclient_error_t *err)
 					session);
 			break;
 		default:
-			printf("unknown message %d\n", hdr->msg_type);
+			log_printf(DEBUG_LEVEL_SERIOUS_WARNING, "unknown message %d\n", hdr->msg_type);
 			return NU_EXIT_CONTINUE;
 	}
 	return NU_EXIT_OK;
@@ -260,7 +257,7 @@ int nu_client_real_check(nuauth_session_t * session, nuclient_error_t * err)
 	int nb_packets = 0;
 
 	if (session->debug_mode) {
-		printf("[+] Client checking for new connections.\n");
+		log_printf(DEBUG_LEVEL_INFO, "[+] Client checking for new connections.\n");
 	}
 
 	if (tcptable_init(&new) == 0) {

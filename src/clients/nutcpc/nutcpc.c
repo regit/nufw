@@ -4,8 +4,6 @@
  **            Vincent Deffontaines <vincent@inl.fr>
  ** INL http://www.inl.fr/
  **
- ** $Id$
- **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
  ** the Free Software Foundation, version 3 of the License.
@@ -469,8 +467,9 @@ static void usage(void)
 	fprintf(stderr, "  -p (--port         ) PORT: nuauth port number\n");
 	fprintf(stderr, "  -a (--auth-dn      ) AUTH_DN: authentication domain name\n");
 	fprintf(stderr, "  -I (--interval     ) INTERVAL: check interval in milliseconds\n");
-	fprintf(stderr, "  -q (--hide         ): do not display running nutcpc options on \"ps\"\n");
 	fprintf(stderr, "  -P (--password     ):PASSWORD: specify password (only for debug purpose)\n");
+	fprintf(stderr, "  -q (--hide         ): do not display running nutcpc options on \"ps\"\n");
+	fprintf(stderr, "  -v (--verbose      ): increase debug level (+1 for each 'v') (max useful number : 10)\n");
 	fprintf(stderr, "  -d (--debug        ): debug mode (don't go to foreground, daemon)\n");
 	fprintf(stderr, "\n");
 	exit(EXIT_FAILURE);
@@ -801,7 +800,7 @@ void parse_cmdline_options(int argc, char **argv,
 
 	/* Parse all command line arguments */
 	opterr = 0;
-	while ((ch = getopt_long(argc, argv, "kcldqNQFGVu:H:I:U:p:P:a:K:C:A:R:W:S:Z:", long_options, NULL)) != -1) {
+	while ((ch = getopt_long(argc, argv, "kcldqNQFGVvu:H:I:U:p:P:a:K:C:A:R:W:S:Z:", long_options, NULL)) != -1) {
 		switch (ch) {
 		case 'H':
 			SECURE_STRNCPY(context->srv_addr, optarg,
@@ -814,6 +813,9 @@ void parse_cmdline_options(int argc, char **argv,
 			break;
 		case 'd':
 			context->debug_mode = 1;
+			break;
+		case 'v':
+			debug_level++;
 			break;
 		case 'I':
 			context->interval = atoi(optarg);
@@ -990,6 +992,10 @@ int main(int argc, char **argv)
 	/* needed by iconv */
 	setlocale(LC_ALL, "");
 
+	log_engine = LOG_TO_STD;
+	debug_areas = DEFAULT_DEBUG_AREAS;
+	debug_level = DEBUG_LEVEL_SERIOUS_MESSAGE;
+
 	if (!nu_check_version(NUCLIENT_VERSION)) {
 		fprintf(stderr,
 			"Wrong version of libnuclient (%s instead of %s)\n",
@@ -1019,12 +1025,10 @@ int main(int argc, char **argv)
 						    (pid_t) atoi(line);
 						fclose(fd);
 						if (kill(pid, 0)) {
-							printf
-							    ("No running process, starting anyway (deleting lockfile)\n");
+							printf("No running process, starting anyway (deleting lockfile)\n");
 							unlink(runpid);
 						} else {
-							printf
-							    ("Kill existing process with \"-k\" or ignore it with \"-l\" option\n");
+							printf("Kill existing process with \"-k\" or ignore it with \"-l\" option\n");
 							exit(EXIT_FAILURE);
 						}
 					}

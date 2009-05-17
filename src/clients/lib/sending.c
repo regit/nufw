@@ -4,8 +4,6 @@
  **            Vincent Deffontaines <vincent@inl.fr>
  ** INL http://www.inl.fr/
  **
- ** $Id$
- **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
  ** the Free Software Foundation, version 3 of the License.
@@ -168,7 +166,7 @@ int send_user_pckt(nuauth_session_t * session, conn_t * carray[CONN_MAX])
 	}
 	header->length = htons(header->length);
 	if (session->debug_mode) {
-		printf("[+] Send %u new connection(s) to nuauth\n", item);
+		log_printf(DEBUG_LEVEL_INFO, "[+] Send %u new connection(s) to nuauth\n", item);
 	}
 
 	/* and send it */
@@ -176,14 +174,14 @@ int send_user_pckt(nuauth_session_t * session, conn_t * carray[CONN_MAX])
 	if (session->tls) {
 		if (gnutls_record_send
 		    (session->tls, data, pointer - data) <= 0) {
-			printf("write failed\n");
+			log_printf(DEBUG_LEVEL_CRITICAL, "write failed\n");
 			return 0;
 		}
 	}
 #else
 	if (nussl_write(session->nussl, (char*)data, pointer - data) < 0)
 	{
-		printf("write failed\n");
+		log_printf(DEBUG_LEVEL_CRITICAL, "write failed\n");
 		return 0;
 	}
 #endif
