@@ -84,7 +84,7 @@ AC_CHECK_TOOL(DOCBOOK2PDF, docbook2pdf, true)
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([arpa/inet.h errno.h fcntl.h getopt.h limits.h netdb.h netinet/in.h netinet/tcp.h pthread.h stdlib.h string.h sys/select.h sys/socket.h unistd.h inexistent.h])
+AC_CHECK_HEADERS([arpa/inet.h errno.h fcntl.h getopt.h limits.h netdb.h netinet/in.h netinet/tcp.h pthread.h stdarg.h stdlib.h string.h sys/select.h sys/socket.h unistd.h inexistent.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST

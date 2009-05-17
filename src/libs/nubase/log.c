@@ -39,6 +39,7 @@
 #include <syslog.h>
 #include <time.h>
 #include <assert.h>
+#include <string.h>
 
 #include <debug.h>
 
@@ -55,6 +56,7 @@ int log_engine = 0;
 int debug_level = DEFAULT_DEBUG_LEVEL;    /*!< Debug level, default valut: #DEFAULT_DEBUG_LEVEL */
 int debug_areas = DEFAULT_DEBUG_AREAS;    /*!< Debug areas, default value: #DEFAULT_DEBUG_AREAS (all areas except perf) */
 
+static log_callback_t _log_cb = NULL; /*!< Log callback */
 
 /**
  * Convert NuFW verbosity level to syslog priority.
@@ -86,6 +88,14 @@ void nubase_log_engine_set(int engine)
 	log_engine = engine;
 }
 
+log_callback_t nubase_log_set_callback(log_callback_t cb)
+{
+	log_callback_t old_cb = _log_cb;
+
+	_log_cb = cb;
+	return old_cb;
+}
+
 /**
  * Display a message to log, the syntax for format is the same as printf().
  * The priority is used for syslog.
@@ -102,6 +112,8 @@ void do_log_area_printf(int area, int priority, char *format, va_list args)
 		       && priority <= MAX_DEBUG_LEVEL);
 		priority = syslog_priority_map[priority - MIN_DEBUG_LEVEL];
 		vsyslog(priority, format, args);
+	} else if (log_engine == LOG_TO_CALLBACK) {
+		(_log_cb)(area, priority, format, args);
 	} else {
 		time_t current_time;
 		struct tm *current_time_tm;

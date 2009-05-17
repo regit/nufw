@@ -26,6 +26,9 @@
 #  include "config.h"
 #endif
 #include <syslog.h>
+#ifdef HAVE_STDARG_H
+#  include <stdarg.h>
+#endif
 #include "debug.h"
 
 /** \file libs/nubase/log.h
@@ -36,8 +39,17 @@
 
 #define SYSLOG_OPTS \
 	LOG_CONS||LOG_PID		/*!< Syslog options of NuFW */
-#define LOG_TO_STD	  1	/*!< Value of ::log_engine when using printf() */
-#define LOG_TO_SYSLOG 2		/*!< Value of ::log_engine when using syslog() */
+
+enum log_type_t {
+	LOG_NONE = 0,
+	LOG_TO_STD,	/*!< Value of ::log_engine when using printf() */
+	LOG_TO_SYSLOG,	/*!< Value of ::log_engine when using syslog() */
+	LOG_TO_CALLBACK,	/*!< Value of ::log_engine when using a callback */
+};
+
+/** \brief Callback prototype, for logs
+ */
+typedef void (*log_callback_t)(debug_area_t area, debug_level_t priority, char *format, va_list args);
 
 /**
  * Log engine used:
@@ -72,5 +84,12 @@ void log_area_printf(debug_area_t area, debug_level_t priority, char *format, ..
 #else
 #  define debug_log_printf(area, priority, format, ...)
 #endif
+
+/** \brief Set callback function for log
+ *
+ * This only makes sense when ::log_engine is #LOG_TO_CALLBACK
+ * \return The previously set callback
+ */
+log_callback_t nubase_log_set_callback(log_callback_t cb);
 
 #endif				/* ifndef NUBASE_LOG_HEADER */
