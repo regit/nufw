@@ -237,7 +237,7 @@ char *nu_get_home_dir()
 
 	uid = getuid();
 	if (!(pwd = getpwuid(uid))) {
-		printf("Unable to get password file record\n");
+		log_printf(DEBUG_LEVEL_CRITICAL, "Unable to get password file record\n");
 		endpwent();
 		return NULL;
 	}
@@ -261,7 +261,7 @@ char *nu_get_user_name()
 
 	uid = getuid();
 	if (!(pwd = getpwuid(uid))) {
-		printf("Unable to get password file record\n");
+		log_printf(DEBUG_LEVEL_CRITICAL,"Unable to get password file record\n");
 		endpwent();
 		return NULL;
 	}
@@ -353,13 +353,13 @@ int nu_client_set_key(nuauth_session_t* session, char* keyfile, char* certfile, 
 	if (keyfile)
 	{
 		session->pem_key = strdup(keyfile);
-		printf("Using key: %s\n", keyfile);
+		log_printf(DEBUG_LEVEL_DEBUG, "Using key: %s\n", keyfile);
 	}
 
 	if (certfile)
 	{
 		session->pem_cert = strdup(certfile);
-		printf("Using certificate: %s\n", certfile);
+		log_printf(DEBUG_LEVEL_DEBUG, "Using certificate: %s\n", certfile);
 	}
 
 	return 1;
@@ -373,7 +373,7 @@ int nu_client_set_ca(nuauth_session_t* session, char* cafile, nuclient_error_t* 
 	if (cafile)
 		session->pem_ca = strdup(cafile);
 
-	printf("Using CA: %s\n", cafile);
+	log_printf(DEBUG_LEVEL_DEBUG, "Using CA: %s\n", cafile);
 	return 1;
 }
 
@@ -387,7 +387,7 @@ int nu_client_set_pkcs12(nuauth_session_t* session, char* key_file, char* key_pa
 
 	if (key_file)
 	{
-		printf("Using key: %s\n", key_file);
+		log_printf(DEBUG_LEVEL_DEBUG, "Using key: %s\n", key_file);
 		session->pkcs12_file = strdup(key_file);
 	}
 
@@ -451,7 +451,7 @@ int nu_client_load_key(nuauth_session_t * session,
 				return 0;
 			}
 			else {
-				printf("Warning: Failed to load default certificate and key.\n");
+				log_printf(DEBUG_LEVEL_WARNING, "Warning: Failed to load default certificate and key.\n");
 			}
 		}
 	}
@@ -529,7 +529,7 @@ int nu_client_load_ca(nuauth_session_t * session,
 			}
 			else {
 				if (!session->suppress_ca_warning) {
-					fprintf(stderr,"\nWARNING: you have not provided any certificate authority.\n"
+					log_printf(DEBUG_LEVEL_WARNING, "\nWARNING: you have not provided any certificate authority.\n"
 							"nutcpc will *NOT* verify server certificate trust.\n"
 							"Use the -A <cafile> option to set up CA.\n\n"
 					       );
@@ -539,7 +539,7 @@ int nu_client_load_ca(nuauth_session_t * session,
 			}
 		}
 	} else {
-		fprintf(stderr, "Could not load any CA !\n");
+		log_printf(DEBUG_LEVEL_WARNING, "Could not load any CA !\n");
 		return 0;
 	}
 	return 1;
@@ -552,11 +552,11 @@ int nu_client_load_crl(nuauth_session_t *session, const char *crlfile,
 	if (crlfile && *crlfile) {
 		ret = nussl_ssl_set_crl_file(session->nussl, crlfile, cafile);
 		if (ret != NUSSL_OK) {
-			fprintf(stderr,"TLS error with CRL: %s",
+			log_printf(DEBUG_LEVEL_WARNING,"TLS error with CRL: %s",
 				nussl_get_error(session->nussl));
 			return 0;
 		}
-		printf("Using crl: %s\n", crlfile);
+		log_printf(DEBUG_LEVEL_DEBUG, "Using crl: %s\n", crlfile);
 	}
 	return 1;
 }

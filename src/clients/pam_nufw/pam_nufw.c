@@ -1,10 +1,8 @@
 /*
- ** Copyright 2006 - INL
+ ** Copyright 2006-2009 - INL
  ** Written by Jean Gillaux <jean@inl.fr>
  ** INL http://www.inl.fr/
  ** Based on pam_permit by Andrew Morgan <morgan@parc.power.net> 1996/3/11
- **
- ** $Id$
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -343,6 +341,11 @@ static int nufw_client_func(struct pam_nufw_s *pn_s,
 	FILE *RunD;
 	struct sigaction no_action;
 	int res_err;
+
+	log_engine = LOG_TO_SYSLOG;
+	debug_level = DEBUG_LEVEL_SERIOUS_MESSAGE;
+	debug_areas = 32;
+	init_log_engine("pam_nufw");
 
 	/* set user and group identifier, and home directory */
 	if (setuid(user_info->uid) != 0) {
