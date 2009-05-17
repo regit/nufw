@@ -74,6 +74,7 @@ struct multi_mode_params {
 };
 
 unsigned int secondary_index;
+time_t multi_inactivity_delay;
 
 static int connect_to_emc(struct multi_mode_params *params);
 static void *emc_thread(struct nuauth_thread_t *data);
@@ -94,7 +95,7 @@ static gboolean is_inactive_client(gpointer key,
 	}
 
 	if (((user_session_t *) value)->last_request <
-			(*(time_t *) user_data - MULTI_INACTIVITY_DELAY)) {
+			(*(time_t *) user_data - multi_inactivity_delay)) {
 		return TRUE;
 	}
 	return FALSE;
@@ -142,6 +143,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	params->tls_cert = nuauth_config_table_get_or_default("nuauth_emc_tls_cert", NUAUTH_EMC_CERTFILE);
 	params->tls_ca = nuauth_config_table_get_or_default("nuauth_emc_tls_cacert", NUAUTH_EMC_CAFILE);
 	params->conninfo = nuauth_config_table_get_or_default("nuauth_emc_conninfo", NUAUTH_EMC_CONNINFO);
+	multi_inactivity_delay = nuauth_config_table_get_or_default_int("multi_mode_inactivity_delay", MULTI_INACTIVITY_DELAY);
 
 
 	if (register_client_capa("MULTI", &(params->capa_index)) != NU_EXIT_OK) {
