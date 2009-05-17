@@ -19,7 +19,7 @@ libnuclient_la_SOURCES = ${include_HEADERS} libnuclient.c proc.c iconv.c checks.
 
 libnuclient_la_LIBADD = -lsasl2 -L$(top_builddir)/src/include/ ../../libs/nussl/libnussl.la ../../libs/nuconfparser/libnuconfparser.la ../../libs/nubase/libnubase.la
 
-LIBNUCLIENT_AC=3
+LIBNUCLIENT_AC=4
 LIBNUCLIENT_REV=0
 LIBNUCLIENT_ANC=0
 

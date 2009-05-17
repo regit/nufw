@@ -4,8 +4,6 @@
  **            Vincent Deffontaines <vincent@inl.fr>
  ** INL http://www.inl.fr/
  **
- ** $Id$
- **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
  ** the Free Software Foundation, version 3 of the License.
@@ -33,8 +31,11 @@ extern "C" {
 #endif
 #endif
 
-#define NUCLIENT_VERSION "2.1.1-3"
-#define DEBUG 0
+#define NUCLIENT_VERSION_MAJOR 4
+#define NUCLIENT_VERSION_MINOR 0
+#define NUCLIENT_VERSION_REVISION 0
+
+#define NUCLIENT_VERSION "4.0.0"
 
 /** Default nuauth IP address */
 #define NUAUTH_IP "192.168.1.1"
