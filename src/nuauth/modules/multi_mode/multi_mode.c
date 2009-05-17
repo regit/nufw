@@ -73,6 +73,8 @@ struct multi_mode_params {
 	int is_connected;
 };
 
+unsigned int secondary_index;
+
 static int connect_to_emc(struct multi_mode_params *params);
 static void *emc_thread(struct nuauth_thread_t *data);
 
@@ -84,17 +86,15 @@ G_MODULE_EXPORT uint32_t get_api_version()
 	return NUAUTH_API_VERSION;
 }
 
-unsigned int secondary_index;
-
 static gboolean is_inactive_client(gpointer key,
 			   gpointer value, gpointer user_data)
 {
-	if (((user_session_t *) value)->capa_flags & (1 << secondary_index)) {
+	if (! (((user_session_t *) value)->capa_flags & (1 << secondary_index))) {
 		return FALSE;
 	}
 
 	if (((user_session_t *) value)->last_request <
-			*((time_t *) user_data - MULTI_INACTIVITY_DELAY)) {
+			(*(time_t *) user_data - MULTI_INACTIVITY_DELAY)) {
 		return TRUE;
 	}
 	return FALSE;
