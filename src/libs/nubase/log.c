@@ -1,8 +1,7 @@
 /*
- ** Copyright(C) 2006 INL
+ ** Copyright(C) 2006-2009 INL
  ** Written by  Victor Stinner <haypo@inl.fr>
- **
- ** $Id: log.c 2738 2007-02-17 13:59:56Z regit $
+ **             Pierre Chifflier <chifflier@inl.fr>
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -39,6 +38,7 @@
 #include <syslog.h>
 #include <time.h>
 #include <assert.h>
+#include <string.h>
 
 #include <debug.h>
 
@@ -55,6 +55,7 @@ int log_engine;
 int debug_level;                /*!< Debug level, default valut: #DEFAULT_DEBUG_LEVEL */
 int debug_areas;                /*!< Debug areas, default value: #DEFAULT_DEBUG_AREAS (all areas) */
 
+static log_callback_t _log_cb = NULL; /*!< Log callback */
 
 /**
  * Convert NuFW verbosity level to syslog priority.
@@ -86,6 +87,14 @@ void nubase_log_engine_set(int engine)
 	log_engine = engine;
 }
 
+log_callback_t nubase_log_set_callback(log_callback_t cb)
+{
+	log_callback_t old_cb = _log_cb;
+
+	_log_cb = cb;
+	return old_cb;
+}
+
 /**
  * Display a message to log, the syntax for format is the same as printf().
  * The priority is used for syslog.
@@ -102,6 +111,8 @@ void do_log_area_printf(int area, int priority, char *format, va_list args)
 		       && priority <= MAX_DEBUG_LEVEL);
 		priority = syslog_priority_map[priority - MIN_DEBUG_LEVEL];
 		vsyslog(priority, format, args);
+	} else if (log_engine == LOG_TO_CALLBACK) {
+		(_log_cb)(area, priority, format, args);
 	} else {
 		time_t current_time;
 		struct tm *current_time_tm;
