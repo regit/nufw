@@ -451,13 +451,13 @@ static int disconnect_info(char **buf, int bufsize, void *data)
 /**
  * @{ */
 
-G_MODULE_EXPORT gchar *ip_authentication(tracking_t * header,
+G_MODULE_EXPORT gchar *ip_authentication(auth_pckt_t * pckt,
 					 struct multi_mode_params *
 					 params)
 {
 	char buf[1024];
 	struct nu_header *msg = (struct nu_header *) buf;
-	/* XXX find my own address ! */
+	tracking_t * header = & pckt->header;
 	char connbuffer[1024];
 
 	/* TODO test if source is not a direct net */
