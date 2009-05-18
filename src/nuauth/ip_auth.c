@@ -63,7 +63,7 @@ void external_ip_auth(gpointer userdata, gpointer data)
 			connection->auth_quality = AUTHQ_BYIP;
 			/* copy ipv4 header */
 			memcpy(&(connection->tracking),
-			       (tracking_t *) userdata,
+			       &((auth_pckt_t *) userdata)->header,
 			       sizeof(tracking_t));
 			g_async_queue_push(nuauthdatas->connections_queue,
 					   connection);

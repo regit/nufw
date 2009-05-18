@@ -179,7 +179,7 @@ GSList *modules_acl_check(connection_t * element)
 }
 
 /* ip auth */
-gchar *modules_ip_auth(tracking_t * header)
+gchar *modules_ip_auth(auth_pckt_t * header)
 {
 	/* iter through module list and stop when decision is made */
 	GSList *walker = hooks[MOD_IP_AUTH].modules;

@@ -47,7 +47,7 @@ typedef GSList *acl_check_callback(connection_t * element,
 typedef void define_period_callback(GHashTable * periods, gpointer params);
 
 /* ip auth */
-typedef gchar *ip_auth_callback(tracking_t * header, gpointer params);
+typedef gchar *ip_auth_callback(auth_pckt_t * pckt, gpointer params);
 
 typedef int user_logs_callback(void *element, tcp_state_t state,
 			       gpointer params);

@@ -130,7 +130,7 @@ GSList *modules_get_user_groups(const char *user);
 
 GSList *modules_acl_check(connection_t * element);
 /* ip auth */
-gchar *modules_ip_auth(tracking_t * tracking);
+gchar *modules_ip_auth(auth_pckt_t * pcktdata);
 
 nu_error_t modules_user_logs(void *element, tcp_state_t state);
 int modules_user_session_logs(user_session_t * user,

@@ -98,6 +98,10 @@ typedef struct {
 	char physoutdev[IFNAMSIZ];	/*!< Output physical device set to "\0" if not available */
 } iface_nfo_t;
 
+typedef struct {
+	tracking_t header;
+	iface_nfo_t iface_nfo;
+} auth_pckt_t;
 
 /**
  * \brief Size of payload we keep for parsing (must be > headers)
