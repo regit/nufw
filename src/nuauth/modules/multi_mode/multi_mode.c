@@ -55,6 +55,7 @@ struct proto_ext_t _multi_ext = {
 #define NUAUTH_EMC_CERTFILE CONFIG_DIR "/nuauth-emc-cert.pem"
 #define NUAUTH_EMC_CAFILE CONFIG_DIR "/NuFW-cacert.pem"
 #define MULTI_INACTIVITY_DELAY 30
+#define MULTI_IFACE "eth0"
 
 struct multi_mode_params {
 	/* FIXME switch to list */
@@ -69,6 +70,8 @@ struct multi_mode_params {
 	char * tls_cert;
 	char * tls_ca;
 	char * conninfo;
+
+	GPatternSpec* pattern;
 
 	int is_connected;
 };
@@ -121,6 +124,8 @@ G_MODULE_EXPORT gchar *unload_module_with_params(gpointer params_p)
 
 	cleanup_func_remove(&clean_inactive_session);
 
+	g_pattern_spec_free(params->pattern);
+
 	if (unregister_protocol_extension(&_multi_ext) != NU_EXIT_OK) {
 		log_message(WARNING, DEBUG_AREA_MAIN,
 			    "Unable to unregister protocol extension for MULTI");
@@ -134,6 +139,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 {
 	struct multi_mode_params *params =
 	    g_new0(struct multi_mode_params, 1);
+	char * iface_pattern;
 
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "multi_mode module ($Revision$)");
@@ -144,7 +150,8 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	params->tls_ca = nuauth_config_table_get_or_default("nuauth_emc_tls_cacert", NUAUTH_EMC_CAFILE);
 	params->conninfo = nuauth_config_table_get_or_default("nuauth_emc_conninfo", NUAUTH_EMC_CONNINFO);
 	multi_inactivity_delay = nuauth_config_table_get_or_default_int("multi_mode_inactivity_delay", MULTI_INACTIVITY_DELAY);
-
+	iface_pattern = nuauth_config_table_get_or_default("nuauth_multi_interface", MULTI_IFACE);
+	params->pattern = g_pattern_spec_new(iface_pattern);
 
 	if (register_client_capa("MULTI", &(params->capa_index)) != NU_EXIT_OK) {
 		log_message(WARNING, DEBUG_AREA_MAIN,
@@ -463,23 +470,24 @@ G_MODULE_EXPORT gchar *ip_authentication(auth_pckt_t * pckt,
 	char connbuffer[1024];
 
 	/* TODO test if source is not a direct net */
+	if (g_pattern_match_string(params->pattern, pckt->iface_nfo.indev)) {
+		/* if not in direct net send packet to EMC */
+		format_ipv6(&header->saddr, connbuffer, sizeof(connbuffer), NULL);
+		connbuffer[strlen(connbuffer)] = ' ';
+		connbuffer[strlen(connbuffer) + 1] = '\0';
+		strcat(connbuffer, params->conninfo);
 
-	/* if not in direct net send packet to EMC */
-	format_ipv6(&header->saddr, connbuffer, sizeof(connbuffer), NULL);
-	connbuffer[strlen(connbuffer)] = ' ';
-	connbuffer[strlen(connbuffer) + 1] = '\0';
-	strcat(connbuffer, params->conninfo);
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+				"connbuffer: [%s]", connbuffer);
 
-	log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
-		"connbuffer: [%s]", connbuffer);
+		msg->proto = PROTO_VERSION_EMC_V1;
+		msg->msg_type = EMC_CLIENT_CONNECTION_REQUEST;
+		msg->option = 0;
+		msg->length = htons(strlen(connbuffer));
 
-	msg->proto = PROTO_VERSION_EMC_V1;
-	msg->msg_type = EMC_CLIENT_CONNECTION_REQUEST;
-	msg->option = 0;
-	msg->length = htons(strlen(connbuffer));
-
-	nussl_write(params->nussl, (char*)msg, sizeof(struct nu_header));
-	nussl_write(params->nussl, connbuffer, strlen(connbuffer));
+		nussl_write(params->nussl, (char*)msg, sizeof(struct nu_header));
+		nussl_write(params->nussl, connbuffer, strlen(connbuffer));
+	}
 
 
 	return NULL;
