@@ -211,7 +211,7 @@ nu_error_t treat_user_request(user_session_t * c_session,
  * Identifier used to generate #NUAUTH_API_VERSION value. Increment it
  * if you changed API internals (eg. change public function prototype).
  */
-#define _NUAUTH_API_ID 20002000
+#define _NUAUTH_API_ID 20004000
 
 /**
  * Version of nuauth API, used by module to check if
