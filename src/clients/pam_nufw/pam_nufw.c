@@ -18,7 +18,9 @@
  ** Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
-
+#ifdef HAVE_CONFIG_H
+# include <config.h>
+#endif
 #define _GNU_SOURCE
 #include "../lib/nuclient.h"
 #include <sys/resource.h>	/* setrlimit() */
@@ -29,7 +31,14 @@
 #include <pwd.h>
 #include <signal.h>
 #include <stdlib.h>
+#include <unistd.h>
+#ifdef HAVE_FCNTL_H
+# include <fcntl.h>
+#endif
+#include <errno.h>
 #include "security.h"
+
+#include <nubase.h>
 
 /*
  * here, we make definitions for the externally accessible functions

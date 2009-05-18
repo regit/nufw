@@ -4,7 +4,7 @@ if BUILD_PAM_NUFW
 TITLE			= pam_nufw
 modulesdir		= /lib/security
 
-pam_nufw_la_CFLAGS	= -I$(top_srcdir)/src/clients/lib -I$(top_srcdir)/src/libs/nussl -I$(top_srcdir)/src/include $(DYNAMIC)
+pam_nufw_la_CFLAGS	= -I$(top_srcdir)/src/clients/lib -I$(top_srcdir)/src/libs/nussl -I$(top_srcdir)/src/libs/nubase -I$(top_srcdir)/src/include $(DYNAMIC)
 
 modules_LTLIBRARIES	= pam_nufw.la
 
