@@ -68,7 +68,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 /**
  * @{ */
 
-G_MODULE_EXPORT gchar *ip_authentication(tracking_t * header,
+G_MODULE_EXPORT gchar *ip_authentication(auth_pckt_t * pckt,
 					 struct ipauth_guest_params *
 					 params)
 {

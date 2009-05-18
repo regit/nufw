@@ -142,6 +142,7 @@ void search_and_push(connection_t * new)
 	/* push data to sender */
 	struct internal_message *message =
 	    g_new0(struct internal_message, 1);
+	auth_pckt_t * pcktdata = g_new0(auth_pckt_t, 1);
 	if (!message) {
 		log_message(CRITICAL, DEBUG_AREA_USER,
 			    "search&push: Couldn't g_new0(). No more memory?");
@@ -152,7 +153,9 @@ void search_and_push(connection_t * new)
 
 	/* duplicate tracking */
 	message->type = WARN_MESSAGE;
-	message->datas = g_memdup(&(new->tracking), sizeof(tracking_t));
+	memcpy(&(pcktdata->header), &(new->tracking), sizeof(tracking_t));
+	duplicate_iface_nfo(&(pcktdata->iface_nfo), &(new->iface_nfo));
+	message->datas = pcktdata;
 	if (message->datas) {
 		g_async_queue_push(nuauthdatas->tls_push_queue, message);
 	} else {

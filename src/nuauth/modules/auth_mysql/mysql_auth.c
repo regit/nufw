@@ -244,10 +244,11 @@ static char *quote_string(MYSQL * mysql, const char *text)
 
 #define SELECT_FIELDS "username"
 
-G_MODULE_EXPORT gchar* ip_authentication(tracking_t * header, struct ipauth_params* params)
+G_MODULE_EXPORT gchar* ip_authentication(auth_pckt_t * pckt, struct ipauth_params* params)
 {
 	char request[LONG_REQUEST_SIZE];
 	char ip_ascii[IPV6_SQL_STRLEN];
+	tracking_t * header = & pckt->header;
 	/* char ip_ascii[40]; */
 	MYSQL *ld;
 	gboolean ok;

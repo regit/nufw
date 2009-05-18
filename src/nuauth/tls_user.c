@@ -871,7 +871,7 @@ void *push_worker(GMutex * mutex)
 		switch (message->type) {
 		case WARN_MESSAGE:
 			global_msg->addr =
-			    ((tracking_t *) message->datas)->saddr;
+			    (((auth_pckt_t *) message->datas)->header).saddr;
 			global_msg->found = FALSE;
 			/* search in client array */
 			warn_clients(global_msg, NULL, NULL);
