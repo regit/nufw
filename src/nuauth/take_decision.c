@@ -407,13 +407,14 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 	uint32_t packet_id = GPOINTER_TO_UINT(packet_id_ptr);
 	int payload_size = 0;
 	int total_size = 0;
-	char *buffer = NULL;
 	nu_error_t ret = NU_EXIT_OK;
+	char buffer[sizeof(nuv3_nuauth_decision_response_t) + IPHDR_REJECT_LENGTH +
+		IP6HDR_REJECT_LENGTH + STORED_PAYLOAD_SIZE];
 
 	switch (element->nufw_version) {
 	case PROTO_VERSION_NUFW_V20:
 		{
-			nuv3_nuauth_decision_response_t *response = NULL;
+			nuv3_nuauth_decision_response_t *response = (nuv3_nuauth_decision_response_t *) buffer;
 			uint16_t mark16;
 			/* check if user id fit in 16 bits */
 			if (0xFFFF < element->mark) {
@@ -429,7 +430,6 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 			total_size =
 			    sizeof(nuv3_nuauth_decision_response_t) +
 			    payload_size;
-			response = (void*)g_new0(char, total_size);
 			response->protocol_version = PROTO_VERSION_NUFW_V20;
 			response->msg_type = AUTH_ANSWER;
 			response->mark = htons(mark16);
@@ -471,12 +471,11 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 				       payload, payload_size);
 			}
 
-			buffer = (void *) response;
 		}
 		break;
 	case PROTO_VERSION_NUFW_V22_2:
 		{
-			nuv4_nuauth_decision_response_t *response = NULL;
+			nuv4_nuauth_decision_response_t *response = (nuv4_nuauth_decision_response_t *) buffer;
 			int use_icmp6 = 0;
 			uint32_t mark = element->mark;
 
@@ -498,7 +497,6 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 			total_size =
 			    sizeof(nuv4_nuauth_decision_response_t) +
 			    payload_size;
-			response = (void*)g_new0(char, total_size);
 			response->protocol_version = PROTO_VERSION_NUFW_V22_2;
 			response->msg_type = AUTH_ANSWER;
 			response->tcmark = htonl(mark);
@@ -575,7 +573,6 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 				}
 			}
 
-			buffer = (void *) response;
 		}
 		break;
 	default:
@@ -588,7 +585,6 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 		print_connection(element, "Answ Packet");
 	}
 	ret = nufw_session_send(element->tls, buffer, total_size);
-	g_free(buffer);
 	if (ret != NU_EXIT_OK) {
 		declare_dead_nufw_session(element->tls);
 	} else {
