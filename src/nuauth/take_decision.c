@@ -423,7 +423,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 			mark16 = (element->mark & 0xFFFF);
 			if (element->decision == DECISION_REJECT) {
 				payload_size =
-				    IPHDR_REJECT_LENGTH + PAYLOAD_SAMPLE;
+				    IPHDR_REJECT_LENGTH + element->payload_len;
 			}
 			/* allocate */
 			total_size =
@@ -440,7 +440,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 			response->payload_len = htons(payload_size);
 			if (element->decision == DECISION_REJECT) {
 				char payload[IPHDR_REJECT_LENGTH +
-					     PAYLOAD_SAMPLE];
+					     STORED_PAYLOAD_SIZE];
 				struct iphdr *ip =
 				    (struct iphdr *) payload;
 
@@ -450,7 +450,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 				ip->ihl = IPHDR_REJECT_LENGTH_BWORD;
 				ip->tot_len =
 				    htons(IPHDR_REJECT_LENGTH +
-					  PAYLOAD_SAMPLE);
+					  element->payload_len);
 				ip->ttl = 64;	/* write dummy ttl */
 				ip->protocol = element->tracking.protocol;
 				/* dummy convert to IPv4 as nufw on the other side does not support IPv6 at all */
@@ -461,8 +461,8 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 
 				/* write transport layer */
 				memcpy(payload + IPHDR_REJECT_LENGTH,
-				       element->tracking.payload,
-				       PAYLOAD_SAMPLE);
+				       element->payload,
+				       element->payload_len);
 
 				/* write icmp reject packet */
 				memcpy((char *) response +
@@ -488,11 +488,11 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 				if (use_icmp6)
 					payload_size =
 					    IP6HDR_REJECT_LENGTH +
-					    PAYLOAD6_SAMPLE;
+					    element->payload_len;
 				else
 					payload_size =
 					    IPHDR_REJECT_LENGTH +
-					    PAYLOAD_SAMPLE;
+					    element->payload_len;
 			}
 			/* allocate */
 			total_size =
@@ -510,7 +510,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 			if (element->decision == DECISION_REJECT) {
 				if (use_icmp6) {
 					char payload[IP6HDR_REJECT_LENGTH +
-						     PAYLOAD6_SAMPLE];
+						     STORED_PAYLOAD_SIZE];
 					struct ip6_hdr *ip =
 					    (struct ip6_hdr *) payload;
 
@@ -530,8 +530,8 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 					/* write transport layer */
 					memcpy(payload +
 					       IP6HDR_REJECT_LENGTH,
-					       element->tracking.payload,
-					       PAYLOAD6_SAMPLE);
+					       element->payload,
+					       element->payload_len);
 
 					/* write icmp reject packet */
 					memcpy((char *) response +
@@ -540,7 +540,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 					       payload, payload_size);
 				} else {
 					char payload[IPHDR_REJECT_LENGTH +
-						     PAYLOAD_SAMPLE];
+						     STORED_PAYLOAD_SIZE];
 					struct iphdr *ip =
 					    (struct iphdr *) payload;
 
@@ -552,7 +552,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 					    IPHDR_REJECT_LENGTH_BWORD;
 					ip->tot_len =
 					    htons(IPHDR_REJECT_LENGTH +
-						  PAYLOAD_SAMPLE);
+						  element->payload_len);
 					ip->ttl = 64;	/* write dummy ttl */
 					ip->protocol =
 					    element->tracking.protocol;
@@ -564,8 +564,8 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 					/* write transport layer */
 					memcpy(payload +
 					       IPHDR_REJECT_LENGTH,
-					       element->tracking.payload,
-					       PAYLOAD_SAMPLE);
+					       element->payload,
+					       element->payload_len);
 
 					/* write icmp reject packet */
 					memcpy((char *) response +
