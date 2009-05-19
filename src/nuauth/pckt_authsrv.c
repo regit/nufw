@@ -48,7 +48,7 @@ nu_error_t parse_dgram(connection_t * connection, unsigned char *dgram,
 	unsigned int ip_hdr_size;
 	/* get ip headers till tracking is filled */
 	ip_hdr_size = get_ip_headers(&connection->tracking, dgram, dgram_size);
-	
+
 	if (ip_hdr_size == 0) {
 		log_message(WARNING, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
 			    "Can't parse IP headers");
@@ -56,14 +56,14 @@ nu_error_t parse_dgram(connection_t * connection, unsigned char *dgram,
 		return NU_EXIT_ERROR;
 	}
 
-	if (( ip_hdr_size + sizeof(connection->tracking.payload)) <= dgram_size) {
-		memcpy(connection->tracking.payload,
+	if (( ip_hdr_size + sizeof(connection->payload)) <= dgram_size) {
+		memcpy(connection->payload,
 		       dgram + ip_hdr_size,
-		       sizeof(connection->tracking.payload));
+		       sizeof(connection->payload));
 	} else {
-		memset(connection->tracking.payload,
+		memset(connection->payload,
 		       0,
-		       sizeof(connection->tracking.payload));
+		       sizeof(connection->payload));
 	}
 
 	dgram += ip_hdr_size;

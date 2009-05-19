@@ -1,9 +1,7 @@
 /*
- ** Copyright(C) 2003-2006 - INL
+ ** Copyright(C) 2003-2009 - INL
  ** Written by Eric Leblond <regit@inl.fr>
  ** INL http://www.inl.fr/
- **
- ** $Id$
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -31,11 +29,6 @@
 
 #include "ipv6.h"
 #include <sys/types.h>
-
-#ifdef TRACKING_WITH_PAYLOAD
-#  define PAYLOAD_SAMPLE 8
-#  define PAYLOAD6_SAMPLE PAYLOAD_SAMPLE
-#endif
 
 /** State of a connection */
 typedef enum {
@@ -65,10 +58,6 @@ typedef struct {
 	u_int8_t type;		/*!< ICMP message type */
 	u_int8_t code;		/*!< ICMP code type */
 
-
-#ifdef TRACKING_WITH_PAYLOAD
-	char payload[PAYLOAD_SAMPLE];	/*!< First 8 bytes of protocol payload used for ICMP reject */
-#endif
 } tracking_t;
 
 unsigned int get_ip_headers(tracking_t * tracking,
