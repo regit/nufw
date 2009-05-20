@@ -58,7 +58,6 @@ void emc_client_cb (struct ev_loop *loop, ev_io *w, int revents)
 	struct emc_client_context *client_ctx = w->data;
 	char buffer[4096];
 
-fprintf(stderr, "[%s] : %lx\n", __func__, (long)pthread_self());
 	buffer[0] = '\0';
 
 	if (revents & EV_READ) {
@@ -82,7 +81,6 @@ void emc_worker_tls_handshake(gpointer userdata, gpointer data)
 	int socket;
 	int ret;
 
-fprintf(stderr, "[%s] : %lx\n", __func__, (long)pthread_self());
 	nussl_sess = client_ctx->nussl;
 
 	/* do not verify FQDN field from client */
@@ -227,14 +225,13 @@ void emc_worker_reader(gpointer userdata, gpointer data)
 	int len;
 	int msg_length;
 
-fprintf(stderr, "[%s] : %lx\n", __func__, (long)pthread_self());
 	client_ctx = (struct emc_client_context *)w->data;
 	nussl_sess = client_ctx->nussl;
 
-	len = nussl_read(client_ctx->nussl, &msg, sizeof(msg));
+	len = nussl_read(client_ctx->nussl, (char*)&msg, sizeof(msg));
 	if (len < 0 || len != sizeof(msg)) {
 		GList *it;
-		log_printf(DEBUG_LEVEL_WARNING, "nussl_error, removing connection [%s]\n", nussl_get_error(client_ctx->nussl));
+		log_printf(DEBUG_LEVEL_WARNING, "nussl_error, removing connection with %s [%s]", client_ctx->address, nussl_get_error(client_ctx->nussl));
 
 		g_mutex_lock(server_ctx->tls_client_list_mutex);
 		it = g_list_find(server_ctx->tls_client_list, client_ctx);
@@ -257,7 +254,7 @@ log_printf(DEBUG_LEVEL_DEBUG, "Header: proto (%d) command (%d) option(%d) length
 	len = nussl_read(client_ctx->nussl, buffer, msg_length);
 	if (len < 0) {
 		GList *it;
-		log_printf(DEBUG_LEVEL_WARNING, "nussl_error, removing connection [%s]\n", nussl_get_error(client_ctx->nussl));
+		log_printf(DEBUG_LEVEL_WARNING, "nussl_error, removing connection with %s [%s]", client_ctx->address, nussl_get_error(client_ctx->nussl));
 
 		g_mutex_lock(server_ctx->tls_client_list_mutex);
 		it = g_list_find(server_ctx->tls_client_list, client_ctx);

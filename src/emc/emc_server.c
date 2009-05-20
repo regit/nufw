@@ -167,8 +167,6 @@ static void emc_client_ready_cb (struct ev_loop *loop, ev_async *w, int revents)
 	struct emc_server_context *ctx = (struct emc_server_context*)w->data;
 	ev_io *client_watcher;
 
-fprintf(stderr, "[%s] : %lx\n", __func__, (long)pthread_self());
-
 	client_watcher = (ev_io *)g_async_queue_pop(ctx->work_queue);
 
 	ev_io_start(EV_DEFAULT_ client_watcher);
@@ -188,7 +186,6 @@ static void emc_server_accept_cb (struct ev_loop *loop, ev_io *w, int revents)
 	char address[INET6_ADDRSTRLEN];
 	struct emc_client_context *client_ctx = NULL;
 
-fprintf(stderr, "[%s] : %lx\n", __func__, (long)pthread_self());
 	ctx = w->data;
 
 	nussl_sess = nussl_session_accept(ctx->nussl);
@@ -386,7 +383,7 @@ int emc_init_server(struct emc_server_context *ctx)
 
 	ctx->tls_client_list_mutex = g_mutex_new();
 
-fprintf(stderr, "Max: %d\n", g_thread_pool_get_max_unused_threads());
+	log_printf(DEBUG_LEVEL_DEBUG, "Max: %d", g_thread_pool_get_max_unused_threads());
 
 	return 0;
 }
