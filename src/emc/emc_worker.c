@@ -121,8 +121,6 @@ void emc_worker_tls_handshake(gpointer userdata, gpointer data)
 	g_async_queue_push(server_ctx->work_queue, client_watcher);
 
 	ev_async_send (EV_DEFAULT_ &client_ready_signal);
-
-log_printf(DEBUG_LEVEL_DEBUG, "DEBUG client connection added");
 }
 
 struct _emc_netmask_lookup_param_t {
@@ -157,7 +155,7 @@ static gboolean _emc_check_send_auth_request(gpointer key, gpointer value, gpoin
 		struct emc_client_context *ctx;
 		struct nu_header *msg = lookup_param->msg;
 
-		/* for each nuauth server, send message (XXX push send request to another thread) */
+		/* for each nuauth server, forward auth request */
 		/* note: list iteration is protected by a mutex */
 		for (it=g_list_first(list); it != NULL; it=g_list_next(it)) {
 			ctx = (struct emc_client_context*)it->data;
@@ -235,7 +233,6 @@ void emc_worker_reader(gpointer userdata, gpointer data)
 
 		g_mutex_lock(server_ctx->tls_client_list_mutex);
 		it = g_list_find(server_ctx->tls_client_list, client_ctx);
-		log_printf(DEBUG_LEVEL_DEBUG, "Removing List item %p", it);
 		if (it != NULL)
 			server_ctx->tls_client_list = g_list_remove_link(server_ctx->tls_client_list, it);
 		g_mutex_unlock(server_ctx->tls_client_list_mutex);
@@ -258,7 +255,6 @@ log_printf(DEBUG_LEVEL_DEBUG, "Header: proto (%d) command (%d) option(%d) length
 
 		g_mutex_lock(server_ctx->tls_client_list_mutex);
 		it = g_list_find(server_ctx->tls_client_list, client_ctx);
-		log_printf(DEBUG_LEVEL_DEBUG, "Removing List item %p", it);
 		if (it != NULL)
 			server_ctx->tls_client_list = g_list_remove_link(server_ctx->tls_client_list, it);
 		g_mutex_unlock(server_ctx->tls_client_list_mutex);
