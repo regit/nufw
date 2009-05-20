@@ -77,14 +77,15 @@ static struct emc_netmask_t * _convert_str_to_netmask(char *mask, unsigned int m
 
 	if ( res->ai_family == AF_INET ) {
 		peer4 = (struct sockaddr_in *)res->ai_addr;
-		netmask->u.u4 = ntohl((u_int32_t)peer4->sin_addr.s_addr);
+		netmask->ip.u4 = ntohl((u_int32_t)peer4->sin_addr.s_addr);
+		netmask->mask.u4 = (0xffffffff << (32-masklen));
 	}
 	else if ( res->ai_family == AF_INET6 ) {
 		int i;
 		peer6 = (struct sockaddr_in6 *)res->ai_addr;
-		memcpy(&netmask->u.u16, peer6->sin6_addr.s6_addr, sizeof(netmask->u.u16));
+		memcpy(&netmask->ip.u16, peer6->sin6_addr.s6_addr, sizeof(netmask->ip.u16));
 		for (i=0; i<4; i++) {
-			netmask->u.u16[i] = ntohl( netmask->u.u16[i] );
+			netmask->ip.u16[i] = ntohl( netmask->ip.u16[i] );
 		}
 	}
 
@@ -153,12 +154,13 @@ static struct emc_netmask_t * _emc_parse_line(const char *line)
 	struct emc_netmask_t *netmask = NULL;
 
 	/* split line and extract fields */
-	fields = g_strsplit_set(line, " ", 3);
+	fields = g_strsplit_set(line, " \r\n", 3);
 
 	if (fields[0] != NULL) {
 		ret = _extract_ip_mask(fields[0], &mask, &masklen);
 		if (ret == 0)
 			netmask = _convert_str_to_netmask(mask, masklen);
+			netmask->nuauth_server = strdup(fields[1]);
 	}
 
 	g_strfreev(fields);

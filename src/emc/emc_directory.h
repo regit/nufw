@@ -28,11 +28,20 @@ struct emc_netmask_t {
 	union {
 		u_int32_t u4;
 		u_int32_t u16[4];
-	} u;
+	} ip;
+
+	union {
+		u_int32_t u4;
+		u_int32_t u16[4];
+	} mask;
 
 	u_int16_t length;
+
+	char *nuauth_server;
 };
 
 int emc_netmask_order_func (gconstpointer a, gconstpointer b);
+
+int emc_netmask_is_included(struct emc_netmask_t*netmask, const char *ip);
 
 #endif /* __EMC_DIRECTORY_H__ */

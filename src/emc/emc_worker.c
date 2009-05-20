@@ -49,6 +49,7 @@
 
 #include <proto.h>
 #include "emc_proto.h"
+#include "emc_directory.h"
 
 extern ev_async client_ready_signal;
 
@@ -126,10 +127,71 @@ fprintf(stderr, "[%s] : %lx\n", __func__, (long)pthread_self());
 log_printf(DEBUG_LEVEL_DEBUG, "DEBUG client connection added");
 }
 
-static void _emc_handle_message(struct emc_client_context *client_ctx, struct nu_header *msg, char *buf, size_t bufsz)
-{
+struct _emc_netmask_lookup_param_t {
 	char hostname[512];
 	char nuauth_name[512];
+	char nuauth_port[512];
+
+	struct nu_header *msg;
+	char *buf;
+	size_t bufsz;
+};
+
+static gboolean _emc_check_send_auth_request(gpointer key, gpointer value, gpointer data)
+{
+	struct emc_netmask_t *netmask = (struct emc_netmask_t*)value;
+	struct _emc_netmask_lookup_param_t *lookup_param = (struct _emc_netmask_lookup_param_t*)data;
+	int num_msg_sent = 0;
+
+	if ( !emc_netmask_is_included(netmask, lookup_param->hostname) ) {
+		return FALSE;
+	}
+
+	/* find if nuauth server is connected, and if yes forward request */
+	g_mutex_lock(server_ctx->tls_client_list_mutex);
+	/* XXX schedule write in another worker thread ?
+	 * We should remove the file descriptors from the global list, else
+	 * nussl_write may trigger bad things ..
+	 */
+	{
+		GList *it;
+		GList *list = server_ctx->tls_client_list;
+		struct emc_client_context *ctx;
+		struct nu_header *msg = lookup_param->msg;
+
+		/* for each nuauth server, send message (XXX push send request to another thread) */
+		/* note: list iteration is protected by a mutex */
+		for (it=g_list_first(list); it != NULL; it=g_list_next(it)) {
+			ctx = (struct emc_client_context*)it->data;
+			if (strcmp(ctx->address, netmask->nuauth_server)==0) {
+				log_printf(DEBUG_LEVEL_DEBUG, "EMC: forwarding request to host: %s", ctx->address);
+				num_msg_sent++;
+
+				msg->length = htons(lookup_param->bufsz);
+				nussl_write(ctx->nussl, (char*)msg, sizeof(struct nu_header));
+				nussl_write(ctx->nussl, lookup_param->buf, lookup_param->bufsz);
+			}
+		}
+	}
+	g_mutex_unlock(server_ctx->tls_client_list_mutex);
+
+	if (num_msg_sent == 0)
+		log_printf(DEBUG_LEVEL_DEBUG, "EMC: ignoring request, nuauth server %s not found (not connected ?)", netmask->nuauth_server);
+	return FALSE;
+}
+
+static int _emc_dispatch_auth_requests(struct emc_client_context *client_ctx,
+		struct _emc_netmask_lookup_param_t *lookup_param)
+{
+	/* iterate through list of emc_netmask_t to find matching mask(s) => nuauth server */
+	g_tree_foreach(server_ctx->nuauth_directory, _emc_check_send_auth_request, lookup_param);
+
+	return 0;
+}
+
+static void _emc_handle_message(struct emc_client_context *client_ctx, struct nu_header *msg, char *buf, size_t bufsz)
+{
+	struct _emc_netmask_lookup_param_t lookup_param;
 
 	buf[bufsz] = '\0';
 	while (strlen(buf)>0 && buf[strlen(buf)-1] == '\n')
@@ -140,34 +202,15 @@ static void _emc_handle_message(struct emc_client_context *client_ctx, struct nu
 		log_printf(DEBUG_LEVEL_DEBUG, "\tconnection request");
 		log_printf(DEBUG_LEVEL_DEBUG, "\tnussl_read: %zu [%s]", bufsz, buf);
 
-		sscanf(buf, "%s %s", hostname, nuauth_name);
-		log_printf(DEBUG_LEVEL_DEBUG, "\thostname is: %s", hostname);
-		log_printf(DEBUG_LEVEL_DEBUG, "\tnuauth is  : %s", nuauth_name);
-		/* XXX schedule write in another worker thread ?
-		 * We should remove the file descriptors from the global list, else
-		 * nussl_write may trigger bad things ..
-		 */
-		{
-			GList *it;
-			GList *list = server_ctx->tls_client_list;
-			struct emc_client_context *ctx;
+		sscanf(buf, "%s %s %s", lookup_param.hostname, lookup_param.nuauth_name, lookup_param.nuauth_port);
+		log_printf(DEBUG_LEVEL_DEBUG, "\thostname is: [%s]", lookup_param.hostname);
+		log_printf(DEBUG_LEVEL_DEBUG, "\tnuauth is  : [%s]:[%s]", lookup_param.nuauth_name, lookup_param.nuauth_port);
+		lookup_param.msg = msg;
+		lookup_param.buf = buf;
+		lookup_param.bufsz = bufsz;
 
-			/* XXX we don't actually have the parameters (source ip etc.) to decide which nuauth
-			 * server to choose. So we send the message to all nuauth servers except
-			 * the one who sent the request
-			 */
-			/* XXX list iteration should be protected by a mutex */
-			for (it=g_list_first(list); it != NULL; it=g_list_next(it)) {
-				ctx = (struct emc_client_context*)it->data;
-				if (strcmp(ctx->address, nuauth_name)!=0) {
-					log_printf(DEBUG_LEVEL_DEBUG, "  EMC: forwarding request to host: %s", ctx->address);
+		_emc_dispatch_auth_requests(client_ctx, &lookup_param);
 
-					msg->length = htons(bufsz);
-					nussl_write(ctx->nussl, (char*)msg, sizeof(struct nu_header));
-					nussl_write(ctx->nussl, buf, bufsz);
-				}
-			}
-		}
 		break;
 	default:
 		log_printf(DEBUG_LEVEL_DEBUG, "\tnussl_read: %zu [%s]", bufsz, buf);
