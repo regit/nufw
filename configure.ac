@@ -99,6 +99,7 @@ AC_CHECK_FUNCS([getopt_long gethostbyname memset setsockopt socket strcasecmp st
 #AM_CHECK_PATH([libgcrypt], [gcry_md_open],AC_DEFINE([HAVE_LIBRARY_GCRYPT],[1],[Gcrypt lib flag]), check_gcrypt=no,[-L/usr/local/lib])
 #AM_CHECK_PATH(libgnutls], [gnutls_init],AC_DEFINE([HAVE_LIBRARY_GNUTLS],[1],[Gnutls lib flag]), check_gnutls=no)
 
+PKG_PROG_PKG_CONFIG
 
 dnl
 dnl <SSL>
@@ -108,12 +109,11 @@ dnl We can force the use of OpenSSL
 AC_ARG_WITH(openssl,   [AC_HELP_STRING(--with-openssl, Build with openssl support *EXPERIMENTAL*.)],build_openssl=$enableval, build_openssl="no" )
 
 if test "${build_openssl}" != "no"; then
-   PKG_PROG_PKG_CONFIG
    PKG_CHECK_MODULES(OPENSSL, openssl)
    AC_DEFINE_UNQUOTED([HAVE_OPENSSL],[1],[Will use openssl support instead of gnutls])
 fi
 
-if test $build_openssl = no; then
+if test "x${build_openssl}" = "xno"; then
    NEED_LIBGCRYPT_VERSION=1.2.0
    AM_PATH_LIBGCRYPT("$NEED_LIBGCRYPT_VERSION")
    if test "x$LIBGCRYPT_LIBS" = "x"; then
@@ -125,11 +125,7 @@ if test $build_openssl = no; then
    fi
 
    NEED_LIBGNUTLS_VERSION=1.0.16
-   AM_PATH_LIBGNUTLS("$NEED_LIBGNUTLS_VERSION")
-   if test "x$LIBGNUTLS_LIBS" = "x"; then
-     AC_MSG_ERROR([libgnutls is needed.
-                   See www.gnu.org/software/gnutls/ .])
-   fi
+   PKG_CHECK_MODULES(GNUTLS, gnutls >= $NEED_LIBGNUTLS_VERSION,,exit)
    AC_DEFINE_UNQUOTED([HAVE_GNUTLS],[1],[Will use gnutls support instead of openssl])
    AC_CHECK_LIB(gnutls, gnutls_priority_set, AC_DEFINE_UNQUOTED(HAVE_GNUTLS_STRING_PRIORITY, , Define whether GnuTLS provide priority parsing),)
 fi
