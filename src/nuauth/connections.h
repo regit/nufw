@@ -142,6 +142,7 @@ typedef struct {
 	gchar *os_release;	/*!< Operating system release */
 	gchar *os_version;	/*!< Operating system version */
 	gchar *app_name;	/*!< Application name (full path) */
+	gchar *app_sig;		/*!< Application hash (SHA1 to SHA512) */
 
 	auth_state_t state;	/*!< State of the packet */
 

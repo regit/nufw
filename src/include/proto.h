@@ -155,6 +155,7 @@ typedef enum {
 	HELLO_FIELD,
 	CAPA_FIELD,
 	EXTENDED_PROTO_FIELD,
+	HASH_FIELD,
 } nu_field_identifier_t;
 
 struct nu_authreq {
@@ -167,7 +168,7 @@ struct nu_authreq {
  * See also the header of the whole packet: ::nu_authreq
  */
 struct nu_authfield {
-	uint8_t type;		/*!< Field type identifier: see ::nuv4_field_identifier_t */
+	uint8_t type;		/*!< Field type identifier: see ::nuv_field_identifier_t */
 	uint8_t option;		/*!< Option: equals to 0 to #OS_SRV */
 	uint16_t length;	/*!< Length of one field */
 };

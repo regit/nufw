@@ -260,6 +260,40 @@ int user_process_field_app(struct nu_authreq *authreq,
 	return 1;
 }
 
+int user_process_field_hash(struct nu_authreq *authreq,
+			   connection_t * connection,
+			   int field_buffer_len,
+			   struct nu_authfield_app *appfield)
+{
+	gchar *appsig = NULL;
+	unsigned int len = appfield->length - 4;
+
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER, "\tgot APP field");
+
+	/* this has to be smaller than field size */
+	if (field_buffer_len < (int) appfield->length) {
+		log_message(WARNING, DEBUG_AREA_USER,
+			    "Improper application field length signaled in authreq header %d < %d",
+			    field_buffer_len, appfield->length);
+		return -1;
+	}
+
+	if (len > 256 || (len <= 0)) {
+		/* it is reaaally long (or too short), we ignore packet (too lasy to kill client) */
+		log_message(INFO, DEBUG_AREA_USER,
+			    "user packet announced a bad length app name : %d",
+			    len);
+		return -1;
+	}
+
+	appsig = g_new0(gchar, len + 1);
+
+	memcpy(appsig, appfield + 4, len);
+	appsig[len] = 0;
+
+	connection->app_sig = appsig;
+	return 1;
+}
 
 int user_process_field(struct nu_authreq *authreq,
 		       uint8_t header_option,
@@ -326,6 +360,18 @@ int user_process_field(struct nu_authreq *authreq,
 			return -1;
 		break;
 
+	case HASH_FIELD:
+		if (auth_buffer_len <
+		    (int) sizeof(struct nu_authfield_app)) {
+			return -1;
+		}
+		if (user_process_field_hash
+		    (authreq, connection, field->length,
+		     (struct nu_authfield_app *) field) < 0)
+			return -1;
+		break;
+
+
 	case HELLO_FIELD:
 		if (auth_buffer_len <
 		    (int) sizeof(struct nu_authfield_hello)) {
@@ -390,6 +436,7 @@ GSList *user_request(struct tls_buffer_read * data)
 		connection->acl_groups = NULL;
 		connection->user_groups = NULL;
 		connection->app_name = NULL;
+		connection->app_sig = NULL;
 		connection->username = NULL;
 		connection->cacheduserdatas = NULL;
 		connection->packet_id = NULL;
