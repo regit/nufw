@@ -1531,6 +1531,7 @@ int nussl_sock_accept_ssl(nussl_socket * sock, nussl_ssl_context * ctx)
 {
 	int ret;
 	nussl_ssl_socket ssl;
+	char errmsg[1024];
 
 #if defined(HAVE_OPENSSL)
 	nussl_ssl_context_set_verify(ctx, ctx->verify, NULL, NULL);
@@ -1542,9 +1543,9 @@ int nussl_sock_accept_ssl(nussl_socket * sock, nussl_ssl_context * ctx)
 		SSL_set_cipher_list(ssl, ctx->ciphers);
 
 	sock->ssl = ssl;
-	ret = nussl_ssl_accept(&ssl, sock->cotimeout);
+	ret = nussl_ssl_accept(&ssl, sock->cotimeout, errmsg, sizeof(errmsg));
 	if (ret == 0) { /* timeout */
-		nussl_snprintf(sock->error, sizeof sock->error,
+		nussl_snprintf(sock->error, (sizeof sock->error),
 				_("SSL handshake timeout"));
 		return NUSSL_SOCK_ERROR;
 	}
@@ -1552,9 +1553,15 @@ int nussl_sock_accept_ssl(nussl_socket * sock, nussl_ssl_context * ctx)
 		int ret_verif;
 		ret_verif = SSL_get_verify_result(ssl);
 		if (ret_verif != 0) {
-			nussl_snprintf(sock->error, sizeof sock->error,
-					_("Certificate verification error: %s"),
+			nussl_snprintf(sock->error, sizeof(sock->error),
+					_("Error is %s\nCertificate verification: %s"),
+					errmsg,
 					X509_verify_cert_error_string(ret_verif));
+			return NUSSL_SOCK_ERROR;
+		} else {
+			nussl_snprintf(sock->error, sizeof(sock->error),
+					_("%s"),
+					errmsg);
 			return NUSSL_SOCK_ERROR;
 		}
 
@@ -1608,14 +1615,17 @@ int nussl_sock_accept_ssl(nussl_socket * sock, nussl_ssl_context * ctx)
 	gnutls_transport_set_ptr((gnutls_session_t) sock->ssl,
 				 (gnutls_transport_ptr) sock->fd);
 
-	ret = nussl_ssl_accept(&ssl, sock->cotimeout);
+	ret = nussl_ssl_accept(&ssl, sock->cotimeout, errmsg, sizeof(errmsg));
 	if (ret == 0) { /* timeout */
 		nussl_snprintf(sock->error, sizeof sock->error,
 				_("SSL handshake timeout"));
 		return NUSSL_SOCK_ERROR;
 	}
 	if (ret < 0) {
-		return error_gnutls(sock, ret);
+		nussl_snprintf(sock->error, sizeof(sock->error),
+				_("%s"),
+				errmsg);
+		return NUSSL_SOCK_ERROR;
 	}
 #if 0				/* done from session.*_post_handshake in nussl_gnutls.c */
 	if (ctx->verify && gnutls_certificate_verify_peers(ssl)) {
