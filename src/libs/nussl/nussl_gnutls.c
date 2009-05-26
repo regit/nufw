@@ -1309,7 +1309,7 @@ void nussl__ssl_exit(void)
 #endif
 }
 
-int nussl_ssl_accept(nussl_ssl_socket * ssl, unsigned int timeout)
+int nussl_ssl_accept(nussl_ssl_socket * ssl, unsigned int timeout, char *errbuf, size_t errbufsz)
 {
 	gnutls_session session = *(gnutls_session*)ssl;
 	int ret, continue_loop=1;
@@ -1319,7 +1319,6 @@ int nussl_ssl_accept(nussl_ssl_socket * ssl, unsigned int timeout)
 	fd_set fd_r, fd_w;
 	struct timeval tv;
 
-printf("nussl_ssl_accept\n");
 	if (timeout == 0) {
 		ret = gnutls_handshake(session);
 		if (ret == 0)
@@ -1344,7 +1343,7 @@ printf("nussl_ssl_accept\n");
 			break;
 		}
 		if (gnutls_error_is_fatal(ret)) {
-			//out_log(LEVEL_HIGH,"GnuTLS: handshake failed: %s\n",gnutls_strerror(ret));
+			snprintf(errbuf, errbufsz, "%s", gnutls_strerror(ret));
 			ret = -1;
 			continue_loop = 0;
 			break;
@@ -1355,7 +1354,7 @@ printf("nussl_ssl_accept\n");
 				was_writing = gnutls_record_get_direction(session);
 				break;
 			default:
-				//out_log(LEVEL_HIGH,"GnuTLS: handshake failed, unknown non-fatal error: %s\n",gnutls_strerror(ret));
+				snprintf(errbuf, errbufsz, "%s", gnutls_strerror(ret));
 				ret = -1;
 				continue_loop = 0;
 				break;

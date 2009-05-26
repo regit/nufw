@@ -1395,7 +1395,7 @@ void nussl__ssl_exit(void)
 #endif
 }
 
-int nussl_ssl_accept(nussl_ssl_socket * ssl_sock, unsigned int timeout)
+int nussl_ssl_accept(nussl_ssl_socket * ssl_sock, unsigned int timeout, char *errbuf, size_t errbufsz)
 {
 	int ret, status, sslerr;
 	int sock;
@@ -1435,10 +1435,7 @@ int nussl_ssl_accept(nussl_ssl_socket * ssl_sock, unsigned int timeout)
 					FD_SET(sock,&fd_w);
 					break;
 				default:
-					fprintf(stderr, "Error accepting connection: ret %d error code %d : %s\n",status,sslerr,
-							ERR_error_string(SSL_get_error(ssl,status),NULL));
-					fprintf(stderr,"Error accepting connection: ret %d error code %ld : %s\n",status,ERR_get_error(),
-							ERR_error_string(ERR_get_error(),NULL));
+					snprintf(errbuf, errbufsz, "%s", ERR_error_string(ERR_get_error(),NULL));
 					ret = -1; /* error */
 					goto exit_accept_handshake;
 			}

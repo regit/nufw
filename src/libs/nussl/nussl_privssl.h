@@ -130,6 +130,6 @@ int nussl_ssl_context_set_verify(nussl_ssl_context * ctx,
 /* SSL accept function (with handshake), with timeout.
  * If timeout is 0, use blocking mode
  */
-int nussl_ssl_accept(nussl_ssl_socket * ssl, unsigned int timeout);
+int nussl_ssl_accept(nussl_ssl_socket * ssl_sock, unsigned int timeout, char *errbuf, size_t errbufsz);
 
 #endif				/* NUSSL_PRIVSSL_H */
