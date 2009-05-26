@@ -509,6 +509,14 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 			g_strlcat(filter, "(!(AppName=*))", LDAP_QUERY_SIZE);
 		}
 
+		if (! element->app_sig) {
+			g_strlcat(filter, "(!(AppSig=*))", LDAP_QUERY_SIZE);
+		} else {
+			gchar iffilter[256];
+			g_snprintf(iffilter, 256, "(|(AppSig=%s)(!(AppSig=*)))", element->app_sig);
+			g_strlcat(filter, iffilter, LDAP_QUERY_SIZE);
+		}
+
 		if (element->iface_nfo.indev[0] == '\0') {
 			g_strlcat(filter, "(!(InDev=*))", LDAP_QUERY_SIZE);
 		} else {
