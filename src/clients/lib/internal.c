@@ -112,7 +112,7 @@ static unsigned samp_recv(nuauth_session_t* session, char *buf, int bufsize,
 
 	tls_len = nussl_read(session->nussl, buf, bufsize);
 	if (tls_len <= 0) {
-		log_printf(DEBUG_LEVEL_CRITICAL, "ERROR nussl_read returned %d (requested %d bytes)\n", tls_len, bufsize);
+		log_printf(DEBUG_LEVEL_CRITICAL, "ERROR nussl_read returned %d (requested %d bytes)", tls_len, bufsize);
 		SET_ERROR(err, NUSSL_ERR, tls_len);
 		return 0;
 	}
@@ -120,7 +120,7 @@ static unsigned samp_recv(nuauth_session_t* session, char *buf, int bufsize,
 	result = sasl_decode64(buf + 3, (unsigned) strlen(buf + 3), buf,
 			       bufsize, &len);
 	if (result != SASL_OK) {
-		log_printf(DEBUG_LEVEL_CRITICAL, "ERROR sasl_decode64 returned %d\n", result);
+		log_printf(DEBUG_LEVEL_CRITICAL, "ERROR sasl_decode64 returned %d", result);
 		SET_ERROR(err, SASL_ERROR, result);
 		return 0;
 	}
@@ -151,7 +151,7 @@ int mysasl_negotiate(nuauth_session_t * session, sasl_conn_t * conn,
 				   buf, NULL, &data, &len, &chosenmech);
 
 	if (session->verbose) {
-		log_printf(DEBUG_LEVEL_INFO, "Using mechanism %s\n", chosenmech);
+		log_printf(DEBUG_LEVEL_INFO, "Using mechanism %s", chosenmech);
 	}
 
 	if (result != SASL_OK && result != SASL_CONTINUE) {
@@ -181,19 +181,19 @@ int mysasl_negotiate(nuauth_session_t * session, sasl_conn_t * conn,
 
 	while (result == SASL_CONTINUE) {
 		if (session->verbose) {
-			log_printf(DEBUG_LEVEL_DEBUG, "Waiting for server reply...\n");
+			log_printf(DEBUG_LEVEL_DEBUG, "Waiting for server reply...");
 		}
 		memset(buf, 0, sizeof(buf));
 		len = samp_recv(session, buf, sizeof(buf), err);
 		if (len <= 0) {
-			log_printf(DEBUG_LEVEL_CRITICAL, "server problem, recv fail...\n");
+			log_printf(DEBUG_LEVEL_CRITICAL, "server problem, recv fail...");
 			return SASL_FAIL;
 		}
 		result =
 		    sasl_client_step(conn, buf, len, NULL, &data, &len);
 		if (result != SASL_OK && result != SASL_CONTINUE) {
 			if (session->verbose)
-				log_printf(DEBUG_LEVEL_DEBUG, "Performing SASL negotiation\n");
+				log_printf(DEBUG_LEVEL_DEBUG, "Performing SASL negotiation");
 			SET_ERROR(err, SASL_ERROR, result);
 		}
 		if (data && len) {
@@ -240,7 +240,7 @@ int add_packet_to_send(nuauth_session_t * session, conn_t ** auth,
 		if (send_user_pckt(session, auth) != 1) {
 			/* error sending */
 #if DEBUG
-			log_printf(DEBUG_LEVEL_CRITICAL, "error when sending\n");
+			log_printf(DEBUG_LEVEL_CRITICAL, "error when sending");
 #endif
 
 			return -1;
@@ -281,7 +281,7 @@ int compare(nuauth_session_t * session, conntable_t * old, conntable_t * new,
 			same_bucket = tcptable_find(old, bucket);
 			if (same_bucket == NULL) {
 #if DEBUG
-				log_printf(DEBUG_LEVEL_DEBUG, "sending new\n");
+				log_printf(DEBUG_LEVEL_DEBUG, "sending new");
 #endif
 				if (add_packet_to_send
 				    (session, auth, &count,
@@ -296,7 +296,7 @@ int compare(nuauth_session_t * session, conntable_t * old, conntable_t * new,
 				if (bucket->retransmit >
 				    same_bucket->retransmit) {
 #if DEBUG
-					log_printf(DEBUG_LEVEL_DEBUG, "sending retransmit\n");
+					log_printf(DEBUG_LEVEL_DEBUG, "sending retransmit");
 #endif
 					if (add_packet_to_send
 					    (session, auth, &count,
@@ -316,7 +316,7 @@ int compare(nuauth_session_t * session, conntable_t * old, conntable_t * new,
 					    time(NULL) - UDP_TIMEOUT) {
 #if DEBUG
 						log_printf(DEBUG_LEVEL_DEBUG,
-						    "working on timeout issue\n");
+						    "working on timeout issue");
 #endif
 						if (add_packet_to_send
 						    (session, auth, &count,

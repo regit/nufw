@@ -88,7 +88,7 @@ nu_error_t recv_message(nuauth_session_t *session, nuclient_error_t *err)
 	switch (hdr->msg_type) {
 		case SRV_REQUIRED_PACKET:
 			if (session->debug_mode) {
-				log_printf(DEBUG_LEVEL_INFO, "[+] Client is asked to send new connections.\n");
+				log_printf(DEBUG_LEVEL_INFO, "[+] Client is asked to send new connections.");
 			}
 			nu_client_real_check(session, err);
 			break;
@@ -97,14 +97,14 @@ nu_error_t recv_message(nuauth_session_t *session, nuclient_error_t *err)
 			hellofield->helloid =
 				((struct nu_srv_helloreq *) dgram)->helloid;
 			if (session->debug_mode) {
-				log_printf(DEBUG_LEVEL_INFO, "[+] Send HELLO\n");
+				log_printf(DEBUG_LEVEL_INFO, "[+] Send HELLO");
 			}
 
 			/*  send it */
 			ret = nussl_write(session->nussl, message, message_length);
 			if (ret < 0) {
 #if DEBUG_ENABLE
-				log_printf(DEBUG_LEVEL_CRITICAL, "write failed at %s:%d\n",
+				log_printf(DEBUG_LEVEL_CRITICAL, "write failed at %s:%d",
 						__FILE__, __LINE__);
 #endif
 				ask_session_end(session);
@@ -119,7 +119,7 @@ nu_error_t recv_message(nuauth_session_t *session, nuclient_error_t *err)
 					session);
 			break;
 		default:
-			log_printf(DEBUG_LEVEL_SERIOUS_WARNING, "unknown message %d\n", hdr->msg_type);
+			log_printf(DEBUG_LEVEL_SERIOUS_WARNING, "unknown message %d", hdr->msg_type);
 			return NU_EXIT_CONTINUE;
 	}
 	return NU_EXIT_OK;
@@ -257,7 +257,7 @@ int nu_client_real_check(nuauth_session_t * session, nuclient_error_t * err)
 	int nb_packets = 0;
 
 	if (session->debug_mode) {
-		log_printf(DEBUG_LEVEL_INFO, "[+] Client checking for new connections.\n");
+		log_printf(DEBUG_LEVEL_INFO, "[+] Client checking for new connections.");
 	}
 
 	if (tcptable_init(&new) == 0) {
