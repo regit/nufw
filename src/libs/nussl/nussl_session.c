@@ -52,6 +52,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
+#include <fcntl.h>
+
 #include "nussl_privssl.h"
 #include "nussl_session.h"
 #include "nussl_alloc.h"
@@ -221,6 +223,8 @@ nussl_session *nussl_session_accept(nussl_session * srv_sess)
 
 int nussl_session_handshake(nussl_session * client_sess, nussl_session * srv_sess)
 {
+	int fd;
+
 	if (nussl_sock_accept_ssl(client_sess->socket, srv_sess->ssl_context)) {
 		/* nussl_sock_accept_ssl already sets an error */
 		nussl_set_error(srv_sess, "%s",
@@ -233,6 +237,13 @@ int nussl_session_handshake(nussl_session * client_sess, nussl_session * srv_ses
 		nussl_set_error(srv_sess, "%s",
 				nussl_get_error(client_sess));
 		return -1;
+	}
+
+	if (client_sess->rdtimeout > 0) {
+		// Set non-blocking mode
+		NUSSL_DEBUG(NUSSL_DBG_SSL, "Setting non-blocking mode\n");
+		fd = nussl_session_get_fd(client_sess);
+		fcntl(fd,F_SETFL,(fcntl(fd,F_GETFL)|O_NONBLOCK));
 	}
 
 	return 0;
