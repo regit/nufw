@@ -3,7 +3,7 @@ lib_LTLIBRARIES = libnussl.la
 EXTRA_DIST = README
 
 # headers to be installed
-include_HEADERS = nussl.h nussl_constants.h
+include_HEADERS = nussl.h nussl_constants.h nussl_hash.h
 
 # headers required for build
 noinst_libnussl_la_SOURCES = nussl_alloc.h nussl_config.h \
@@ -18,6 +18,7 @@ libnussl_la_SOURCES = nussl_alloc.c nussl_dates.c nussl_openssl.c \
 	nussl_ssl_common.c nussl_request.c nussl_session.c nussl_socket.c \
 	nussl_string.c nussl_utils.c \
 	nussl_openssl_local.c nussl_gnutls_local.c \
+	nussl_hash.c \
 	${include_HEADERS} \
 	${noinst_libnussl_la_SOURCES}
 AM_CPPFLAGS = -I$(top_srcdir)/src/include/ -D_REENTRANT
