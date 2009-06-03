@@ -24,10 +24,10 @@ typedef enum {
 #define NUSSL_HASH_MAX_SIZE 64	/* longest known is SHA512 */
 
 /* out buffer must at least NUSSL_HASH_MAX_SIZE bytes long */
-int nussl_hash_compute(nussl_hash_algo_t algo, char *data, size_t datasz, char *out, size_t *outsz);
+int nussl_hash_compute(nussl_hash_algo_t algo, const char *data, size_t datasz, char *out, size_t *outsz);
 
 /* out buffer must at least NUSSL_HASH_MAX_SIZE bytes long */
-int nussl_hash_compute_with_salt(nussl_hash_algo_t algo, char *data, size_t datasz, char *salt, size_t saltsz, char *out, size_t *outsz);
+int nussl_hash_compute_with_salt(nussl_hash_algo_t algo, const char *data, size_t datasz, const char *salt, size_t saltsz, char *out, size_t *outsz);
 
 
 #ifdef __cplusplus
