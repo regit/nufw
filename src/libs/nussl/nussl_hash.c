@@ -27,12 +27,12 @@
 #include <openssl/err.h>
 #include <openssl/evp.h>
 
-int nussl_hash_compute(nussl_hash_algo_t algo, char *data, size_t datasz, char *out, size_t *outsz)
+int nussl_hash_compute(nussl_hash_algo_t algo, const char *data, size_t datasz, char *out, size_t *outsz)
 {
 	return nussl_hash_compute_with_salt(algo, data, datasz, NULL, 0, out, outsz);
 }
 
-int nussl_hash_compute_with_salt(nussl_hash_algo_t algo, char *data, size_t datasz, char *salt, size_t saltsz, char *out, size_t *outsz)
+int nussl_hash_compute_with_salt(nussl_hash_algo_t algo, const char *data, size_t datasz, const char *salt, size_t saltsz, char *out, size_t *outsz)
 {
 	const EVP_MD *md;
 	EVP_MD_CTX mdctx;
@@ -56,6 +56,7 @@ int nussl_hash_compute_with_salt(nussl_hash_algo_t algo, char *data, size_t data
 
 	EVP_MD_CTX_init(&mdctx);
 	EVP_DigestInit_ex(&mdctx, md, NULL);
+	EVP_DigestUpdate(&mdctx, (unsigned char*)data, datasz);
 	if (salt != NULL && saltsz > 0) {
 		EVP_DigestUpdate(&mdctx, (unsigned char*)salt, saltsz);
 	}
@@ -70,12 +71,12 @@ int nussl_hash_compute_with_salt(nussl_hash_algo_t algo, char *data, size_t data
 
 #include <gcrypt.h>
 
-int nussl_hash_compute(nussl_hash_algo_t algo, char *data, size_t datasz, char *out, size_t *outsz)
+int nussl_hash_compute(nussl_hash_algo_t algo, const char *data, size_t datasz, char *out, size_t *outsz)
 {
 	return nussl_hash_compute_with_salt(algo, data, datasz, NULL, 0, out, outsz);
 }
 
-int nussl_hash_compute_with_salt(nussl_hash_algo_t algo, char *data, size_t datasz, char *salt, size_t saltsz, char *out, size_t *outsz)
+int nussl_hash_compute_with_salt(nussl_hash_algo_t algo, const char *data, size_t datasz, const char *salt, size_t saltsz, char *out, size_t *outsz)
 {
 	gcry_md_hd_t hd;
 	int g_algo = 0;
