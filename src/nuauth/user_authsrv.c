@@ -266,9 +266,9 @@ int user_process_field_hash(struct nu_authreq *authreq,
 			   struct nu_authfield_app *appfield)
 {
 	gchar *appsig = NULL;
-	unsigned int len = appfield->length - 4;
+	unsigned int len = appfield->length -  sizeof(struct nu_authfield_app);
 
-	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER, "\tgot APP field");
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER, "\tgot HASH field");
 
 	/* this has to be smaller than field size */
 	if (field_buffer_len < (int) appfield->length) {
@@ -288,7 +288,7 @@ int user_process_field_hash(struct nu_authreq *authreq,
 
 	appsig = g_new0(gchar, len + 1);
 
-	memcpy(appsig, appfield + 4, len);
+	memcpy(appsig, (char *)appfield + sizeof(struct nu_authfield_app), len);
 	appsig[len] = 0;
 
 	connection->app_sig = appsig;
@@ -312,6 +312,8 @@ int user_process_field(struct nu_authreq *authreq,
 
 	switch (field->type) {
 	case IPV6_FIELD:
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+				  "IPV6_FIELD");
 		if (auth_buffer_len <
 				(int) sizeof(struct nu_authfield_ipv6)) {
 			log_message(WARNING, DEBUG_AREA_USER,
@@ -350,6 +352,8 @@ int user_process_field(struct nu_authreq *authreq,
 		break;
 
 	case APP_FIELD:
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+				  "APP_FIELD");
 		if (auth_buffer_len <
 		    (int) sizeof(struct nu_authfield_app)) {
 			return -1;
@@ -361,6 +365,8 @@ int user_process_field(struct nu_authreq *authreq,
 		break;
 
 	case HASH_FIELD:
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+				  "HASH_FIELD");
 		if (auth_buffer_len <
 		    (int) sizeof(struct nu_authfield_app)) {
 			return -1;
@@ -373,6 +379,8 @@ int user_process_field(struct nu_authreq *authreq,
 
 
 	case HELLO_FIELD:
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+				  "HELLO_FIELD");
 		if (auth_buffer_len <
 		    (int) sizeof(struct nu_authfield_hello)) {
 			return -1;
