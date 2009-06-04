@@ -87,8 +87,10 @@ int send_user_pckt(nuauth_session_t * session, conn_t * carray[CONN_MAX])
 	struct nu_authreq *authreq;
 	struct nu_authfield_ipv6 *authfield;
 	struct nu_authfield_app *appfield;
+	struct nu_authfield_app *sigfield;
 	unsigned len;
 	const char *appname;
+	const char *appsig;
 	char *app_ptr;
 
 	session->timestamp_last_sent = time(NULL);
@@ -155,11 +157,27 @@ int send_user_pckt(nuauth_session_t * session, conn_t * carray[CONN_MAX])
 		/* glue piece together on data if packet is not too long */
 		header->length += appfield->length;
 
+		appsig = prg_cache_getsig(carray[item]->inode);
+		sigfield = (struct nu_authfield_app *) ((char*)appfield + appfield->length);
+		sigfield->type = HASH_FIELD;
+		sigfield->option = 0;
+		app_ptr = (char *) (sigfield + 1);
+		memcpy(app_ptr, appsig, strlen(appsig));
+		sigfield->length = sizeof(struct nu_authfield_app) + strlen(appsig);
+
+		authreq->packet_length += sigfield->length;
+
+		/* glue piece together on data if packet is not too long */
+		header->length += sigfield->length;
+
 		assert(header->length < PACKET_SIZE);
 
 		pointer += authreq->packet_length;
 
+		sigfield->length = htons(sigfield->length);
+
 		appfield->length = htons(appfield->length);
+
 		authreq->packet_length = htons(authreq->packet_length);
 		authfield->length =
 		    htons(sizeof(struct nu_authfield_ipv6));

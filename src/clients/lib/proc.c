@@ -25,6 +25,7 @@
 
 #include "libnuclient.h"
 #include "proc.h"
+#include <sasl/saslutil.h>
 
 #ifdef LINUX
 
@@ -51,6 +52,9 @@
 #include "security.h"
 
 #include <nubase.h>
+#include <nussl_hash.h>
+
+#define BLOCKSIZE 64
 
 
 /**
@@ -63,6 +67,7 @@ static struct prg_node {
 	unsigned long inode;   /** Inode of the program executable binary */
 	char name[PROGNAME_WIDTH];
 			       /** Name of the program (encoded in UTF-8) */
+	char sig[4 * NUSSL_HASH_MAX_SIZE + 12]; /* HASH size + prefix */
 } *prg_hash[PRG_HASH_SIZE];
 
 #define PROGNAME_WIDTHs PROGNAME_WIDTH1(PROGNAME_WIDTH)
@@ -102,6 +107,7 @@ static void prg_cache_add(unsigned long inode, char *name)
 	pn->next = NULL;
 	pn->inode = inode;
 	SECURE_STRNCPY(pn->name, name, sizeof(pn->name));
+	pn->sig[0] = 0;
 }
 
 const char *prg_cache_get(unsigned long inode)
@@ -113,6 +119,32 @@ const char *prg_cache_get(unsigned long inode)
 		if (pn->inode == inode)
 			return (pn->name);
 	return ("-");
+}
+
+const char *prg_cache_getsig(unsigned long inode)
+{
+	unsigned hi = PRG_HASHIT(inode);
+	struct prg_node *pn;
+	size_t size;
+	char pnsig[NUSSL_HASH_MAX_SIZE];
+	int ret;
+
+#define SHA512_PREFIX "{SHA512}"
+
+	for (pn = prg_hash[hi]; pn; pn = pn->next) {
+		if (pn->inode == inode) {
+			if (pn->sig[0] == 0) {
+				char * hexnum;
+				nussl_hash_file(NUSSL_HASH_SHA512, pn->name,
+						pnsig, &size);
+				hexnum = pn->sig + strlen(SHA512_PREFIX);
+				memcpy(pn->sig, SHA512_PREFIX, strlen(SHA512_PREFIX));
+				bin2hex(size, pnsig, hexnum);
+			}
+			return (pn->sig);
+		}
+	}
+	return "-";
 }
 
 void prg_cache_clear(void)
