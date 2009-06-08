@@ -104,7 +104,7 @@ int nussl_hash_compute_with_salt(nussl_hash_algo_t algo, const char *data, size_
 	if (salt != NULL && saltsz > 0) {
 		gcry_md_write(hd, salt, saltsz);
 	}
-	res = (char *) gcry_md_read(hd, algo);
+	res = (char *) gcry_md_read(hd, g_algo);
 
 	*outsz = strlen(res);
 	strncpy(out, res, *outsz);
