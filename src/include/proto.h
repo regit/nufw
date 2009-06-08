@@ -236,7 +236,8 @@ typedef enum {
 /** Server mode, value of with #SRV_TYPE (::nuv2_srv_message) message type */
 typedef enum {
 	SRV_TYPE_POLL = 0,	/*!< Server works in POLL mode (default) */
-	SRV_TYPE_PUSH		/*!< Server works in PUSH mode */
+	SRV_TYPE_PUSH,		/*!< Server works in PUSH mode */
+	SRV_HASH_TYPE		/*!< Server hash function for app sig */
 } nu_server_mode_t;
 
 typedef enum {

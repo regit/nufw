@@ -14,7 +14,10 @@
 extern "C" {
 #endif
 
+/* don't change order or it will break compatibility
+   between client and server */
 typedef enum {
+	NUSSL_HASH_NONE = 0,
 	NUSSL_HASH_MD5,
 	NUSSL_HASH_SHA1,
 	NUSSL_HASH_SHA256,

@@ -624,6 +624,17 @@ static int finish_nego(user_session_t * c_session)
 		return SASL_FAIL;
 	}
 
+	/* send mode to client */
+	msg.type = SRV_TYPE;
+	msg.option = SRV_HASH_TYPE;
+	msg.length = htons(nuauthconf->hash_algo);
+	if (nussl_write(c_session->nussl, (char*)&msg, sizeof(msg)) < 0) {
+		log_message(WARNING, DEBUG_AREA_USER,
+			    "nussl_write() failure at %s:%d",
+			    __FILE__, __LINE__);
+		return SASL_FAIL;
+	}
+
 	/* send nego done */
 	msg.type = SRV_INIT;
 	msg.option = INIT_OK;

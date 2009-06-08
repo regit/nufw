@@ -121,7 +121,7 @@ const char *prg_cache_get(unsigned long inode)
 	return ("-");
 }
 
-const char *prg_cache_getsig(unsigned long inode)
+const char *prg_cache_getsig(int algo, unsigned long inode)
 {
 	unsigned hi = PRG_HASHIT(inode);
 	struct prg_node *pn;
@@ -135,7 +135,7 @@ const char *prg_cache_getsig(unsigned long inode)
 		if (pn->inode == inode) {
 			if (pn->sig[0] == 0) {
 				char * hexnum;
-				nussl_hash_file(NUSSL_HASH_SHA512, pn->name,
+				nussl_hash_file(algo, pn->name,
 						pnsig, &size);
 				hexnum = pn->sig + strlen(SHA512_PREFIX);
 				memcpy(pn->sig, SHA512_PREFIX, strlen(SHA512_PREFIX));

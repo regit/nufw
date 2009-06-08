@@ -23,6 +23,7 @@
 #include <time.h>
 
 #include <nubase.h>
+#include <nussl_hash.h>
 
 #include "nuauthconf.h"
 
@@ -176,6 +177,9 @@ int init_nuauthconf(struct nuauth_params **result)
 	conf->krb5_service = nuauth_config_table_get_or_default("nuauth_krb5_service", DEFAULT_KRB5_SERVICE);
 	conf->krb5_hostname = nuauth_config_table_get("nuauth_krb5_hostname");
 	conf->krb5_realm = nuauth_config_table_get("nuauth_krb5_realm");
+
+	conf->hash_algo =
+	    nuauth_config_table_get_or_default_int("nuauth_client_hash_algo", NUSSL_HASH_SHA512);
 
 	if (conf->debug_level > 9) {
 		conf->debug_level = 9;

@@ -203,6 +203,7 @@ struct nuauth_session {
 
 	/** Server mode: #SRV_TYPE_POLL or #SRV_TYPE_PUSH */
 	u_int8_t server_mode;
+	u_int8_t hash;
 
 	/**
 	 * Flag to signal if user is connected or not.
