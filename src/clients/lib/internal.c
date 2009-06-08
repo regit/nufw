@@ -636,7 +636,7 @@ int init_sasl(nuauth_session_t * session, const char *hostname, nuclient_error_t
 			session->username = session->username_callback();
 		} else {
 			if (session->verbose)
-				log_printf(DEBUG_LEVEL_CRITICAL, "Can't call username callback\n");
+				log_printf(DEBUG_LEVEL_CRITICAL, "Can't call username callback");
 		}
 	}
 
