@@ -342,7 +342,7 @@ void nu_client_set_client_info(nuauth_session_t *session,
 		session->client_version = strdup(client_version);
 }
 
-int nu_client_set_key(nuauth_session_t* session, char* keyfile, char* certfile, nuclient_error_t* err)
+int nu_client_set_key(nuauth_session_t* session, const char* keyfile, const char* certfile, nuclient_error_t* err)
 {
 	if (session->pem_key)
 		free(session->pem_key);
@@ -365,7 +365,7 @@ int nu_client_set_key(nuauth_session_t* session, char* keyfile, char* certfile, 
 	return 1;
 }
 
-int nu_client_set_ca(nuauth_session_t* session, char* cafile, nuclient_error_t* err)
+int nu_client_set_ca(nuauth_session_t* session, const char* cafile, nuclient_error_t* err)
 {
 	if (session->pem_ca)
 		free(session->pem_ca);
@@ -409,7 +409,7 @@ int nu_client_set_pkcs12(nuauth_session_t* session, char* key_file, char* key_pa
  * \return Returns 0 on error (error description in err), 1 otherwise
  */
 int nu_client_load_key(nuauth_session_t * session,
-			char *keyfile, char *certfile,
+			const char *keyfile, const char *certfile,
 			nuclient_error_t * err)
 {
 	char certstring[256];
@@ -500,7 +500,7 @@ int nu_client_load_pkcs12(nuauth_session_t * session,
  * \return Returns 0 on error (error description in err), 1 otherwise
  */
 int nu_client_load_ca(nuauth_session_t * session,
-			char *cafile,
+			const char *cafile,
 			nuclient_error_t * err)
 {
 	char castring[256];
@@ -531,7 +531,7 @@ int nu_client_load_ca(nuauth_session_t * session,
 				if (!session->suppress_ca_warning) {
 					log_printf(DEBUG_LEVEL_WARNING, "\nWARNING: you have not provided any certificate authority.\n"
 							"nutcpc will *NOT* verify server certificate trust.\n"
-							"Use the -A <cafile> option to set up CA.\n\n"
+							"Use the -A <cafile> option to set up CA.\n"
 					       );
 				}
 				session->suppress_fqdn_verif = 1;
@@ -621,7 +621,7 @@ int nu_client_set_nuauth_cert_dn(nuauth_session_t * session,
   * \ingroup nuclientAPI
   */
 int nu_client_set_crlfile(nuauth_session_t * session,
-		char *crlfile,
+		const char *crlfile,
 		nuclient_error_t *err)
 {
 	if (session->pem_crl)
@@ -945,6 +945,7 @@ int nu_client_connect(nuauth_session_t * session,
 
 	ret = nussl_open_connection(session->nussl);
 	if (ret != NUSSL_OK) {
+		log_printf(DEBUG_LEVEL_CRITICAL, "%s", nussl_get_error(session->nussl));
 		nussl_session_destroy(session->nussl);
 		session->nussl = NULL;
 		SET_ERROR(err, NUSSL_ERR, ret);

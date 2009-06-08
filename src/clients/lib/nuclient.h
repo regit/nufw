@@ -140,7 +140,7 @@ void nu_client_set_verbose(nuauth_session_t * session,
 void nu_client_set_source(nuauth_session_t *session, struct sockaddr_storage *addr);
 
 int nu_client_set_key(nuauth_session_t * session,
-		char *keyfile, char *certfile,
+		const char *keyfile, const char *certfile,
 		nuclient_error_t *err);
 
 int nu_client_set_pkcs12(nuauth_session_t * session,
@@ -148,14 +148,14 @@ int nu_client_set_pkcs12(nuauth_session_t * session,
 		nuclient_error_t *err);
 
 int nu_client_set_ca(nuauth_session_t * session,
-		char *cafile, nuclient_error_t *err);
+		const char *cafile, nuclient_error_t *err);
 
 int nu_client_set_nuauth_cert_dn(nuauth_session_t * session,
 		char *nuauth_cert_dn,
 		nuclient_error_t *err);
 
 int nu_client_set_crlfile(nuauth_session_t * session,
-				char *crlfile,
+				const char *crlfile,
 				nuclient_error_t *err);
 
 char* nu_client_get_cipher(nuauth_session_t * session);
@@ -163,7 +163,7 @@ char* nu_client_get_cert_info(nuauth_session_t * session);
 char* nu_client_get_server_cert_info(nuauth_session_t * session);
 
 int nu_client_set_crlfile(nuauth_session_t * session,
-		char *crlfile,
+		const char *crlfile,
 		nuclient_error_t *err);
 
 int nu_client_set_krb5_service(nuauth_session_t * session,
