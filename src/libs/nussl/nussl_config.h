@@ -51,7 +51,7 @@
 #define NUSSL_HAVE_TS_SSL	/* TS = Thread Safe */
 /* #define HAVE_OPENSSL */
 
-#define NUSSL_FMT_SIZE_T "u"
+#define NUSSL_FMT_SIZE_T "zu"
 #define NUSSL_FMT_SSIZE_T "d"
 #define NUSSL_FMT_OFF_T "ld"
 #define NUSSL_FMT_NE_OFF_T NUSSL_FMT_OFF_T
