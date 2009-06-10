@@ -60,7 +60,7 @@ int nussl_hash_compute_with_salt(nussl_hash_algo_t algo, const char *data, size_
 	if (salt != NULL && saltsz > 0) {
 		EVP_DigestUpdate(&mdctx, (unsigned char*)salt, saltsz);
 	}
-	EVP_DigestFinal_ex(&mdctx, (unsigned char*)out, outsz);
+	EVP_DigestFinal_ex(&mdctx, (unsigned char*)out, (unsigned int*)outsz);
 	EVP_MD_CTX_cleanup(&mdctx);
 
 	return 0;

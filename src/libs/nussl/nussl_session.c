@@ -69,6 +69,9 @@
 # include <pthread.h>
 #endif
 
+/* pre-declration list */
+int nussl_session_get_fd(nussl_session * sess);
+
 #if 0
 /* Destroy a a list of hooks. */
 static void destroy_hooks(struct hook *hooks)
