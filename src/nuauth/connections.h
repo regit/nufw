@@ -73,10 +73,13 @@ typedef enum {
 #define IPHDR_REJECT_LENGTH_BWORD 5
 
 typedef enum {
+	AUTHQ_NONE,
 	AUTHQ_BYIP,
 	AUTHQ_HELLO,
 	AUTHQ_SASL,
 	AUTHQ_SSL,
+	AUTHQ_SSLHARD,
+	AUTHQ_MAX = AUTHQ_SSLHARD,
 } auth_quality_t;
 
 /**
