@@ -95,9 +95,11 @@ static int samp_send(nuauth_session_t* session, const char *buffer,
 	result = nussl_write(session->nussl, buf, len + 3);
 	if (result < 0) {
 		SET_ERROR(err, NUSSL_ERR, result);
+		free(buf);
 		return 0;
 	}
 
+	free(buf);
 	return 1;
 }
 
