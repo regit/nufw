@@ -364,6 +364,7 @@ gboolean check_property_clients(struct in6_addr *addr, user_session_check_t *sch
 				}
 			}
 		}
+		g_mutex_unlock(client_mutex);
 		return cst;
 	} else {
 		g_mutex_unlock(client_mutex);
