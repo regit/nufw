@@ -90,7 +90,7 @@ void localid_insert_message(connection_t * pckt,
 		global_msg->addr = pckt->tracking.saddr;
 		global_msg->found = FALSE;
 		/* if return is 1 we have somebody connected */
-		if (warn_clients(global_msg, NULL, NULL)) {
+		if (warn_clients(global_msg, NULL, 0x1)) {
 			/* add element to hash with computed key */
 			g_hash_table_insert(localid_auth_hash,
 					    GINT_TO_POINTER(randomid),
