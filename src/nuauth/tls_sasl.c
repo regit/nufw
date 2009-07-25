@@ -432,6 +432,8 @@ static int parse_user_os(user_session_t * c_session, char *buf, int buf_size)
 			  ntohs(osfield->length) - sizeof(struct nu_authfield), dec_buf,
 			  dec_buf_size, &len);
 	if (decode != SASL_OK) {
+		log_message(WARNING, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
+				"Unable to base64 decode field");
 		g_free(dec_buf);
 		return SASL_BADAUTH;
 	}
@@ -441,6 +443,8 @@ static int parse_user_os(user_session_t * c_session, char *buf, int buf_size)
 		os_strings = g_strsplit(dec_buf, ";", 5);
 		if (os_strings[0] == NULL || os_strings[1] == NULL
 		    || os_strings[2] == NULL) {
+			log_message(WARNING, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
+				"Unable to split OS field");
 			g_strfreev(os_strings);
 			g_free(dec_buf);
 			return SASL_BADAUTH;
@@ -557,6 +561,8 @@ static int finish_nego(user_session_t * c_session)
 			    __FILE__, __LINE__);
 		return SASL_FAIL;
 	}
+	debug_log_message(DEBUG, DEBUG_AREA_USER,
+				  "OS version asked");
 
 	buf_size = nussl_read(c_session->nussl, buf, sizeof buf);
 	ret = parse_user_os(c_session, buf, buf_size);
