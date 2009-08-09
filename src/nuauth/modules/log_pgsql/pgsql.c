@@ -1,9 +1,8 @@
 /*
- ** Copyright(C) 2003-2008 Eric Leblond <eric@regit.org>
- **		     Vincent Deffontaines <vincent@gryzor.com>
- **		     Pierre Chifflier <chifflier@inl.fr>
- **                   INL
- ** $Id$
+ ** Copyright(C) 2003-2009 INL
+ ** Written by Eric Leblond <eleblond@inl.fr>
+ **	       Vincent Deffontaines <vincent@gryzor.com>
+ **	       Pierre Chifflier <chifflier@inl.fr>
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
