@@ -76,14 +76,6 @@ static void tls_sasl_connect_ok(user_session_t * c_session, int c)
 		c_session->user_name = username;
 	}
 
-	if (nuauthconf->single_user_client_limit > 0) {
-		if (!test_username_count_vs_max(c_session->user_name,
-				   nuauthconf->single_user_client_limit)) {
-			policy_refuse_user(c_session, c, PER_USER_TOO_MANY_LOGINS);
-			return;
-		}
-	}
-
 	if (c_session->proto_version < PROTO_VERSION_V24) {
 		/* send mode to client */
 		msg.type = SRV_TYPE;
@@ -797,6 +789,13 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 			break;
 		}
 
+		if (nuauthconf->single_user_client_limit > 0) {
+			if (!test_username_count_vs_max(c_session->user_name,
+						nuauthconf->single_user_client_limit)) {
+				policy_refuse_user(c_session, socket_fd, PER_USER_TOO_MANY_LOGINS);
+				return;
+			}
+		}
 		/* Tuning of user_session */
 		ret = modules_user_session_modify(c_session);
 		if (ret != SASL_OK) {
@@ -806,16 +805,25 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 			/* get rid of client */
 			clean_session(c_session);
 			break;
-		} else {
-			/* accept client for PROTO >= PROTO_VERSION_V24 */
-			if (c_session->proto_version >= PROTO_VERSION_V24) {
-				ret = send_nego_end(c_session, INIT_OK);
-				if (ret != SASL_OK) {
-					clean_session(c_session);
-					break;
-				}
+		}
 
+		if (nuauthconf->single_user_client_limit > 0) {
+			if (!test_username_count_vs_max(c_session->user_name,
+						nuauthconf->single_user_client_limit)) {
+				send_nego_end(c_session, INIT_OK);
+				policy_refuse_user(c_session, socket_fd, PER_USER_TOO_MANY_LOGINS);
+				break;
 			}
+		}
+
+		/* accept client for PROTO >= PROTO_VERSION_V24 */
+		if (c_session->proto_version >= PROTO_VERSION_V24) {
+			ret = send_nego_end(c_session, INIT_OK);
+			if (ret != SASL_OK) {
+				clean_session(c_session);
+				break;
+			}
+
 		}
 
 		tls_sasl_connect_ok(c_session, socket_fd);
