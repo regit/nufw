@@ -895,6 +895,7 @@ static int finish_init(nuauth_session_t * session, nuclient_error_t * err)
 				finish = 1;
 				switch (message->option) {
 					case INIT_NOK:
+						SET_ERROR(err, INTERNAL_ERROR, NUFW_INITNEGO_ERROR);
 						return 0;
 					case INIT_OK:
 						session->connected = 1;
@@ -1101,6 +1102,10 @@ const char *nu_client_strerror(nuauth_session_t * session, nuclient_error_t * er
 			return "Binding (source address) error";
 		case NUSSL_INIT_ERR:
 			return "NuSSL initialisation failed.";
+		case NUFW_INITNEGO_ERROR:
+			return "NuFW refused connection during init.";
+		case NUFW_CRUISE_ERROR:
+			return "NuFW error during cruise protocol.";
 		default:
 			return "Unknown internal error code";
 		}
