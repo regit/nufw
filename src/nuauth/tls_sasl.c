@@ -711,6 +711,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 	c_session->user_name = NULL;
 	c_session->user_id = 0;
 	c_session->last_request = time(NULL);
+	c_session->expire = -1;
 	g_free(client->str_addr);
 	g_free(userdata);
 
