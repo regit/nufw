@@ -641,18 +641,25 @@ static int finish_nego(user_session_t * c_session)
 		return SASL_FAIL;
 	}
 
-	/* send nego done */
-	msg.type = SRV_INIT;
-	msg.option = INIT_OK;
-	if (nussl_write(c_session->nussl, (char*)&msg, sizeof(msg)) < 0) {
-		log_message(WARNING, DEBUG_AREA_USER,
-			    "nussl_write() failure at %s:%d",
-			    __FILE__, __LINE__);
-		return SASL_FAIL;
-	}
+
 	debug_log_message(DEBUG, DEBUG_AREA_USER,
 				  "negotation finished");
 
+	return SASL_OK;
+}
+
+static int send_nego_end(user_session_t * c_session, int result)
+{
+	struct nu_srv_message msg;
+	/* send nego done */
+	msg.type = SRV_INIT;
+	msg.option = result;
+	if (nussl_write(c_session->nussl, (char*)&msg, sizeof(msg)) < 0) {
+		log_message(WARNING, DEBUG_AREA_USER,
+				"nussl_write() failure at %s:%d",
+				__FILE__, __LINE__);
+		return SASL_FAIL;
+	}
 	return SASL_OK;
 }
 
@@ -792,9 +799,22 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 		/* Tuning of user_session */
 		ret = modules_user_session_modify(c_session);
 		if (ret != SASL_OK) {
+			if (c_session->proto_version >= PROTO_VERSION_V24) {
+				ret = send_nego_end(c_session, INIT_NOK);
+			}
 			/* get rid of client */
 			clean_session(c_session);
 			break;
+		} else {
+			/* accept client for PROTO >= PROTO_VERSION_V24 */
+			if (c_session->proto_version >= PROTO_VERSION_V24) {
+				ret = send_nego_end(c_session, INIT_OK);
+				if (ret != SASL_OK) {
+					clean_session(c_session);
+					break;
+				}
+
+			}
 		}
 
 		tls_sasl_connect_ok(c_session, socket_fd);
