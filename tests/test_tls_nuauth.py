@@ -75,10 +75,14 @@ class TestTLSNuauth(TestCase):
         args = dict()
         args["nuauth_tls_request_cert"] = "2"
         args["nuauth_tls_crl"] = '"%s"' % abspath(config.get("test_cert", "invalid_crl"))
-        self.startNuauth(args)
-        self.client = createClient(more_args=["-H","nuauth.inl.fr","-A",self.cacert])
-        self.assert_(not connectClient(self.client))
-        self.stopNuauth()
+	mytest = False
+	try:
+            self.startNuauth(args)
+	except:
+	    mytest = True
+	self.assert_(mytest)
+	if not mytest:
+            self.stopNuauth()
 
 
 if __name__ == "__main__":
