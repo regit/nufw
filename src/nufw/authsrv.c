@@ -1,10 +1,8 @@
 /*
- ** Copyright (C) 2002-2008 INL
+ ** Copyright (C) 2002-2009 INL
  ** Written by Éric Leblond <eric@regit.org>
  **            Vincent Deffontaines <vincent@gryzor.com>
  ** INL http://www.inl.fr/
- **
- ** $Id$
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -56,9 +54,13 @@ int auth_process_answer(char *dgram, int dgram_size)
 	if (dgram_size <
 	    (int) (sizeof(nuv4_nuauth_decision_response_t) + payload_len)
 	    || ((payload_len != 0) && (payload_len != (20 + 8))
-		&& (payload_len != (40 + 8)))) {
+		&& (payload_len != (40 + 8)) &&
+		(dgram_size != (int) (sizeof(nuv4_nuauth_decision_response_t) + payload_len)))) {
 		log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_WARNING,
-				"[!] Packet with improper size");
+				"[!] Packet with improper size: payload of %d, received %d (vs %d)",
+				payload_len,
+				dgram_size,
+				(int) (sizeof(nuv4_nuauth_decision_response_t) + payload_len));
 		return -1;
 	}
 
@@ -107,7 +109,8 @@ int auth_process_answer(char *dgram, int dgram_size)
 				"(*) Rejecting %" PRIu32, packet_id);
 		IPQ_SET_VERDICT(packet_id, NF_DROP);
 		if (send_icmp_unreach(dgram +
-				  sizeof(nuv4_nuauth_decision_response_t)) == -1) {
+				  sizeof(nuv4_nuauth_decision_response_t),
+				  payload_len) == -1) {
 			log_area_printf(DEBUG_AREA_PACKET, DEBUG_LEVEL_WARNING,
 					"(*) Could not sent ICMP reject for %" PRIu32, packet_id);
 		}
