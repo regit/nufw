@@ -276,7 +276,7 @@ int send_icmp_ipv4_unreach(char *payload, int payload_len)
 	}
 	/* write ICMP header */
 	icmp->type = 3;
-	icmp->code = 0;
+	icmp->code = 3;
 	icmp->checksum = 0x0000;
 	icmp->un.frag.__unused = 0;
 	icmp->un.frag.mtu = 0;
