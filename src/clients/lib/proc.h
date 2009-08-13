@@ -36,6 +36,7 @@ int prg_cache_loaded;
 
 void prg_cache_load(void);
 const char *prg_cache_get(unsigned long inode);
+const char *prg_cache_getsig(int algo, unsigned long inode);
 void prg_cache_clear(void);
 #endif
 

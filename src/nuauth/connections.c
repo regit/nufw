@@ -142,6 +142,7 @@ void free_connection(connection_t * conn)
 	g_slist_free(conn->packet_id);
 	g_slist_free(conn->user_groups);
 	g_free(conn->app_name);
+	g_free(conn->app_sig);
 	g_free(conn->os_sysname);
 	g_free(conn->os_release);
 	g_free(conn->os_version);
@@ -190,6 +191,7 @@ connection_t *duplicate_connection(connection_t * element)
 	}
 	conn_copy->username = g_strdup(element->username);
 	conn_copy->app_name = g_strdup(element->app_name);
+	conn_copy->app_sig = g_strdup(element->app_sig);
 	conn_copy->os_sysname = g_strdup(element->os_sysname);
 	conn_copy->os_release = g_strdup(element->os_release);
 	conn_copy->os_version = g_strdup(element->os_version);
@@ -439,6 +441,7 @@ gint print_connection(gpointer data, gpointer userdata)
 	char * str_user = NULL;
 	char * str_os = NULL;
 	char * str_app = NULL;
+	char * str_sig = NULL;
 	char * message = NULL;
 
 	str_tracking = str_print_tracking_t(&(conn->tracking));
@@ -488,9 +491,15 @@ gint print_connection(gpointer data, gpointer userdata)
 	} else {
 		str_app = g_strdup("");
 	}
+	if (conn->app_sig) {
+		str_sig = g_strdup_printf(", appsig=%s", conn->app_sig);
+	} else {
+		str_sig = g_strdup("");
+	}
 
 	message = g_strconcat(prefix, ":", str_tracking, str_state, str_iface,
-			      str_id, str_mark, str_user, str_os, str_app, NULL);
+			      str_id, str_mark, str_user, str_os, str_app,
+			      str_sig, NULL);
 	g_free(str_tracking);
 	g_free(str_state);
 	g_free(str_iface);	
@@ -499,6 +508,7 @@ gint print_connection(gpointer data, gpointer userdata)
 	g_free(str_user);	
 	g_free(str_os);	
 	g_free(str_app);	
+	g_free(str_sig);
 
 	g_message("%s", message);
 

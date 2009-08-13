@@ -1,9 +1,8 @@
 /*
- ** Copyright(C) 2003-2008 Eric Leblond <eric@regit.org>
- **		     Vincent Deffontaines <vincent@gryzor.com>
- **		     Pierre Chifflier <chifflier@inl.fr>
- **                   INL
- ** $Id$
+ ** Copyright(C) 2003-2009 INL
+ ** Written by Eric Leblond <eleblond@inl.fr>
+ **	       Vincent Deffontaines <vincent@gryzor.com>
+ **	       Pierre Chifflier <chifflier@inl.fr>
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -637,6 +636,7 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 {
 	char request[INSERT_REQUEST_VALUES_SIZE];
 	char addr_ascii[INET6_ADDRSTRLEN];
+	gchar *str_groups;
 	struct log_pgsql_params *params =
 	    (struct log_pgsql_params *) params_p;
 	gboolean ok;
@@ -652,19 +652,23 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 
 	switch (state) {
 	case SESSION_OPEN:
+		/* build list of user groups */
+		str_groups = str_print_group(c_session);
 		/* create new user session */
 		ok = secure_snprintf(request, sizeof(request),
-				     "INSERT INTO %s (user_id, username, ip_saddr, "
+				     "INSERT INTO %s (user_id, username, user_groups, ip_saddr, "
 				     "os_sysname, os_release, os_version, socket, start_time) "
-				     "VALUES ('%lu', '%s', '%s', '%s', '%s', '%s', '%u', ABSTIME(%lu))",
+				     "VALUES ('%lu', '%s', '%s', '%s', '%s', '%s', '%s', '%u', ABSTIME(%lu))",
 				     params->pgsql_users_table_name,
 				     (unsigned long)c_session->user_id,
 				     c_session->user_name,
+				     str_groups,
 				     addr_ascii,
 				     c_session->sysname,
 				     c_session->release,
 				     c_session->version,
 				     c_session->socket, time(NULL));
+		g_free(str_groups);
 		break;
 
 	case SESSION_CLOSE:

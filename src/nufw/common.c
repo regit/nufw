@@ -264,22 +264,27 @@ __u16 icmp_cksum(__u16 * buf, int nbytes)
 	return (__u16) ~ sum;
 }
 
-int send_icmp_ipv4_unreach(char *payload)
+int send_icmp_ipv4_unreach(char *payload, int payload_len)
 {
 	struct sockaddr_in to;
-	char buffer[sizeof(struct icmphdr) + 20 + 8];
+	char buffer[256];
 	struct iphdr *ip = (struct iphdr *) payload;
 	struct icmphdr *icmp = (struct icmphdr *) buffer;
 
+	if (payload_len + sizeof(struct icmphdr) > 256) {
+		return -1;
+	}
 	/* write ICMP header */
 	icmp->type = 3;
-	icmp->code = 0;
+	icmp->code = 3;
 	icmp->checksum = 0x0000;
 	icmp->un.frag.__unused = 0;
 	icmp->un.frag.mtu = 0;
 
 	/* copy old packet header */
-	memcpy(buffer + sizeof(struct icmphdr), payload, 20 + 8);
+	memcpy(buffer + sizeof(struct icmphdr),
+			(char *)payload + sizeof(*ip),
+			payload_len - sizeof(*ip));
 
 	/* get destination IPv4 address */
 	memset(&to, 0, sizeof(to));
@@ -287,20 +292,25 @@ int send_icmp_ipv4_unreach(char *payload)
 	to.sin_addr.s_addr = ip->saddr;
 
 	/* compute icmp checksum */
-	icmp->checksum = icmp_cksum((__u16 *) buffer, sizeof(buffer));
+	icmp->checksum = icmp_cksum((__u16 *) buffer,
+				    sizeof(struct icmphdr) + payload_len - sizeof(*ip));
 
 	/* send packet */
-	return sendto(raw_sock4, buffer, sizeof(buffer), 0,
+	return sendto(raw_sock4, buffer,
+		      sizeof(struct icmphdr) + payload_len - sizeof(*ip), 0,
 		      (struct sockaddr *) &to, sizeof(to));
 }
 
-int send_icmp_ipv6_unreach(char *payload)
+int send_icmp_ipv6_unreach(char *payload, int payload_len)
 {
 	struct sockaddr_in6 to;
-	char buffer[sizeof(struct icmp6_hdr) + 40 + 8];
+	char buffer[256];
 	struct ip6_hdr *ip = (struct ip6_hdr *) payload;
 	struct icmp6_hdr *icmp = (struct icmp6_hdr *) buffer;
 
+	if (payload_len + sizeof(struct icmp6_hdr) > 256) {
+		return -1;
+	}
 	/* write ICMP header */
 	memset(icmp, 0, sizeof(*icmp));
 	icmp->icmp6_type = 1;
@@ -308,7 +318,7 @@ int send_icmp_ipv6_unreach(char *payload)
 	/* checksum and data are nul */
 
 	/* copy old packet header */
-	memcpy(buffer + sizeof(*icmp), payload, 40 + 8);
+	memcpy(buffer + sizeof(*icmp), payload, payload_len);
 
 	/* get destination IPv6 address */
 	memset(&to, 0, sizeof(to));
@@ -323,19 +333,19 @@ int send_icmp_ipv6_unreach(char *payload)
 
 	if (raw_sock6 > 0) {
 		/* send packet */
-		return sendto(raw_sock6, buffer, sizeof(buffer), 0,
-			      (struct sockaddr *) &to, sizeof(to));
+		return sendto(raw_sock6, buffer, payload_len + sizeof(struct icmp6_hdr),
+				0, (struct sockaddr *) &to, sizeof(to));
 	} else {
 		return 0;
 	}
 }
 
-int send_icmp_unreach(char *payload)
+int send_icmp_unreach(char *payload, int payload_len)
 {
 	struct iphdr *ip4 = (struct iphdr *) payload;
 	if (ip4->version == AF_INET) {
-		return send_icmp_ipv4_unreach(payload);
+		return send_icmp_ipv4_unreach(payload, payload_len);
 	} else {
-		return send_icmp_ipv6_unreach(payload);
+		return send_icmp_ipv6_unreach(payload, payload_len);
 	}
 }

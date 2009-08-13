@@ -199,6 +199,7 @@ void search_and_fill_complete_of_authreq(connection_t * new,
 		packet->username = new->username;
 		/* application */
 		packet->app_name = new->app_name;
+		packet->app_sig = new->app_sig;
 		/* system */
 		packet->os_sysname = new->os_sysname;
 		packet->os_release = new->os_release;
@@ -242,6 +243,7 @@ void search_and_fill_complete_of_userpckt(connection_t * new,
 		new->state = AUTH_STATE_COMPLETING;
 		/* application */
 		new->app_name = packet->app_name;
+		new->app_sig = packet->app_sig;
 		/* system */
 		new->os_sysname = packet->os_sysname;
 		new->os_release = packet->os_release;

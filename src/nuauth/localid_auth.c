@@ -83,10 +83,14 @@ void localid_insert_message(connection_t * pckt,
 		/* send message to clients */
 		((struct nu_srv_helloreq *) global_msg->msg)->helloid =
 		    randomid;
+
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+				"[localid] Generated local ID %u\n",
+				randomid);
 		global_msg->addr = pckt->tracking.saddr;
 		global_msg->found = FALSE;
 		/* if return is 1 we have somebody connected */
-		if (warn_clients(global_msg, NULL, NULL)) {
+		if (warn_clients(global_msg, NULL, (void *)0x1)) {
 			/* add element to hash with computed key */
 			g_hash_table_insert(localid_auth_hash,
 					    GINT_TO_POINTER(randomid),
@@ -97,6 +101,9 @@ void localid_insert_message(connection_t * pckt,
 		break;
 	case AUTH_STATE_USERPCKT:
 		/* search in struct */
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+				"[localid] Looking for packet with ID %u\n",
+				GPOINTER_TO_UINT((pckt->packet_id)->data));
 		element =
 		    (connection_t *) g_hash_table_lookup(localid_auth_hash,
 							 (GSList *) (pckt->
@@ -111,7 +118,6 @@ void localid_insert_message(connection_t * pckt,
 				element->username = pckt->username;
 				element->user_groups = pckt->user_groups;
 				element->auth_quality = AUTHQ_HELLO;
-				pckt->user_groups = NULL;
 				/* do asynchronous call to acl check */
 				thread_pool_push(nuauthdatas->
 						   acl_checkers, element,
@@ -123,15 +129,14 @@ void localid_insert_message(connection_t * pckt,
 			}
 			/* remove element from hash without destroy */
 			g_hash_table_steal(localid_auth_hash,
-					   GINT_TO_POINTER(pckt->packet_id));
+					   (GSList *) (pckt->packet_id)->data);
 			pckt->user_groups = NULL;
 			pckt->username = NULL;
 			/* free pckt */
 			free_connection(pckt);
-
 		} else {
 			free_connection(pckt);
-			g_warning("Bad user packet.");
+			g_warning("Packet ID is unknown.");
 		}
 		break;
 

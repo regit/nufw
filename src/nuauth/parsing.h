@@ -34,4 +34,6 @@ gboolean check_string_in_array(gchar * checkstring, gchar ** stringarray);
  */
 gchar *string_escape(const gchar * orig);
 
+gchar *str_print_group(user_session_t * usession);
+
 #endif

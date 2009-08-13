@@ -22,8 +22,10 @@
 #include "nubase.h"
 #include <stdio.h> /* sscanf() */
 #include <string.h> /* sscanf() */
-#include <sasl/sasl.h>
 #include <security.h>
+
+#define NU_SASL_FAIL -1
+#define NU_SASL_OK 0
 
 int process_ext_message(char *buf, int bufsize, struct llist_head * ext_proto_l, void *data)
 {
@@ -56,7 +58,7 @@ int process_ext_message(char *buf, int bufsize, struct llist_head * ext_proto_l,
 				}
 				if (p_ext_proto == NULL) {
 					/* unknown protocol */
-					return SASL_FAIL;
+					return NU_SASL_FAIL;
 				}
 				break;
 			case EXT_PROTO_CMD:
@@ -69,7 +71,7 @@ int process_ext_message(char *buf, int bufsize, struct llist_head * ext_proto_l,
 						ret = p_ext_proto->cmd[i].callback(&lbuf,
 										 bufsize - (lbuf - buf),
 										 data);
-						if (ret != SASL_OK) {
+						if (ret != NU_SASL_OK) {
 							return ret;
 						}
 					}
@@ -78,7 +80,7 @@ int process_ext_message(char *buf, int bufsize, struct llist_head * ext_proto_l,
 		}
 	} while (lbuf < buf + bufsize);
 
-	return SASL_OK;
+	return NU_SASL_OK;
 }
 
 

@@ -364,6 +364,7 @@ gboolean check_property_clients(struct in6_addr *addr, user_session_check_t *sch
 				}
 			}
 		}
+		g_mutex_unlock(client_mutex);
 		return cst;
 	} else {
 		g_mutex_unlock(client_mutex);
@@ -402,7 +403,7 @@ char warn_clients(struct msg_addr_set *global_msg,
 	if (ipsessions) {
 		global_msg->found = TRUE;
 
-		if ((!scheck) && ipsessions->proto_version >= PROTO_VERSION_V22_1) {
+		if ((!(data || scheck)) && ipsessions->proto_version >= PROTO_VERSION_V22_1) {
 			gettimeofday(&timestamp, NULL);
 			timeval_substract(&interval, &timestamp, &(ipsessions->last_message));
 			if (interval.tv_sec || ((unsigned)interval.tv_usec < nuauthconf->push_delay)) {
@@ -413,7 +414,6 @@ char warn_clients(struct msg_addr_set *global_msg,
 				ipsessions->last_message.tv_usec = timestamp.tv_usec;
 			}
 		}
-
 		for (ipsockets = ipsessions->sessions; ipsockets; ipsockets = ipsockets->next) {
 			user_session_t *session = (user_session_t *)ipsockets->data;
 			int ret;
@@ -427,6 +427,13 @@ char warn_clients(struct msg_addr_set *global_msg,
 							"Failed to send warning to client(s): %s", nussl_get_error(session->nussl));
 					badsockets = g_slist_prepend(badsockets, GINT_TO_POINTER(ipsockets->data));
 				}
+#if DEBUG_ENABLE
+				else {
+					log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+							"Message sent to client.");
+
+				}
+#endif /* DEBUG_ENABLE */
 			}
 		}
 		if (badsockets) {

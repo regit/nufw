@@ -90,6 +90,11 @@ attributetype ( 1.3.6.1.4.1.23812.1.15 NAME 'AppName'
 	SUBSTR caseIgnoreSubstringsMatch
 	SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{256})
 
+attributetype ( 1.3.6.1.4.1.23812.1.16 NAME 'AppSig'
+       DESC 'Application Signature'
+       EQUALITY caseIgnoreMatch
+       SYNTAX 1.3.6.1.4.1.1466.115.121.1.15{256})
+
 attributetype ( 1.3.6.1.4.1.23812.1.17 NAME 'SrcPort'
 	DESC 'An integer defining a Port src'
 	EQUALITY integerMatch
@@ -148,4 +153,4 @@ attributetype ( 1.3.6.1.4.1.23812.1.26 NAME 'PhysOutDev'
 objectclass ( 1.3.6.1.4.1.23812.2.1 NAME 'NuAccessControlList'
 	DESC 'An IP Acl'
 	MUST (cn $ SrcIPStart $ SrcIPEnd $ DstIPStart $ DstIPEnd $ Decision $ DstPortStart $ DstPortEnd )
-	MAY (Proto $ SrcPortStart $ SrcPortEnd $ DstPort $ SrcPort  $ OsName $ OsVersion $ OsRelease $ AppName $ User $ Group $ description $ TimeRange $ AclFlags $ AclWeight $ AuthQuality $ InDev $ PhysInDev $ OutDev $ PhysOutDev) )
+	MAY (Proto $ SrcPortStart $ SrcPortEnd $ DstPort $ SrcPort  $ OsName $ OsVersion $ OsRelease $ AppName $ AppSig $ User $ Group $ description $ TimeRange $ AclFlags $ AclWeight $ AuthQuality $ InDev $ PhysInDev $ OutDev $ PhysOutDev) )

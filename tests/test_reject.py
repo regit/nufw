@@ -7,7 +7,7 @@ from inl_tests.iptables import Iptables
 from filter import testAllowPort, testPortFailure, VALID_PORT
 from test_plaintext_auth import USERDB
 from plaintext import PlaintextAcl
-from errno import ETIMEDOUT, ENETUNREACH, EISCONN
+from errno import ETIMEDOUT, ECONNREFUSED, EISCONN
 
 class TestICMPReject(TestCase):
     def setUp(self):
@@ -42,7 +42,7 @@ class TestICMPReject(TestCase):
         self.config["nuauth_reject_after_timeout"] = "1"
         self.config["nuauth_reject_authenticated_drop"] = "0"
         self.nuauth = Nuauth(self.config)
-        testPortFailure(self, self.iptables, None, VALID_PORT, ENETUNREACH)
+        testPortFailure(self, self.iptables, None, VALID_PORT, ECONNREFUSED)
 
     def testRejectAuthenticated(self):
         self.config["nuauth_reject_after_timeout"] = 0
@@ -50,7 +50,7 @@ class TestICMPReject(TestCase):
         self.nuauth = Nuauth(self.config)
         user = self.users[0]
         client = user.createClientWithCerts()
-        testPortFailure(self, self.iptables, client, VALID_PORT, ENETUNREACH)
+        testPortFailure(self, self.iptables, client, VALID_PORT, ECONNREFUSED)
         client.stop()
 
 if __name__ == "__main__":

@@ -21,11 +21,83 @@
 
 #include "nussl_hash.h"
 
+#define BLOCKSIZE 64
+
 #ifdef HAVE_OPENSSL
 
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <openssl/evp.h>
+
+int nussl_hash_file(nussl_hash_algo_t algo, const char * filename,
+		    char *out, size_t *outsz)
+{
+	const EVP_MD *md;
+	EVP_MD_CTX mdctx;
+	FILE *stream;
+	size_t n, sum;
+	char buffer[BLOCKSIZE + 72];
+	int fini = 0;
+
+	switch (algo) {
+		case NUSSL_HASH_MD5:
+			md = EVP_md5();
+			break;
+		case NUSSL_HASH_SHA1:
+			md = EVP_sha1();
+			break;
+		case NUSSL_HASH_SHA256:
+			md = EVP_sha256();
+			break;
+		case NUSSL_HASH_SHA512:
+			md = EVP_sha512();
+			break;
+		default:
+			return -1;
+	};
+
+	EVP_MD_CTX_init(&mdctx);
+	EVP_DigestInit_ex(&mdctx, md, NULL);
+
+	stream = fopen(filename, "r");
+	if (stream == NULL) {
+		/* it is almost normal to leave */
+		return 0;
+	}
+
+	while (1)  {
+		sum = 0;
+		while (1) {
+			n = fread (buffer + sum, 1, BLOCKSIZE - sum, stream);
+
+			sum += n;
+			if (sum == BLOCKSIZE)
+				break;
+
+			if (n == 0) {
+				if (ferror (stream)) {
+					return 1;
+				}
+				fini = 1;
+				break;
+			}
+
+			if (feof (stream)) {
+				fini = 1;
+				break;
+			}
+		}
+		EVP_DigestUpdate(&mdctx, (unsigned char*)buffer, sum);
+		if (fini) {
+			break;
+		}
+	}
+
+	EVP_DigestFinal_ex(&mdctx, (unsigned char*)out, (unsigned int*)outsz);
+	EVP_MD_CTX_cleanup(&mdctx);
+
+	return 0;
+}
 
 int nussl_hash_compute(nussl_hash_algo_t algo, const char *data, size_t datasz, char *out, size_t *outsz)
 {
@@ -70,6 +142,80 @@ int nussl_hash_compute_with_salt(nussl_hash_algo_t algo, const char *data, size_
 #else	/* HAVE_OPENSSL */
 
 #include <gcrypt.h>
+
+int nussl_hash_file(nussl_hash_algo_t algo, const char * filename,
+		    char *out, size_t *outsz)
+{
+	gcry_md_hd_t hd;
+	int g_algo = 0;
+	char *res;
+	FILE *stream;
+	size_t n, sum;
+	char buffer[BLOCKSIZE + 72];
+	int fini = 0;
+
+	switch (algo) {
+	case NUSSL_HASH_MD5:
+		g_algo = GCRY_MD_MD5;
+		break;
+	case NUSSL_HASH_SHA1:
+		g_algo = GCRY_MD_SHA1;
+		break;
+	case NUSSL_HASH_SHA256:
+		g_algo = GCRY_MD_SHA256;
+		break;
+	case NUSSL_HASH_SHA512:
+		g_algo = GCRY_MD_SHA512;
+		break;
+	default:
+		return -1;
+	};
+
+	gcry_md_open(&hd, g_algo, 0);
+
+	stream = fopen(filename, "r");
+	if (stream == NULL) {
+		/* it is almost normal to leave */
+		return 0;
+	}
+
+	while (1)  {
+		sum = 0;
+		while (1) {
+			n = fread (buffer + sum, 1, BLOCKSIZE - sum, stream);
+
+			sum += n;
+			if (sum == BLOCKSIZE)
+				break;
+
+			if (n == 0) {
+				if (ferror (stream)) {
+					return 1;
+				}
+				fini = 1;
+				break;
+			}
+
+			if (feof (stream)) {
+				fini = 1;
+				break;
+			}
+		}
+		gcry_md_write(hd, buffer, sum);
+		if (fini) {
+			break;
+		}
+	}
+
+	res = (char *) gcry_md_read(hd, g_algo);
+
+	*outsz = strlen(res);
+	strncpy(out, res, *outsz);
+
+	gcry_md_close(hd);
+
+	return 0;
+}
 
 int nussl_hash_compute(nussl_hash_algo_t algo, const char *data, size_t datasz, char *out, size_t *outsz)
 {
