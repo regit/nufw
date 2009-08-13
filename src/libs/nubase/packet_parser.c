@@ -84,16 +84,6 @@ unsigned int get_ip_headers(tracking_t * tracking,
 		/* compute offset to next header and copy protocol */
 		offset = 4 * ip->ihl;
 		tracking->protocol = ip->protocol;
-
-#ifdef TRACKING_WITH_PAYLOAD
-		/* copy payload if any, or fill payload with zero bytes */
-		if ((offset + sizeof(tracking->payload)) <= dgram_size)
-			memcpy(tracking->payload, dgram + offset,
-			       sizeof(tracking->payload));
-		else
-			memset(tracking->payload, 0,
-			       sizeof(tracking->payload));
-#endif /* #ifdef TRACKING_WITH_PAYLOAD */
 	} else if (ip->version == 6) {
 #else
 	if (ip->ip_v == 4) {
@@ -104,24 +94,11 @@ unsigned int get_ip_headers(tracking_t * tracking,
 		/* compute offset to next header and copy protocol */
 		offset = 4 * ip->ip_hl;
 		tracking->protocol = ip->ip_p;
-
-#ifdef TRACKING_WITH_PAYLOAD
-		/* copy payload if any, or fill payload with zero bytes */
-		if ((offset + sizeof(tracking->payload)) <= dgram_size)
-			memcpy(tracking->payload, dgram + offset,
-			       sizeof(tracking->payload));
-		else
-			memset(tracking->payload, 0,
-			       sizeof(tracking->payload));
-#endif //#ifdef TRACKING_WITH_PAYLOAD
 	} else if (ip->ip_v == 6) {
 #endif
 
 
 		unsigned char found_transport_layer = 0;
-#ifdef TRACKING_WITH_PAYLOAD
-		unsigned char copy_payload = 1;
-#endif
 		struct ip6_ext *generic_hdr;
 		struct ip6_frag *frag_hdr;
 
@@ -171,9 +148,6 @@ unsigned int get_ip_headers(tracking_t * tracking,
 				 * - For ESP, it's not possible to extract any useful
 				 *   informations to match ACLs
 				 */
-#ifdef TRACKING_WITH_PAYLOAD
-				copy_payload = 0;
-#endif
 				found_transport_layer = 1;
 				break;
 
@@ -183,17 +157,6 @@ unsigned int get_ip_headers(tracking_t * tracking,
 				break;
 			}
 		} while (!found_transport_layer);
-
-#ifdef TRACKING_WITH_PAYLOAD
-		if ((offset + sizeof(tracking->payload)) <= dgram_size
-		    && copy_payload) {
-			memcpy(tracking->payload, dgram + offset,
-			       sizeof(tracking->payload));
-		} else {
-			memset(tracking->payload, 0,
-			       sizeof(tracking->payload));
-		}
-#endif
 	} else {
 		offset = 0;
 	}

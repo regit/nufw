@@ -1,8 +1,7 @@
 /*
  ** Copyright(C) 2006-2009 INL
- ** Written by Victor Stinner <haypo@inl.fr>
- **            Pierre Chifflier <chifflier@inl.fr>
- ** INL http://www.inl.fr/
+ ** Written by  Victor Stinner <haypo@inl.fr>
+ **             Pierre Chifflier <chifflier@inl.fr>
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by

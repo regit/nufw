@@ -735,6 +735,7 @@ nuauth_session_t *_nu_client_new(nuclient_error_t * err)
 	session->max_sleep_delay.tv_usec = MAX_DELAY_USEC;
 	session->sleep_delay.tv_sec = MIN_DELAY_SEC;
 	session->sleep_delay.tv_usec = MIN_DELAY_USEC;
+	session->hash = 0;
 
 	if (tcptable_init(&new) == 0) {
 		SET_ERROR(err, INTERNAL_ERROR, MEMORY_ERR);
@@ -872,7 +873,17 @@ static int finish_init(nuauth_session_t * session, nuclient_error_t * err)
 				}
 				break;
 			case SRV_TYPE:
-				session->server_mode = message->option;
+				switch (message->option) {
+					case SRV_TYPE_POLL:
+					case SRV_TYPE_PUSH:
+						session->server_mode = message->option;
+						break;
+					case SRV_HASH_TYPE:
+						session->hash = ntohs(message->length);
+						break;
+					default:
+						break;
+				}
 				break;
 			case SRV_EXTENDED_PROTO:
 				process_ext_message(buf + sizeof(struct nu_srv_message),
@@ -884,6 +895,7 @@ static int finish_init(nuauth_session_t * session, nuclient_error_t * err)
 				finish = 1;
 				switch (message->option) {
 					case INIT_NOK:
+						SET_ERROR(err, INTERNAL_ERROR, NUFW_INITNEGO_ERROR);
 						return 0;
 					case INIT_OK:
 						session->connected = 1;
@@ -1090,6 +1102,10 @@ const char *nu_client_strerror(nuauth_session_t * session, nuclient_error_t * er
 			return "Binding (source address) error";
 		case NUSSL_INIT_ERR:
 			return "NuSSL initialisation failed.";
+		case NUFW_INITNEGO_ERROR:
+			return "NuFW refused connection during init.";
+		case NUFW_CRUISE_ERROR:
+			return "NuFW error during cruise protocol.";
 		default:
 			return "Unknown internal error code";
 		}

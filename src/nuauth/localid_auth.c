@@ -1,8 +1,7 @@
 /*
- ** Copyright(C) 2005 Eric Leblond <regit@inl.fr>
+ ** Copyright(C) 2005, 2009 INL
+ ** Written by Eric Leblond <eleblond@inl.fr>
  ** INL : http://www.inl.fr/
- **
- ** $Id$
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -26,12 +25,35 @@
  * @{
  */
 
-char localid_authenticated_protocol(int protocol)
+gboolean proto_support_check(user_session_t * session, gpointer data)
 {
-	if (protocol != IPPROTO_TCP) {
+	if (session->proto_version < PROTO_VERSION_V22_1)
+		return TRUE;
+	if (session->capa_flags & (1 << GPOINTER_TO_INT(data))) {
 		return TRUE;
 	}
 	return FALSE;
+}
+
+char localid_authenticated_protocol(connection_t *conn)
+{
+	int protocol = conn->tracking.protocol;
+	int capa = 0;
+
+	switch (protocol) {
+		case IPPROTO_TCP:
+			capa = nuauthdatas->tcp_capa;
+			break;
+		case IPPROTO_UDP:
+			capa = nuauthdatas->udp_capa;
+			break;
+		default:
+			/* we don't support it, hello is the only choice */
+			return TRUE;
+	}
+	return ! check_property_clients(&conn->tracking.saddr,
+					&proto_support_check, 1,
+					GINT_TO_POINTER(capa));
 }
 
 /**
@@ -61,10 +83,14 @@ void localid_insert_message(connection_t * pckt,
 		/* send message to clients */
 		((struct nu_srv_helloreq *) global_msg->msg)->helloid =
 		    randomid;
+
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+				"[localid] Generated local ID %u\n",
+				randomid);
 		global_msg->addr = pckt->tracking.saddr;
 		global_msg->found = FALSE;
 		/* if return is 1 we have somebody connected */
-		if (warn_clients(global_msg, NULL, NULL)) {
+		if (warn_clients(global_msg, NULL, (void *)0x1)) {
 			/* add element to hash with computed key */
 			g_hash_table_insert(localid_auth_hash,
 					    GINT_TO_POINTER(randomid),
@@ -75,6 +101,9 @@ void localid_insert_message(connection_t * pckt,
 		break;
 	case AUTH_STATE_USERPCKT:
 		/* search in struct */
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+				"[localid] Looking for packet with ID %u\n",
+				GPOINTER_TO_UINT((pckt->packet_id)->data));
 		element =
 		    (connection_t *) g_hash_table_lookup(localid_auth_hash,
 							 (GSList *) (pckt->
@@ -88,7 +117,7 @@ void localid_insert_message(connection_t * pckt,
 				element->mark = pckt->mark;
 				element->username = pckt->username;
 				element->user_groups = pckt->user_groups;
-				pckt->user_groups = NULL;
+				element->auth_quality = AUTHQ_HELLO;
 				/* do asynchronous call to acl check */
 				thread_pool_push(nuauthdatas->
 						   acl_checkers, element,
@@ -100,15 +129,14 @@ void localid_insert_message(connection_t * pckt,
 			}
 			/* remove element from hash without destroy */
 			g_hash_table_steal(localid_auth_hash,
-					   GINT_TO_POINTER(pckt->packet_id));
+					   (GSList *) (pckt->packet_id)->data);
 			pckt->user_groups = NULL;
 			pckt->username = NULL;
 			/* free pckt */
 			free_connection(pckt);
-
 		} else {
 			free_connection(pckt);
-			g_warning("Bad user packet.");
+			g_warning("Packet ID is unknown.");
 		}
 		break;
 

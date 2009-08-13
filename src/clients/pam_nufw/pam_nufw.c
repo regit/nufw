@@ -21,7 +21,6 @@
 #ifdef HAVE_CONFIG_H
 # include <config.h>
 #endif
-#define _GNU_SOURCE
 #include "../lib/nuclient.h"
 #include <sys/resource.h>	/* setrlimit() */
 #include <stdio.h>
@@ -291,7 +290,6 @@ static void main_loop(struct pam_nufw_s *pn_s)
 {
 	int connected = 1;
 	int tempo = 1;
-	unsigned long interval = 100;
 
 	for (;;) {
 		if (!connected) {

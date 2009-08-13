@@ -76,14 +76,6 @@ static void tls_sasl_connect_ok(user_session_t * c_session, int c)
 		c_session->user_name = username;
 	}
 
-	if (nuauthconf->single_user_client_limit > 0) {
-		if (!test_username_count_vs_max(c_session->user_name,
-				   nuauthconf->single_user_client_limit)) {
-			policy_refuse_user(c_session, c, PER_USER_TOO_MANY_LOGINS);
-			return;
-		}
-	}
-
 	if (c_session->proto_version < PROTO_VERSION_V24) {
 		/* send mode to client */
 		msg.type = SRV_TYPE;
@@ -432,6 +424,8 @@ static int parse_user_os(user_session_t * c_session, char *buf, int buf_size)
 			  ntohs(osfield->length) - sizeof(struct nu_authfield), dec_buf,
 			  dec_buf_size, &len);
 	if (decode != SASL_OK) {
+		log_message(WARNING, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
+				"Unable to base64 decode field");
 		g_free(dec_buf);
 		return SASL_BADAUTH;
 	}
@@ -441,6 +435,8 @@ static int parse_user_os(user_session_t * c_session, char *buf, int buf_size)
 		os_strings = g_strsplit(dec_buf, ";", 5);
 		if (os_strings[0] == NULL || os_strings[1] == NULL
 		    || os_strings[2] == NULL) {
+			log_message(WARNING, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
+				"Unable to split OS field");
 			g_strfreev(os_strings);
 			g_free(dec_buf);
 			return SASL_BADAUTH;
@@ -557,6 +553,8 @@ static int finish_nego(user_session_t * c_session)
 			    __FILE__, __LINE__);
 		return SASL_FAIL;
 	}
+	debug_log_message(DEBUG, DEBUG_AREA_USER,
+				  "OS version asked");
 
 	buf_size = nussl_read(c_session->nussl, buf, sizeof buf);
 	ret = parse_user_os(c_session, buf, buf_size);
@@ -624,18 +622,36 @@ static int finish_nego(user_session_t * c_session)
 		return SASL_FAIL;
 	}
 
-	/* send nego done */
-	msg.type = SRV_INIT;
-	msg.option = INIT_OK;
+	/* send mode to client */
+	msg.type = SRV_TYPE;
+	msg.option = SRV_HASH_TYPE;
+	msg.length = htons(nuauthconf->hash_algo);
 	if (nussl_write(c_session->nussl, (char*)&msg, sizeof(msg)) < 0) {
 		log_message(WARNING, DEBUG_AREA_USER,
 			    "nussl_write() failure at %s:%d",
 			    __FILE__, __LINE__);
 		return SASL_FAIL;
 	}
+
+
 	debug_log_message(DEBUG, DEBUG_AREA_USER,
 				  "negotation finished");
 
+	return SASL_OK;
+}
+
+static int send_nego_end(user_session_t * c_session, int result)
+{
+	struct nu_srv_message msg;
+	/* send nego done */
+	msg.type = SRV_INIT;
+	msg.option = result;
+	if (nussl_write(c_session->nussl, (char*)&msg, sizeof(msg)) < 0) {
+		log_message(WARNING, DEBUG_AREA_USER,
+				"nussl_write() failure at %s:%d",
+				__FILE__, __LINE__);
+		return SASL_FAIL;
+	}
 	return SASL_OK;
 }
 
@@ -687,6 +703,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 	c_session->user_name = NULL;
 	c_session->user_id = 0;
 	c_session->last_request = time(NULL);
+	c_session->expire = -1;
 	g_free(client->str_addr);
 	g_free(userdata);
 
@@ -772,12 +789,41 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 			break;
 		}
 
+		if (nuauthconf->single_user_client_limit > 0) {
+			if (!test_username_count_vs_max(c_session->user_name,
+						nuauthconf->single_user_client_limit)) {
+				policy_refuse_user(c_session, socket_fd, PER_USER_TOO_MANY_LOGINS);
+				return;
+			}
+		}
 		/* Tuning of user_session */
 		ret = modules_user_session_modify(c_session);
 		if (ret != SASL_OK) {
+			if (c_session->proto_version >= PROTO_VERSION_V24) {
+				ret = send_nego_end(c_session, INIT_NOK);
+			}
 			/* get rid of client */
 			clean_session(c_session);
 			break;
+		}
+
+		if (nuauthconf->single_user_client_limit > 0) {
+			if (!test_username_count_vs_max(c_session->user_name,
+						nuauthconf->single_user_client_limit)) {
+				send_nego_end(c_session, INIT_OK);
+				policy_refuse_user(c_session, socket_fd, PER_USER_TOO_MANY_LOGINS);
+				break;
+			}
+		}
+
+		/* accept client for PROTO >= PROTO_VERSION_V24 */
+		if (c_session->proto_version >= PROTO_VERSION_V24) {
+			ret = send_nego_end(c_session, INIT_OK);
+			if (ret != SASL_OK) {
+				clean_session(c_session);
+				break;
+			}
+
 		}
 
 		tls_sasl_connect_ok(c_session, socket_fd);

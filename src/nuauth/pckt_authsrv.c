@@ -1,5 +1,6 @@
 /*
- ** Copyright(C) 2003-2009 Eric Leblond <regit@inl.fr>
+ ** Copyright(C) 2003-2009 INL
+ ** Written by Eric Leblond <eleblond@inl.fr>
  ** INL http://www.inl.fr/
  **
  ** This program is free software; you can redistribute it and/or modify
@@ -31,6 +32,8 @@
 
 #include <auth_srv.h>
 #include <errno.h>
+#include <netinet/ip.h>
+#include <netinet/ip6.h>
 
 #include "pckt_authsrv_v3.h"
 
@@ -43,8 +46,8 @@ nu_error_t parse_dgram(connection_t * connection, unsigned char *dgram,
 		       nufw_message_t msg_type)
 {
 	unsigned char *orig_dgram = dgram;
-	unsigned int orig_dgram_size = dgram_size;
 	unsigned int ip_hdr_size;
+	struct iphdr *ip = (struct iphdr *) dgram;
 	/* get ip headers till tracking is filled */
 	ip_hdr_size = get_ip_headers(&connection->tracking, dgram, dgram_size);
 
@@ -55,16 +58,6 @@ nu_error_t parse_dgram(connection_t * connection, unsigned char *dgram,
 		return NU_EXIT_ERROR;
 	}
 
-	if (( ip_hdr_size + sizeof(connection->payload)) <= dgram_size) {
-		memcpy(connection->payload,
-		       dgram + ip_hdr_size,
-		       sizeof(connection->payload));
-	} else {
-		memset(connection->payload,
-		       0,
-		       sizeof(connection->payload));
-	}
-
 	dgram += ip_hdr_size;
 	dgram_size -= ip_hdr_size;
 
@@ -72,9 +65,9 @@ nu_error_t parse_dgram(connection_t * connection, unsigned char *dgram,
 	/* get saddr and daddr */
 	/* check if proto is in Hello mode list (when hello authentication is used) */
 	if (nuauthconf->hello_authentication
-	    && localid_authenticated_protocol(connection->tracking.
-					      protocol)) {
+	    && localid_authenticated_protocol(connection)) {
 		connection->state = AUTH_STATE_HELLOMODE;
+		connection->auth_quality = AUTHQ_HELLO;
 		*conn = connection;
 	} else {
 		connection->state = AUTH_STATE_AUTHREQ;
@@ -152,10 +145,10 @@ nu_error_t parse_dgram(connection_t * connection, unsigned char *dgram,
 		}
 	}
 
-	if (orig_dgram_size > STORED_PAYLOAD_SIZE)
+	if (ntohs(ip->tot_len) > STORED_PAYLOAD_SIZE)
 		connection->payload_len = STORED_PAYLOAD_SIZE;
 	else
-		connection->payload_len = orig_dgram_size;
+		connection->payload_len = ntohs(ip->tot_len);
 	memcpy(connection->payload, orig_dgram, connection->payload_len);
 
 	return NU_EXIT_CONTINUE;

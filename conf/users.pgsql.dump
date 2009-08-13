@@ -1,0 +1,28 @@
+--
+-- PostgreSQL database dump
+--
+
+-- \connect - postgres
+
+SET search_path = public, pg_catalog;
+
+--
+-- Users session table
+--
+
+CREATE TABLE users (
+    ip_saddr inet NOT NULL,
+    socket bigint NOT NULL,
+    user_id bigint,
+    username character varying(30),
+    user_groups character varying(90),
+    start_time timestamp without time zone,
+    end_time timestamp without time zone NULL,
+    os_sysname character varying(40),
+    os_release character varying(40),
+    os_version character varying(100)
+);
+CREATE INDEX ip_saddr ON users USING btree (ip_saddr);
+CREATE INDEX socket   ON users USING btree (socket);
+CREATE INDEX username ON users USING btree (username);
+

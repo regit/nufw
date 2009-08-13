@@ -156,6 +156,9 @@ struct nuauth_params {
 	char * krb5_service;
 	char * krb5_hostname;
 	char * krb5_realm;
+
+	/* application hash */
+	int hash_algo;
 };
 
 struct nuauth_datas {

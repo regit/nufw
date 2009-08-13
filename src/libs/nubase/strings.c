@@ -200,4 +200,24 @@ char *str_itoa(int i)
 	return str;
 }
 
+static const char hex[16] =
+{
+  '0', '1', '2', '3', '4', '5', '6', '7',
+  '8', '9', 'a', 'b', 'c', 'd', 'e', 'f',
+};
+
+void bin2hex(int len, unsigned char *binnum, char *hexnum)
+{
+  int i;
+  unsigned val;
+
+  for (i = 0; i < len; i++)
+    {
+      val = binnum[i];
+      hexnum[i * 2] = hex[val >> 4];
+      hexnum[i * 2 + 1] = hex[val & 0xf];
+    }
+  hexnum[len * 2] = 0;
+}
+
 /** @} */

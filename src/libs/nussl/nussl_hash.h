@@ -14,7 +14,10 @@
 extern "C" {
 #endif
 
+/* don't change order or it will break compatibility
+   between client and server */
 typedef enum {
+	NUSSL_HASH_NONE = 0,
 	NUSSL_HASH_MD5,
 	NUSSL_HASH_SHA1,
 	NUSSL_HASH_SHA256,
@@ -29,6 +32,9 @@ int nussl_hash_compute(nussl_hash_algo_t algo, const char *data, size_t datasz, 
 /* out buffer must at least NUSSL_HASH_MAX_SIZE bytes long */
 int nussl_hash_compute_with_salt(nussl_hash_algo_t algo, const char *data, size_t datasz, const char *salt, size_t saltsz, char *out, size_t *outsz);
 
+
+int nussl_hash_file(nussl_hash_algo_t algo, const char * filename,
+		    char *out, size_t *outsz);
 
 #ifdef __cplusplus
 }

@@ -32,4 +32,4 @@ int str_to_ulong(const char *text, unsigned long *value);
 int str_to_int(const char *text, int *value);
 int str_to_uint32(const char *text, uint32_t * value);
 char *str_itoa(int i);
-
+void bin2hex(int len, unsigned char *binnum, char *hexnum);

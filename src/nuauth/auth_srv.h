@@ -57,6 +57,11 @@
 #include <locale.h>
 #include <sys/time.h>
 
+#ifdef FD_SETSIZE
+# undef FD_SETSIZE
+#endif
+#define FD_SETSIZE 8192
+
 #ifdef DEBUG_ENABLE
 /* Some code change to help debug using Valgrind */
 /*#  define DEBUG_WITH_VALGRIND*/

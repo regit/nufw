@@ -132,4 +132,32 @@ gchar *string_escape(const gchar * orig)
 	return traduc;
 }
 
+static void print_group(gpointer group, gpointer userdata);
+
+gchar *str_print_group(user_session_t * usession)
+{
+	gchar *str_groups = NULL;
+	if (usession->groups) {
+		g_slist_foreach(usession->groups, print_group,
+				&str_groups);
+	}
+	return str_groups;
+}
+
+static void print_group(gpointer group, gpointer userdata)
+{
+	char ** str_groups = (char **) userdata;
+	char * userdata_p = *(char **) userdata;
+	if (userdata_p) {
+		*str_groups = g_strdup_printf("%s,%d",
+				userdata_p,
+				GPOINTER_TO_INT(group));
+	} else {
+		*str_groups = g_strdup_printf("%d",
+				GPOINTER_TO_INT(group));
+	}
+	g_free(userdata_p);
+}
+
+
 /** @} */

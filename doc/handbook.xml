@@ -1227,6 +1227,10 @@ nuauth_tls_crl=/etc/nufw/localCA-crl.pem
 </screen>
 
 <para>
+The <filename>nuclient.conf</filename> can be global for a computer if put in nufw configuration directory. It can also contain per-user value if put in the directory <filename>$HOME/.nufw/</filename>. In this case, the per-user value will overwrite the glbal value.
+</para>
+
+<para>
 To combine strict TLS usage and login/password authentication, the recommended setup for
 client certificate deploiement is to deploy a per-computer certificate with FQDN matching
 computer domain name with the associated CA and key in the configuration directory of NuFW

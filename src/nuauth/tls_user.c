@@ -442,6 +442,12 @@ void tls_user_check_activity(struct tls_user_context_t *context,
 	 * in push mode modification of hash are done in push_worker */
 	c_session = get_client_datas_by_socket(socket);
 
+	if (c_session == NULL) {
+		log_message(INFO, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
+			  "User session can not be found");
+		return;
+	}
+
 	if (nuauthconf->session_duration && c_session->expire < time(NULL)) {
 		delete_client_by_socket(socket);
 		return;

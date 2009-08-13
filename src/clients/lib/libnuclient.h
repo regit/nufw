@@ -68,6 +68,7 @@
 
 #include "nubase.h"
 #include "nuclient.h"
+#include "nussl_hash.h"
 
 /* Constants */
 #define SENT_TEST_INTERVAL 30
@@ -100,7 +101,8 @@ char nu_capabilities[NU_CAPABILITIES_MAXLENGTH];
 
 #define PACKET_ITEM_MAXSIZE \
 	( sizeof(struct nu_authreq) + sizeof(struct nu_authfield_ipv6) \
-	  + sizeof(struct nu_authfield_app) + PROGNAME_BASE64_WIDTH )
+	  + 2 * sizeof(struct nu_authfield_app) + PROGNAME_BASE64_WIDTH \
+	  + 4 * NUSSL_HASH_MAX_SIZE)
 
 #define PACKET_SIZE \
 	( sizeof(struct nu_header) + CONN_MAX * PACKET_ITEM_MAXSIZE )
@@ -201,6 +203,7 @@ struct nuauth_session {
 
 	/** Server mode: #SRV_TYPE_POLL or #SRV_TYPE_PUSH */
 	u_int8_t server_mode;
+	u_int8_t hash;
 
 	/**
 	 * Flag to signal if user is connected or not.

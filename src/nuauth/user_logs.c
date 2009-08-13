@@ -155,21 +155,6 @@ void real_log_user_packet(gpointer userdata, gpointer data)
 	g_free(userdata);
 }
 
-static void print_group(gpointer group, gpointer userdata)
-{
-	char ** str_groups = (char **) userdata;
-	char * userdata_p = *(char **) userdata;
-	if (userdata_p) {
-		*str_groups = g_strdup_printf("%s,%d",
-				userdata_p,
-				GPOINTER_TO_INT(group));
-	} else {
-		*str_groups = g_strdup_printf("%d",
-				GPOINTER_TO_INT(group));
-	}
-	g_free(userdata_p);
-}
-
 /**
  * \brief High level function used to log an user session
  *
@@ -190,10 +175,7 @@ void log_user_session(user_session_t * usession, session_state_t state)
 	}
 
 	if (state == SESSION_OPEN) {
-		if (usession->groups) {
-			g_slist_foreach(usession->groups, print_group,
-					&str_groups);
-		}
+		str_groups = str_print_group(usession);
 		log_message(MESSAGE, DEBUG_AREA_USER,
 			    "[+] User \"%s\" connected, groups: %s",
 			    usession->user_name, str_groups);
@@ -219,7 +201,7 @@ void log_user_session(user_session_t * usession, session_state_t state)
 		g_strdup(usession->user_name);
 	sessevent->session->nussl = NULL;
 	sessevent->session->socket = usession->socket;
-	sessevent->session->groups = NULL;
+	sessevent->session->groups = g_slist_copy(usession->groups);
 	sessevent->session->sysname = g_strdup(usession->sysname);
 	sessevent->session->version = g_strdup(usession->version);
 	sessevent->session->release = g_strdup(usession->release);
@@ -249,6 +231,7 @@ void log_user_session_thread(gpointer event_ptr, gpointer unused_optional)
 	g_free(session->sysname);
 	g_free(session->version);
 	g_free(session->release);
+	g_slist_free(session->groups);
 	g_free(session);
 	g_free(event);
 }
