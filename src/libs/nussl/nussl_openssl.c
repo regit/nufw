@@ -515,6 +515,7 @@ static nussl_ssl_client_cert *dup_client_cert(const nussl_ssl_client_cert *
 	return newcc;
 }
 
+#if 0
 /* Callback invoked when the SSL server requests a client certificate.  */
 static int provide_client_cert(SSL * ssl, X509 ** cert, EVP_PKEY ** pkey)
 {
@@ -570,6 +571,8 @@ static int provide_client_cert(SSL * ssl, X509 ** cert, EVP_PKEY ** pkey)
 		return 0;
 	}
 }
+
+#endif
 
 int nussl_ssl_set_clicert(nussl_session * sess,
 			  const nussl_ssl_client_cert * cc)

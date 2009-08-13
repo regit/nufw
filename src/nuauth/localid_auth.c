@@ -103,7 +103,7 @@ void localid_insert_message(connection_t * pckt,
 		/* search in struct */
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 				"[localid] Looking for packet with ID %u\n",
-				(GSList *) (pckt->packet_id)->data);
+				GPOINTER_TO_UINT((pckt->packet_id)->data));
 		element =
 		    (connection_t *) g_hash_table_lookup(localid_auth_hash,
 							 (GSList *) (pckt->
