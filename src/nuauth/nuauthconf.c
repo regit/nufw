@@ -296,6 +296,8 @@ gboolean nuauth_reload(int signum)
 	release_thread_pools();
 	nuauth_install_signals(TRUE);
 
+	force_refresh_crl_file();
+
 	g_message("[+] NuAuth server reloaded");
 	return restart;
 }
