@@ -417,9 +417,12 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 				   buf,
 				   data, len, &data, (unsigned *) &len);
 
-	if (auth_result != SASL_OK && auth_result != SASL_CONTINUE)
-		g_message("Starting SASL negotiation: %s",
-			  sasl_errstring(auth_result, NULL, NULL));
+	if (auth_result != SASL_OK && auth_result != SASL_CONTINUE) {
+		g_message("Error starting SASL negotiation: %s (%d)",
+			  sasl_errstring(auth_result, NULL, NULL),
+			  auth_result);
+		return SASL_FAIL;
+	}
 
 	while (auth_result == SASL_CONTINUE) {
 		if (data) {
@@ -773,6 +776,13 @@ int sasl_user_check(user_session_t * c_session)
 	secure_snprintf(ipremoteport+len, sizeof(ipremoteport)-len,
 		";%hu", c_session->sport);
 
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
+			  "Starting SASL server: service=%s, hostname=%s, realm=%s, iplocal=%s, ipremote=%s",
+			  nuauthconf->krb5_service,
+			  nuauthconf->krb5_hostname,
+			  nuauthconf->krb5_realm,
+			  iplocalport, ipremoteport
+			 );
 	ret = sasl_server_new(nuauthconf->krb5_service,
 			nuauthconf->krb5_hostname,
 			nuauthconf->krb5_realm,
