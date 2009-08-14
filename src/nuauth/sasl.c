@@ -461,15 +461,15 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 	if (external_auth == FALSE) {
 		char *tempname = NULL;
 		result =
-		    sasl_getprop(conn, SASL_USERNAME,
+		    sasl_getprop(conn, SASL_AUTHUSER,
 				 (const void **) &(tempname));
 		if (result != SASL_OK) {
-			g_warning("get user failed");
+			g_warning("get user failed: %s", sasl_errstring(result, NULL, NULL));
 			return result;
 		}
 		if (tempname == NULL)
 		{
-			g_warning("sasl_getprop(SASL_USERNAME): username is NULL!");
+			g_warning("sasl_getprop(SASL_AUTHUSER): username is NULL!");
 			return SASL_BADPARAM;
 		}
 		c_session->user_name = g_strdup(tempname);
@@ -616,7 +616,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 		log_message(INFO, DEBUG_AREA_AUTH, "proto v3: sasl negotiation error: %d",
 			    r);
 		ret =
-		    sasl_getprop(conn, SASL_USERNAME,
+		    sasl_getprop(conn, SASL_AUTHUSER,
 				 (const void **) &(user_name));
 		if (ret == SASL_OK) {
 			c_session->user_name = g_strdup(user_name);
@@ -691,7 +691,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 	if (external_auth == FALSE) {
 		char *tempname = NULL;
 		ret =
-		    sasl_getprop(conn, SASL_USERNAME,
+		    sasl_getprop(conn, SASL_AUTHUSER,
 				 (const void **) &(tempname));
 		if (ret != SASL_OK) {
 			g_warning("proto v3: get user failed");
