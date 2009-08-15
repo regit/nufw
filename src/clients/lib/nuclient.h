@@ -43,6 +43,8 @@ extern "C" {
 /** Default Kerberos realm */
 #define DEFAULT_KRB5_REALM "nuauth"
 
+#define NU_HELLO_CAPABILITIES "HELLO"
+
 /** Timeout of UDP connections */
 #define UDP_TIMEOUT 30
 
