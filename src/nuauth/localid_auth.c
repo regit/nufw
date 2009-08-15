@@ -40,6 +40,10 @@ char localid_authenticated_protocol(connection_t *conn)
 	int protocol = conn->tracking.protocol;
 	int capa = 0;
 
+	/* we can't use HELLO if there is multiple sessions on host */
+	if (get_client_sockets_by_ip(&conn->tracking.saddr) > 1) {
+		return FALSE;
+	}
 	switch (protocol) {
 		case IPPROTO_TCP:
 			capa = nuauthdatas->tcp_capa;
