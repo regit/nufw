@@ -67,6 +67,7 @@ static int suppress_ca_warning = 0;
 static int suppress_fqdn_verif = 0;
 static int do_not_load_config  = 0;
 static int do_not_load_plugins = 0;
+static int mono_user = 0;
 
 void panic(const char *fmt, ...)
 #ifdef __GNUC__
@@ -428,6 +429,7 @@ static struct option long_options[] = {
 	{"hide", 0, NULL, 'q'},
 	{"password", 1, NULL, 'P'},
 	{"debug", 0, NULL, 'd'},
+	{"mono", 0, NULL, 'm'},
 
 	{0, 0, 0, 0}
 };
@@ -446,6 +448,7 @@ static void usage(void)
 	fprintf(stderr, "  -k (--kill         ): kill active client\n");
 	fprintf(stderr, "  -c (--check        ): check if there is an active client\n");
 	fprintf(stderr, "  -l (--no-lock      ): don't create lock file\n");
+	fprintf(stderr, "  -m (--mono         ): mono user system\n");
 	fprintf(stderr, "  -V (--no-version   ): display version\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "Certificate options:\n");
@@ -800,7 +803,7 @@ void parse_cmdline_options(int argc, char **argv,
 
 	/* Parse all command line arguments */
 	opterr = 0;
-	while ((ch = getopt_long(argc, argv, "kcldqNQFGVvu:H:I:U:p:P:a:K:C:A:R:W:S:Z:", long_options, NULL)) != -1) {
+	while ((ch = getopt_long(argc, argv, "kcldqNQFGVvmu:H:I:U:p:P:a:K:C:A:R:W:S:Z", long_options, NULL)) != -1) {
 		switch (ch) {
 		case 'H':
 			SECURE_STRNCPY(context->srv_addr, optarg,
@@ -866,6 +869,9 @@ void parse_cmdline_options(int argc, char **argv,
 			break;
 		case 'G':
 			do_not_load_plugins = 1;
+			break;
+		case 'm':
+			mono_user = 1;
 			break;
 		case 'a':
 			SECURE_STRNCPY(context->nuauthdn, optarg,
@@ -960,6 +966,10 @@ void init_library(nutcpc_context_t * context, char *username)
 		context->certfile = (char *)nu_client_default_tls_cert();
 	if (!context->keyfile)
 		context->keyfile = (char *)nu_client_default_tls_key();
+
+	if (mono_user) {
+		nu_client_set_capability(NU_HELLO_CAPABILITIES);
+	}
 
 	/* Init. library */
 	printf("Connecting to NuFW gateway (%s)\n", context->srv_addr);
