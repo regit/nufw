@@ -803,7 +803,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 		if (nuauthconf->single_user_client_limit > 0) {
 			if (!test_username_count_vs_max(c_session->user_name,
 						nuauthconf->single_user_client_limit)) {
-				send_nego_end(c_session, INIT_OK);
+				send_nego_end(c_session, INIT_NOK);
 				policy_refuse_user(c_session, socket_fd, PER_USER_TOO_MANY_LOGINS);
 				break;
 			}
