@@ -114,7 +114,7 @@ int send_username(char **dbuf,int dbufsize, void *data)
 		/*
 		SET_ERROR(err, NUSSL_ERR, ret);
 		*/
-		return 0;
+		return -1;
 	}
 	ret = snprintf(enc_capa, sizeof(buf) - sizeof(*vfield),
 				"BEGIN\n" LUSER_EXT_NAME "\n" LUSER_USER_CMD " %s\nEND\n",
@@ -136,10 +136,10 @@ int send_username(char **dbuf,int dbufsize, void *data)
 		/*
 		SET_ERROR(err, NUSSL_ERR, ret);
 		*/
-		return 0;
+		return -1;
 	}
 
-	return 1;
+	return 0;
 }
 
 int send_username_cruise(char **dbuf,int dbufsize, void *data)
@@ -164,7 +164,7 @@ int send_username_cruise(char **dbuf,int dbufsize, void *data)
 		/*
 		SET_ERROR(err, NUSSL_ERR, ret);
 		*/
-		return 0;
+		return -1;
 	}
 	ret = snprintf(enc_capa, sizeof(buf) - sizeof(*header),
 				"BEGIN\n" LUSER_EXT_NAME "\n" LUSER_USER_CMD " %s\nEND\n",
@@ -183,8 +183,8 @@ int send_username_cruise(char **dbuf,int dbufsize, void *data)
 		/*
 		SET_ERROR(err, NUSSL_ERR, ret);
 		*/
-		return 0;
+		return -1;
 	}
 
-	return 1;
+	return 0;
 }
