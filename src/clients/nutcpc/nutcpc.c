@@ -803,7 +803,7 @@ void parse_cmdline_options(int argc, char **argv,
 
 	/* Parse all command line arguments */
 	opterr = 0;
-	while ((ch = getopt_long(argc, argv, "kcldqNQFGVvmu:H:I:U:p:P:a:K:C:A:R:W:S:Z", long_options, NULL)) != -1) {
+	while ((ch = getopt_long(argc, argv, "kcldqNQFGVvmu:H:I:U:p:P:a:K:C:A:R:W:S:Z:", long_options, NULL)) != -1) {
 		switch (ch) {
 		case 'H':
 			SECURE_STRNCPY(context->srv_addr, optarg,
