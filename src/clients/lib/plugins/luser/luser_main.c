@@ -53,24 +53,13 @@ struct proto_ext_t cr_localuser_ext = {
 	}
 };
 
-static int test_dispatch(struct nuclient_plugin_t *plugin, unsigned int event_id, nuauth_session_t * session, const char *arg);
-
 int NUCLIENT_PLUGIN_INIT(unsigned int api_num, struct nuclient_plugin_t *plugin)
 {
-	printf("***********************\n");
-	printf("Hello from plugin\n");
-	printf("Server API version: 0x%lx\n", (long)api_num);
-	printf("Internal API version: 0x%lx\n", (long)PLUGIN_API_NUM);
-	printf("Instance name: %s\n", plugin->instance_name);
-	printf("***********************\n");
-
 	if (PLUGIN_API_NUM != api_num)
 		return -1;
 
-	plugin->dispatch = test_dispatch;
+	plugin->dispatch = NULL;
 	plugin->close = NULL;
-	//plugin->close = test_close;
-	//
 	nu_client_set_capability(LUSER_EXT_NAME);
 	/* register postauth protocol extension */
 	INIT_LLIST_HEAD(&(localuser_ext.list));
@@ -80,12 +69,6 @@ int NUCLIENT_PLUGIN_INIT(unsigned int api_num, struct nuclient_plugin_t *plugin)
 	INIT_LLIST_HEAD(&(cr_localuser_ext.list));
 	llist_add(&nu_cruise_extproto_l, &(cr_localuser_ext.list));
 
-	return 0;
-}
-
-static int test_dispatch(struct nuclient_plugin_t *plugin, unsigned int event_id, nuauth_session_t * session, const char *arg)
-{
-	printf("plugin dispatch function called, event %d\n", event_id);
 	return 0;
 }
 
