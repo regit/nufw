@@ -740,8 +740,8 @@ int sasl_user_check(user_session_t * c_session)
 	sasl_conn_t *conn = NULL;
 	sasl_security_properties_t secprops;
 	gboolean external_auth = FALSE;
-	char *iplocalport = NULL;
-	char ipremoteport[INET6_ADDRSTRLEN+20];
+	char iplocalport[INET6_ADDRSTRLEN +20];
+	char ipremoteport[INET6_ADDRSTRLEN +20];
 	int len;
 	int ret;
 	sasl_callback_t internal_callbacks[] = {
@@ -775,6 +775,14 @@ int sasl_user_check(user_session_t * c_session)
 	len = strlen(ipremoteport);
 	secure_snprintf(ipremoteport+len, sizeof(ipremoteport)-len,
 		";%hu", c_session->sport);
+
+	/* format "ip;port" */
+	format_ipv6(&c_session->server_addr, iplocalport, INET6_ADDRSTRLEN, NULL);
+	len = strlen(iplocalport);
+	secure_snprintf(iplocalport+len, sizeof(iplocalport)-len,
+		";%s", nuauthconf->userpckt_port);
+
+
 
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 			  "Starting SASL server: service=%s, hostname=%s, realm=%s, iplocal=%s, ipremote=%s",
