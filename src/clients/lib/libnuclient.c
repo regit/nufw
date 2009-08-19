@@ -839,13 +839,14 @@ void nu_client_reset(nuauth_session_t * session)
 static int finish_init(nuauth_session_t * session, nuclient_error_t * err)
 {
 	int finish = 0;
+	int ret;
 	char buf[1024];
 	int bufsize;
 	struct nu_srv_message * message = (struct nu_srv_message *) buf;
 
 	while (! finish) {
 		bufsize = nussl_read(session->nussl, buf, sizeof(buf));
-		if ((bufsize < 0) ||
+		if ((bufsize <= 0) ||
 			((size_t)bufsize < sizeof(struct nu_srv_message))) {
 			/* allo houston */
 			return 0;
@@ -886,10 +887,13 @@ static int finish_init(nuauth_session_t * session, nuclient_error_t * err)
 				}
 				break;
 			case SRV_EXTENDED_PROTO:
-				process_ext_message(buf + sizeof(struct nu_srv_message),
+				ret = process_ext_message(buf + sizeof(struct nu_srv_message),
 						bufsize - sizeof(struct nu_srv_message),
 						&nu_postauth_extproto_l,
 						session);
+				if (ret != 0) {
+					return 0;
+				}
 				break;
 			case SRV_INIT:
 				finish = 1;

@@ -163,13 +163,7 @@ void refresh_crl_file(void)
 
 	nuauth_tls.crl_refresh_counter++;
 	if (nuauth_tls.crl_refresh == nuauth_tls.crl_refresh_counter) {
-		stat(nuauth_tls.crl_file, &stats);
-
-		if (nuauth_tls.crl_file_mtime < stats.st_mtime) {
-			tls_crl_update_each_session(nuauthdatas->tls_nufw_servers);
-			tls_crl_update_each_session(nuauthdatas->tls_auth_servers);
-		}
-		nuauth_tls.crl_refresh_counter = 0;
+		force_refresh_crl_file();
 	}
 
 }
