@@ -159,8 +159,6 @@ void tls_crl_update_each_session(GSList *session)
  */
 void refresh_crl_file(void)
 {
-	struct stat stats;
-
 	nuauth_tls.crl_refresh_counter++;
 	if (nuauth_tls.crl_refresh == nuauth_tls.crl_refresh_counter) {
 		force_refresh_crl_file();
