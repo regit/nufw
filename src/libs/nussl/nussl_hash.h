@@ -34,7 +34,7 @@ int nussl_hash_compute_with_salt(nussl_hash_algo_t algo, const char *data, size_
 
 
 int nussl_hash_file(nussl_hash_algo_t algo, const char * filename,
-		    char *out, size_t *outsz);
+		    unsigned char *out, size_t *outsz);
 
 #ifdef __cplusplus
 }

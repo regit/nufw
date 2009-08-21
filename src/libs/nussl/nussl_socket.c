@@ -1613,7 +1613,7 @@ int nussl_sock_accept_ssl(nussl_socket * sock, nussl_ssl_context * ctx)
 	gnutls_dh_set_prime_bits(ssl, ctx->dh_bits);
 	sock->ssl = ssl;
 	gnutls_transport_set_ptr((gnutls_session_t) sock->ssl,
-				 (gnutls_transport_ptr) sock->fd);
+				 (gnutls_transport_ptr) (long) sock->fd);
 
 	ret = nussl_ssl_accept(&ssl, sock->cotimeout, errmsg, sizeof(errmsg));
 	if (ret == 0) { /* timeout */
@@ -1713,7 +1713,7 @@ int nussl_sock_connect_ssl(nussl_socket * sock, nussl_ssl_context * ctx,
 #endif
 
 	gnutls_transport_set_ptr(sock->ssl,
-				 (gnutls_transport_ptr) sock->fd);
+				 (gnutls_transport_ptr) (long) sock->fd);
 
 	if (ctx->cache.client.data) {
 #if defined(HAVE_GNUTLS_SESSION_GET_DATA2)

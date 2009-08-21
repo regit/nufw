@@ -45,7 +45,7 @@ nu_error_t recv_message(nuauth_session_t *session, nuclient_error_t *err)
 {
 	int ret;
 	char dgram[512];
-	struct nu_header * hdr = dgram;
+	struct nu_header * hdr = (struct nu_header *) dgram;
 	const size_t message_length =
 	    sizeof(struct nu_header) + sizeof(struct nu_authfield_hello) +
 	    sizeof(struct nu_authreq);
@@ -275,7 +275,7 @@ int nu_client_real_check(nuauth_session_t * session, nuclient_error_t * err)
 #endif
 	nb_packets = compare(session, session->ct, new, err);
 
-	plugin_emit_event(NUCLIENT_EVENT_END_CHECK, session, (void *)nb_packets);
+	plugin_emit_event(NUCLIENT_EVENT_END_CHECK, session, (void *) (long)nb_packets);
 
 	/* free link between proc and socket inode */
 #ifdef LINUX

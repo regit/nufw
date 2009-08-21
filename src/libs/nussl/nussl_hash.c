@@ -30,7 +30,7 @@
 #include <openssl/evp.h>
 
 int nussl_hash_file(nussl_hash_algo_t algo, const char * filename,
-		    char *out, size_t *outsz)
+		    unsigned char *out, size_t *outsz)
 {
 	const EVP_MD *md;
 	EVP_MD_CTX mdctx;
@@ -144,11 +144,11 @@ int nussl_hash_compute_with_salt(nussl_hash_algo_t algo, const char *data, size_
 #include <gcrypt.h>
 
 int nussl_hash_file(nussl_hash_algo_t algo, const char * filename,
-		    char *out, size_t *outsz)
+		    unsigned char *out, size_t *outsz)
 {
 	gcry_md_hd_t hd;
 	int g_algo = 0;
-	char *res;
+	unsigned char *res;
 	FILE *stream;
 	size_t n, sum;
 	char buffer[BLOCKSIZE + 72];
@@ -207,10 +207,10 @@ int nussl_hash_file(nussl_hash_algo_t algo, const char * filename,
 		}
 	}
 
-	res = (char *) gcry_md_read(hd, g_algo);
+	res = (unsigned char *) gcry_md_read(hd, g_algo);
 
-	*outsz = strlen(res);
-	strncpy(out, res, *outsz);
+	*outsz = strlen((char *)res);
+	strncpy((char *)out, (char *)res, *outsz);
 
 	gcry_md_close(hd);
 
