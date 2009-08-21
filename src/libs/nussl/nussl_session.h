@@ -1,11 +1,9 @@
 /*
- ** Copyright (C) 2007-2008 INL
+ ** Copyright (C) 2007-2009 INL
  ** Written by S.Tricaud <stricaud@inl.fr>
  **            L.Defert <ldefert@inl.fr>
  **            Pierre Chifflier <chifflier@inl.fr>
  ** INL http://www.inl.fr/
- **
- ** $Id$
  **
  ** NuSSL: OpenSSL / GnuTLS layer based on libneon
  */
@@ -30,6 +28,15 @@
    Software Foundation, Inc., 59 Temple Place - Suite 330, Boston,
    MA 02111-1307, USA
 
+   In addition, as a special exception, INL
+   gives permission to link the code of its release of NuSSL with the
+   OpenSSL project's "OpenSSL" library (or with modified versions of it
+   that use the same license as the "OpenSSL" library), and distribute
+   the linked executables.  You must obey the GNU General Public License
+   in all respects for all of the code used other than "OpenSSL".  If you
+   modify this file, you may extend this exception to your version of the
+   file, but you are not obligated to do so.  If you do not wish to do
+   so, delete this exception statement from your version.
 */
 
 #ifndef NUSSL_SESSION_H
