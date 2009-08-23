@@ -33,6 +33,7 @@
 #define PGSQL_REQUEST_TIMEOUT 10
 #define PGSQL_TABLE_NAME "ulog"
 #define PGSQL_USERS_TABLE_NAME "users"
+#define PGSQL_AUTH_FAILURE_TABLE_NAME "authfail"
 #define PGSQL_USE_IPV4 1
 
 #define OSNAME_MAX_SIZE 64
@@ -51,6 +52,7 @@ struct log_pgsql_params {
 	char *pgsql_db_name;
 	char *pgsql_table_name;
 	char *pgsql_users_table_name;
+	char *pgsql_auth_failure_table_name;
 	int pgsql_server_port;
 	int pgsql_use_ipv4;
 

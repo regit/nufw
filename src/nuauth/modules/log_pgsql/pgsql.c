@@ -115,6 +115,7 @@ G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 		g_free(params->pgsql_db_name);
 		g_free(params->pgsql_table_name);
 		g_free(params->pgsql_users_table_name);
+		g_free(params->pgsql_auth_failure_table_name);
 	}
 	g_free(params);
 
@@ -186,6 +187,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	params->pgsql_db_name = nuauth_config_table_get_or_default("pgsql_db_name", PGSQL_DB_NAME);
 	params->pgsql_table_name = nuauth_config_table_get_or_default("pgsql_table_name", PGSQL_TABLE_NAME);
 	params->pgsql_users_table_name = nuauth_config_table_get_or_default("pgsql_users_table_name", PGSQL_USERS_TABLE_NAME);
+	params->pgsql_auth_failure_table_name = nuauth_config_table_get_or_default("pgsql_auth_failure_table_name", PGSQL_AUTH_FAILURE_TABLE_NAME);
 	params->pgsql_request_timeout = nuauth_config_table_get_or_default_int("pgsql_request_timeout", PGSQL_REQUEST_TIMEOUT);
 	params->pgsql_use_ipv4 = nuauth_config_table_get_or_default_int("pgsql_use_ipv4", PGSQL_USE_IPV4);
 
@@ -701,6 +703,128 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 	}
 	PQclear(Result);
 	return 0;
+}
+
+G_MODULE_EXPORT void auth_error_log(user_session_t * c_session,
+				    nuauth_auth_error_t error,
+				    const char *text, gpointer params_p)
+{
+	struct log_pgsql_params *params =
+	    (struct log_pgsql_params *) params_p;
+	char addr_ascii[INET6_ADDRSTRLEN];
+	char request_values[INSERT_REQUEST_VALUES_SIZE];
+	char request_fields[INSERT_REQUEST_FIELDS_SIZE];
+	char tmp_buffer[INSERT_REQUEST_VALUES_SIZE];
+	char * quoted_username = NULL;
+	gchar *str_groups;
+	gchar * sql_query;
+	gboolean ok;
+	PGresult *Result;
+	PGconn *ld = get_pgsql_handler(params);
+	if (ld == NULL)
+		return;
+
+
+	if (!formatINET(params, addr_ascii, sizeof(addr_ascii),
+				&c_session->addr, 0)) {
+		return;
+	}
+
+	quoted_username = quote_pgsql_string(c_session->user_name);
+	/* create new user session */
+	ok = secure_snprintf(request_fields, sizeof(request_fields),
+			"INSERT INTO %s (username, ip_saddr, reason, time, "
+			"sport",
+			params->pgsql_auth_failure_table_name);
+
+	if (!ok) {
+		g_free(quoted_username);
+		return;
+	}
+
+	ok = secure_snprintf(request_values, sizeof(request_values),
+			"VALUES ('%s', '%s', '%s', ABSTIME(%lu), '%d'",
+			quoted_username,
+			addr_ascii,
+			text,
+			time(NULL),
+			c_session->sport);
+
+	g_free(quoted_username);
+
+	if (!ok) {
+		return;
+	}
+
+	if (c_session->groups) {
+		g_strlcat(request_fields, ",user_id, user_groups",
+				sizeof(request_fields));
+		/* build list of user groups */
+		str_groups = str_print_group(c_session);
+
+		ok = secure_snprintf(tmp_buffer, sizeof(tmp_buffer),
+				     ", '%u', '%s'",
+				     c_session->user_id,
+				     str_groups);
+		g_free(str_groups);
+		if (!ok) {
+			return;
+		}
+		g_strlcat(request_values, tmp_buffer,
+			  sizeof(request_values));
+	}
+
+	if (c_session->sysname) {
+		char * q_sysname = quote_pgsql_string(c_session->sysname);
+		char * q_release = quote_pgsql_string(c_session->release);
+		char * q_version = quote_pgsql_string(c_session->version);
+
+
+		g_strlcat(request_fields, "os_sysname, os_release, os_version)",
+				sizeof(request_fields));
+		ok = secure_snprintf(tmp_buffer, sizeof(tmp_buffer),
+				     ", '%s', '%s', '%s')",
+				     q_sysname,
+				     q_release,
+				     q_version);
+		g_free(q_sysname);
+		g_free(q_release);
+		g_free(q_version);
+
+		if (!ok) {
+			return;
+		}
+		g_strlcat(request_values, tmp_buffer,
+			  sizeof(request_values));
+	} else {
+		g_strlcat(request_fields, ")", sizeof(request_fields));
+		g_strlcat(request_values, ");", sizeof(request_values));
+	}
+
+	/* create the sql query */
+	sql_query =
+	    g_strconcat(request_fields, "\n", request_values, NULL);
+	if (sql_query == NULL) {
+		log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
+			    "Fail to build PostgreSQL query (maybe too long)!");
+		return;
+	}
+
+
+	/* do the query */
+	Result = PQexec(ld, sql_query);
+
+	g_free(sql_query);
+	/* check error */
+	if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK) {
+		log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
+			    "[PostgreSQL] Cannot insert session: %s",
+			    PQerrorMessage(ld));
+	}
+	PQclear(Result);
+	return;
+
+
 }
 
 /** @} */
