@@ -395,6 +395,8 @@ static int pgsql_insert(PGconn * ld, connection_t * element,
 	/* do the query */
 	Result = PQexec(ld, sql_query);
 
+	g_free(sql_query);
+
 	/* check error */
 	if (!Result || PQresultStatus(Result) != PGRES_COMMAND_OK) {
 		log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
