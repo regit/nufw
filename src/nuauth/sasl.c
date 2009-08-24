@@ -417,9 +417,12 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 				   buf,
 				   data, len, &data, (unsigned *) &len);
 
-	if (auth_result != SASL_OK && auth_result != SASL_CONTINUE)
-		g_message("Starting SASL negotiation: %s",
-			  sasl_errstring(auth_result, NULL, NULL));
+	if (auth_result != SASL_OK && auth_result != SASL_CONTINUE) {
+		g_message("Error starting SASL negotiation: %s (%d)",
+			  sasl_errstring(auth_result, NULL, NULL),
+			  auth_result);
+		return SASL_FAIL;
+	}
 
 	while (auth_result == SASL_CONTINUE) {
 		if (data) {
@@ -461,15 +464,15 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 	if (external_auth == FALSE) {
 		char *tempname = NULL;
 		result =
-		    sasl_getprop(conn, SASL_USERNAME,
+		    sasl_getprop(conn, SASL_AUTHUSER,
 				 (const void **) &(tempname));
 		if (result != SASL_OK) {
-			g_warning("get user failed");
+			g_warning("get user failed: %s", sasl_errstring(result, NULL, NULL));
 			return result;
 		}
 		if (tempname == NULL)
 		{
-			g_warning("sasl_getprop(SASL_USERNAME): username is NULL!");
+			g_warning("sasl_getprop(SASL_AUTHUSER): username is NULL!");
 			return SASL_BADPARAM;
 		}
 		c_session->user_name = g_strdup(tempname);
@@ -616,7 +619,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 		log_message(INFO, DEBUG_AREA_AUTH, "proto v3: sasl negotiation error: %d",
 			    r);
 		ret =
-		    sasl_getprop(conn, SASL_USERNAME,
+		    sasl_getprop(conn, SASL_AUTHUSER,
 				 (const void **) &(user_name));
 		if (ret == SASL_OK) {
 			c_session->user_name = g_strdup(user_name);
@@ -691,7 +694,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 	if (external_auth == FALSE) {
 		char *tempname = NULL;
 		ret =
-		    sasl_getprop(conn, SASL_USERNAME,
+		    sasl_getprop(conn, SASL_AUTHUSER,
 				 (const void **) &(tempname));
 		if (ret != SASL_OK) {
 			g_warning("proto v3: get user failed");
@@ -737,8 +740,8 @@ int sasl_user_check(user_session_t * c_session)
 	sasl_conn_t *conn = NULL;
 	sasl_security_properties_t secprops;
 	gboolean external_auth = FALSE;
-	char *iplocalport = NULL;
-	char ipremoteport[INET6_ADDRSTRLEN+20];
+	char iplocalport[INET6_ADDRSTRLEN +20];
+	char ipremoteport[INET6_ADDRSTRLEN +20];
 	int len;
 	int ret;
 	sasl_callback_t internal_callbacks[] = {
@@ -773,6 +776,21 @@ int sasl_user_check(user_session_t * c_session)
 	secure_snprintf(ipremoteport+len, sizeof(ipremoteport)-len,
 		";%hu", c_session->sport);
 
+	/* format "ip;port" */
+	format_ipv6(&c_session->server_addr, iplocalport, INET6_ADDRSTRLEN, NULL);
+	len = strlen(iplocalport);
+	secure_snprintf(iplocalport+len, sizeof(iplocalport)-len,
+		";%s", nuauthconf->userpckt_port);
+
+
+
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
+			  "Starting SASL server: service=%s, hostname=%s, realm=%s, iplocal=%s, ipremote=%s",
+			  nuauthconf->krb5_service,
+			  nuauthconf->krb5_hostname,
+			  nuauthconf->krb5_realm,
+			  iplocalport, ipremoteport
+			 );
 	ret = sasl_server_new(nuauthconf->krb5_service,
 			nuauthconf->krb5_hostname,
 			nuauthconf->krb5_realm,

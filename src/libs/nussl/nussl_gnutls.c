@@ -1327,7 +1327,7 @@ int nussl_ssl_accept(nussl_ssl_socket * ssl, unsigned int timeout, char *errbuf,
 			return -1;
 	}
 
-	sock = (int)gnutls_transport_get_ptr(session);
+	sock = (int) (long)gnutls_transport_get_ptr(session);
 	blocking_state = fcntl(sock,F_GETFL);
 
 	fcntl(sock,F_SETFL,(fcntl(sock,F_GETFL)|O_NONBLOCK));

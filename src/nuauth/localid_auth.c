@@ -25,7 +25,7 @@
  * @{
  */
 
-gboolean proto_support_check(user_session_t * session, gpointer data)
+static gboolean capa_support_check(user_session_t * session, gpointer data)
 {
 	if (session->proto_version < PROTO_VERSION_V22_1)
 		return TRUE;
@@ -35,11 +35,37 @@ gboolean proto_support_check(user_session_t * session, gpointer data)
 	return FALSE;
 }
 
+static gboolean fallback_to_hello_check(user_session_t * session, gpointer data)
+{
+	/* Is client protocol recent enough ? */
+	if (session->proto_version < PROTO_VERSION_V22_1)
+		return FALSE;
+	/* If protocol is directly supported, localid will not be used */
+	if (session->capa_flags & (1 << GPOINTER_TO_INT(data))) {
+		return FALSE;
+	}
+	/* If HELLO support is present, we will used it */
+	if (session->capa_flags & (1 << nuauthdatas->hello_capa)) {
+		return TRUE;
+	}
+	return FALSE;
+}
+
+/**
+ * Check if localid authentication has to be used for connection
+ *
+ * \return FALSE if not, TRUE if localid will be used
+ *
+ */
 char localid_authenticated_protocol(connection_t *conn)
 {
 	int protocol = conn->tracking.protocol;
 	int capa = 0;
 
+	/* we can't use HELLO if there is multiple sessions on host */
+	if (g_slist_length(get_client_sockets_by_ip(&conn->tracking.saddr)) > 1) {
+		return FALSE;
+	}
 	switch (protocol) {
 		case IPPROTO_TCP:
 			capa = nuauthdatas->tcp_capa;
@@ -48,11 +74,14 @@ char localid_authenticated_protocol(connection_t *conn)
 			capa = nuauthdatas->udp_capa;
 			break;
 		default:
-			/* we don't support it, hello is the only choice */
-			return TRUE;
+			/* can't authenticate directly connection, localid
+			 * is the only alternative */
+			return check_property_clients(&conn->tracking.saddr,
+					&capa_support_check, 1,
+					GINT_TO_POINTER(nuauthdatas->hello_capa));
 	}
-	return ! check_property_clients(&conn->tracking.saddr,
-					&proto_support_check, 1,
+	return check_property_clients(&conn->tracking.saddr,
+					&fallback_to_hello_check, 1,
 					GINT_TO_POINTER(capa));
 }
 
