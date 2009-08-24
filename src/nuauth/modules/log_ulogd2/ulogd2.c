@@ -162,11 +162,12 @@ G_MODULE_EXPORT gint user_packet_logs(void *element, tcp_state_t state,
 			(void*)&u_time_sec,
 			sizeof(u_int32_t));
 
-	if (connection->iface_nfo.indev[0] != '\0'
-	    || connection->iface_nfo.outdev[0] != '\0') {
+	if (connection->iface_nfo.indev[0] != '\0') {
 		ulogd2_request_add_option(req, ULOGD2_OPT_OOB_IN,
 				(void*)connection->iface_nfo.indev,
 				strlen(connection->iface_nfo.indev));
+	}
+	if (connection->iface_nfo.outdev[0] != '\0') {
 		ulogd2_request_add_option(req, ULOGD2_OPT_OOB_OUT,
 				(void*)connection->iface_nfo.outdev,
 				strlen(connection->iface_nfo.outdev));
@@ -246,7 +247,7 @@ static int _connect_ulogd2_socket(struct log_ulogd2_params *params)
 		return -1;
 
 	server_sock.sun_family = AF_UNIX;  /* server_sock is declared before socket() ^ */
-	strncpy(server_sock.sun_path, socket_location, UNIX_PATH_MAX-1);
+	strncpy(server_sock.sun_path, socket_location, sizeof(server_sock.sun_path)-1);
 	len = strlen(server_sock.sun_path) + sizeof(server_sock.sun_family);
 
 	ret = connect(s, (struct sockaddr *)&server_sock, len);
