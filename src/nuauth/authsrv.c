@@ -1055,24 +1055,13 @@ void nuauth_main_loop()
 		/* a little sleep (one second) */
 		nanosleep(&sleep, NULL);
 
-		/* remove old connections */
-		g_timer_start(timer);
 		for (cleanup_it = cleanup_func_list;
 		     cleanup_it != NULL; cleanup_it = cleanup_it->next) {
 			cleanup_func_t cleanup = cleanup_it->data;
 			cleanup();
 		}
-		g_timer_stop(timer);
-
-		/* compute next sleep: one second minus (elapsed time) */
-		sec = g_timer_elapsed(timer, &ms);
-		if (1 <= sec) {
-			sleep.tv_sec = 0;
-			sleep.tv_nsec = 0;
-		} else {
-			sleep.tv_sec = 0;
-			sleep.tv_nsec = (1000000 - ms) * 1000;
-		}
+		sleep.tv_sec = 1;
+		sleep.tv_nsec = 0;
 	}
 	g_timer_destroy(timer);
 }
