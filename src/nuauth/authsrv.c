@@ -701,18 +701,24 @@ void configure_app(int argc, char **argv)
 {
 	command_line_params_t params;
 	int ret;
-	struct rlimit core_limit;
+	struct rlimit r_limit;
 	struct nuauth_params initconf;
 	struct nuauth_params *conf;
 
 	/* Avoid creation of core file which may contains username and password */
-	if (getrlimit(RLIMIT_CORE, &core_limit) == 0) {
+	if (getrlimit(RLIMIT_CORE, &r_limit) == 0) {
 #ifdef DEBUG_ENABLE
-		core_limit.rlim_cur = RLIM_INFINITY;
+		r_limit.rlim_cur = RLIM_INFINITY;
 #else
-		core_limit.rlim_cur = 0;
+		r_limit.rlim_cur = 0;
 #endif
-		setrlimit(RLIMIT_CORE, &core_limit);
+		setrlimit(RLIMIT_CORE, &r_limit);
+	}
+
+	if (getrlimit(RLIMIT_NOFILE, &r_limit) == 0) {
+		r_limit.rlim_cur = 8096;
+		r_limit.rlim_max = 8096;
+		setrlimit(RLIMIT_NOFILE, &r_limit);
 	}
 
 #ifndef DEBUG_ENABLE
