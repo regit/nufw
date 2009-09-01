@@ -675,8 +675,8 @@ int load_modules()
 	}
 
 	/* MOD_USER_CHECK is *always* set to something */
-	hooks[MOD_USER_ID].config = nuauth_config_table_get_or_default(hooks[MOD_USER_ID].configstring, module_default_value(MOD_USER_ID));
-	hooks[MOD_USER_GROUPS].config = nuauth_config_table_get_or_default(hooks[MOD_USER_GROUPS].configstring, module_default_value(MOD_USER_GROUPS));
+	hooks[MOD_USER_ID].config = nuauth_config_table_get_or_default(hooks[MOD_USER_ID].configstring, hooks[MOD_USER_CHECK].config);
+	hooks[MOD_USER_GROUPS].config = nuauth_config_table_get_or_default(hooks[MOD_USER_GROUPS].configstring, hooks[MOD_USER_CHECK].config);
 
 	/* external auth module loading */
 	g_mutex_lock(modules_mutex);
