@@ -40,12 +40,15 @@
 #define SOCKET_FILENAME "nuauth-command.socket"
 #define SOCKET_TARGET SOCKET_PATH SOCKET_FILENAME
 
+GHashTable *client_conn_hash;
+
 const char* COMMAND_HELP =
 "version: display nuauth version\n"
 "confdump: dump configuration\n"
 "users: list connected users\n"
 "firewalls: list connected nufw firewalls\n"
 "packets count: display number of decision waiting packets\n"
+"users count: display number of connected clients\n"
 "refresh cache: refresh all caches\n"
 "refresh crl: refresh the TLS crl file\n"
 "disconnect ID: disconnect an user with his session identifier\n"
@@ -418,6 +421,8 @@ void command_execute(command_t * this, char *command)
 		encoder_add_int32(encoder, nuauthconf->debug_areas);
 	} else if (strcmp(command, "packets count") == 0) {
 		encoder_add_int32(encoder, g_hash_table_size(conn_list));
+	} else if (strcmp(command, "users count") == 0) {
+		encoder_add_int32(encoder, g_hash_table_size(client_conn_hash));
 	} else {
 		/* unknown command => disconnect */
 	}
