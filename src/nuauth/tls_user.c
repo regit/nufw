@@ -458,22 +458,6 @@ void tls_user_check_activity(struct tls_user_context_t *context,
 	thread_pool_push(nuauthdatas->user_checkers, c_session, NULL);
 }
 
-/**
- * Fix this->mx value if needed (after changing this->tls_rx_set)
- *
- * This function has to be called when mutex is locked.
- */
-void tls_user_update_mx(struct tls_user_context_t *this)
-{
-	int i;
-	for (i = this->mx - 1;
-			i >= 0 && !FD_ISSET(i, &this->tls_rx_set);
-			i = this->mx - 1) {
-		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
-				"setting mx to %d", i);
-		this->mx = i;
-	}
-}
 
 /**
  * Remove a client from rx set
@@ -487,11 +471,69 @@ void tls_user_remove_client(int sock)
 	while (thread_p) {
 		this = ((struct nuauth_thread_t *)thread_p->data)->data;
 		/* search sock among existing select */
-		FD_CLR(sock, &this->tls_rx_set);
-		tls_user_update_mx(this);
+		/* FIXME */
+#if 0
+		ev_io_stop(EV_DEFAULT_ w);
+#endif
 		thread_p = thread_p->next;
 	}
 }
+
+static void client_accept_cb(struct ev_loop *loop, ev_io *w, int revents)
+{
+	struct tls_user_context_t *context = (struct tls_user_context_t *) w->data;
+	tls_user_accept(context);
+}
+
+static void client_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
+{
+	struct tls_user_context_t *context = (struct tls_user_context_t *) w->data;
+	ev_io_stop(context->loop, w);
+	tls_user_check_activity(context, w->fd);
+}
+
+static void client_injector_cb(struct ev_loop *loop, ev_async *w, int revents)
+{
+	struct tls_user_context_t *context = (struct tls_user_context_t *) w->data;
+	ev_io *client_watcher = NULL;
+	void *c_pop;
+	/*
+	 * Try to get new file descriptor to update set. Messages come from
+	 * tls_sasl_connect_ok() and are send when a new user is connected.
+	 */
+	c_pop = g_async_queue_pop(mx_queue);
+
+	client_watcher = g_new0(ev_io, 1);
+	ev_io_init(client_watcher, client_activity_cb, GPOINTER_TO_INT(c_pop), EV_READ);
+	client_watcher->data = context;
+	ev_io_start(context->loop, client_watcher);
+	activate_client_by_socket(GPOINTER_TO_INT(c_pop));
+}
+
+/*
+ * execute client destruction task
+ */
+static void client_destructor_cb(struct ev_loop *loop, ev_async *w, int revents)
+{
+	struct tls_user_context_t *context = (struct tls_user_context_t *) w->data;
+	disconnect_user_msg_t *disconnect_msg;
+
+	disconnect_msg = g_async_queue_pop(context->cmd_queue);
+
+	if (disconnect_msg->socket == -1) {
+		disconnect_msg->result = kill_all_clients();
+	} else {
+		disconnect_msg->result = delete_client_by_socket(disconnect_msg->socket);
+	}
+	g_mutex_unlock(disconnect_msg->mutex);
+}
+
+
+static void loop_destructor_cb(struct ev_loop *loop, ev_async *w, int revents)
+{
+	ev_unloop(loop, EVUNLOOP_ALL);
+}
+
 
 /**
  * Wait for new client connection or client event using ::mx_queue
@@ -502,145 +544,37 @@ void tls_user_remove_client(int sock)
  */
 void tls_user_main_loop(struct tls_user_context_t *context, GMutex * mutex)
 {
-	gpointer c_pop;
-	int i, nb_active_clients;
-	fd_set wk_set;		/* working set */
-	struct timeval tv;
-	disconnect_user_msg_t *disconnect_msg;
+	ev_io *client_watcher;
 
-	/* create unix pipe */
-	if (pipe(user_pipefd) == -1) {
-		log_message(CRITICAL, DEBUG_AREA_MAIN,
-		    "[+] Unable to open user pipe.");
-		nuauth_ask_exit();
-	}
-	if (fcntl(user_pipefd[0], F_SETFL, (fcntl(user_pipefd[0], F_GETFL)|O_NONBLOCK))) {
-		log_message(CRITICAL, DEBUG_AREA_MAIN,
-		    "[+] Unable to set pipe to non-blocking.");
-		nuauth_ask_exit();
-	}
+	context->loop = ev_loop_new(0);
+	/* register injector cb */
+	ev_async_init(&context->client_injector_signal, client_injector_cb);
+	ev_async_start(context->loop, &context->client_injector_signal);
+	context->client_injector_signal.data = context;
 
-	FD_SET(user_pipefd[0], &context->tls_rx_set);
+	/* register destructor cb */
+	ev_async_init(&context->client_destructor_signal, client_destructor_cb);
+	ev_async_start(context->loop, &context->client_destructor_signal);
+	context->client_destructor_signal.data = context;
 
+
+	/* register destructor cb */
+	ev_async_init(&context->loop_fini_signal, loop_destructor_cb);
+	ev_async_start(context->loop, &context->loop_fini_signal);
+	context->loop_fini_signal.data = context;
+
+	/* register accept cb */
+	client_watcher = g_new0(ev_io, 1);
+	ev_io_init(client_watcher, client_accept_cb, context->sck_inet, EV_READ);
+	ev_io_start(context->loop, client_watcher);
+	client_watcher->data = context;
 
 	log_message(INFO, DEBUG_AREA_USER,
-		    "[+] NuAuth is waiting for client connections.");
-	while (g_mutex_trylock(mutex)) {
-		g_mutex_unlock(mutex);
+			"[+] NuAuth is waiting for client connections.");
+	ev_loop(context->loop, 0 /* or: EVLOOP_NONBLOCK */ );
 
-		/*
-		 * Try to get new file descriptor to update set. Messages come from
-		 * tls_sasl_connect_ok() and are send when a new user is connected.
-		 */
-		c_pop = g_async_queue_try_pop(mx_queue);
-		while (c_pop) {
-			int socket = GPOINTER_TO_INT(c_pop);
-
-			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
-					  "checking mx against %d",
-					  socket);
-			if (socket + 1 > context->mx)
-				context->mx = socket + 1;
-			/*
-			 * change FD_SET
-			 */
-			FD_SET(socket, &context->tls_rx_set);
-			activate_client_by_socket(socket);
-			c_pop = g_async_queue_try_pop(mx_queue);
-		}
-
-		/*
-		 * execute client destruction task
-		 */
-		while ((disconnect_msg = g_async_queue_try_pop(context->cmd_queue)) != NULL){
-			if (disconnect_msg->socket == -1) {
-				disconnect_msg->result = kill_all_clients();
-			} else {
-				disconnect_msg->result = delete_client_by_socket(disconnect_msg->socket);
-			}
-			g_mutex_unlock(disconnect_msg->mutex);
-		}
-
-		/* wait new events during 1 second */
-		FD_ZERO(&wk_set);
-		for (i = 0; i < context->mx; ++i) {
-			if (FD_ISSET(i, &context->tls_rx_set))
-				FD_SET(i, &wk_set);
-			if (i == user_pipefd[0]) {
-				FD_SET(i, &wk_set);
-			}
-		}
-		tv.tv_sec = 0;
-		tv.tv_usec = 250000;
-		nb_active_clients =
-		    select(context->mx, &wk_set, NULL, NULL, &tv);
-
-		/* catch select() error */
-		if (nb_active_clients == -1) {
-			/* Signal was catched: just ignore it */
-			if (errno == EINTR) {
-				log_message(CRITICAL, DEBUG_AREA_USER,
-					    "Warning: tls user select() failed: signal was catched.");
-				continue;
-			}
-
-			if (errno == EBADF) {
-				/* A client disconnects between FD_SET and select.
-				 * Will try to find it */
-				for (i=0; i<context->mx; ++i){
-					struct stat s;
-					if (FD_ISSET(i, &context->tls_rx_set)){
-						if (fstat(i, &s)<0) {
-							log_message(CRITICAL, DEBUG_AREA_USER,
-								    "Warning: %d is a bad file descriptor.", i);
-							FD_CLR(i, &context->tls_rx_set);
-						}
-					}
-				}
-				continue;
-			}
-
-			log_message(FATAL, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
-				    "select() %s:%d failure: %s",
-				    __FILE__, __LINE__, g_strerror(errno));
-			nuauth_ask_exit();
-			break;
-		} else if (nb_active_clients > 0) {
-			/*
-			 * Check if a connect has occured
-			 */
-			if (FD_ISSET(context->sck_inet, &wk_set)) {
-				if (tls_user_accept(context) != 0)
-					continue;
-			}
-
-			if (FD_ISSET(user_pipefd[0], &wk_set)) {
-				int32_t gb_socket;
-				while (read(user_pipefd[0], &gb_socket, sizeof(gb_socket)) >0) {
-					debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
-							  "FD %d return to working set", gb_socket);
-					FD_SET(gb_socket, &context->tls_rx_set);
-				}
-				if (gb_socket + 1 > context->mx)
-					context->mx = gb_socket + 1;
-				continue;
-			}
-			/*
-			 * check for client activity
-			 */
-			for (i = 0; i < context->mx; ++i) {
-				if (i == context->sck_inet)
-					continue;
-				if (FD_ISSET(i, &wk_set)) {
-					tls_user_check_activity(context, i);
-					/* remove socket from wk_set it will be added
-					 * back by user checker. */
-					FD_CLR(i, &context->tls_rx_set);
-				}
-			}
-		}
-		tls_user_update_mx(context);
-	}
+	ev_loop_destroy(context->loop);
+	g_free(client_watcher);
 
 	close(context->sck_inet);
 }

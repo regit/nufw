@@ -64,8 +64,7 @@ static void policy_refuse_user(user_session_t * c_session, int c,
 	clean_session(c_session);
 }
 
-
-static void tls_sasl_connect_ok(user_session_t * c_session, int c)
+static void tls_sasl_connect_ok(user_session_t * c_session, struct client_connection * client)
 {
 	struct nu_srv_message msg;
 	/* Success place */
@@ -108,22 +107,24 @@ static void tls_sasl_connect_ok(user_session_t * c_session, int c)
 			clean_session(c_session);
 			return;
 		}
-		datas->socket = c;
+		datas->socket = client->socket;
 		datas->data = c_session;
 		c_session->activated = FALSE;
 		message->datas = datas;
 		message->type = INSERT_MESSAGE;
 		g_async_queue_push(nuauthdatas->tls_push_queue, message);
 	} else {
-		add_client(c, c_session);
+		add_client(client->socket, c_session);
 	}
 
 	c_session->connect_timestamp = time(NULL);
+	c_session->srv_context = client->srv_context;
 	/* send new valid session to user session logging system */
 	log_user_session(c_session, SESSION_OPEN);
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
-			  "Says we need to work on %d", c);
-	g_async_queue_push(mx_queue, GINT_TO_POINTER(c));
+			  "Says we need to work on %d", client->socket);
+	g_async_queue_push(mx_queue, GINT_TO_POINTER(client->socket));
+	ev_async_send (client->srv_context->loop, &client->srv_context->client_injector_signal);
 }
 
 static int add_client_capa(user_session_t * c_session, const char * value)
@@ -688,7 +689,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 				client->str_addr);
 		nussl_session_destroy(client->nussl);
 		g_free(client->str_addr);
-		g_free(userdata);
+		g_free(client);
 		return;
 	}
 
@@ -704,8 +705,6 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 	c_session->user_id = 0;
 	c_session->last_request = time(NULL);
 	c_session->expire = -1;
-	g_free(client->str_addr);
-	g_free(userdata);
 
 	/* Check the user is authorized to connect
 	 * when he already have an open connection */
@@ -719,6 +718,8 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 		        log_message(INFO, DEBUG_AREA_USER,
 				    "Policy: too many connection attempts from already overused IP %s, closing socket",
 				    address);
+			g_free(client->str_addr);
+			g_free(client);
 			return;
 		}
 	}
@@ -819,7 +820,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 
 		}
 
-		tls_sasl_connect_ok(c_session, socket_fd);
+		tls_sasl_connect_ok(c_session, client);
 		break;
 
 	case SASL_FAIL:
@@ -833,6 +834,8 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 		}
 		clean_session(c_session);
 	}
+	g_free(client->str_addr);
+	g_free(client);
 }
 
 /**

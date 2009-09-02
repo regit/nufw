@@ -257,8 +257,10 @@ int command_do_disconnect(int sock)
 		disconnect_user_msg_t *msg = g_new(disconnect_user_msg_t, 1);
 		msg->socket = sock;
 		msg->mutex = g_mutex_new();
-		g_async_queue_push(this->cmd_queue, msg);
 
+		g_async_queue_push(this->cmd_queue, msg);
+		ev_async_send(this->loop,
+			      &this->client_destructor_signal);
 		/* wait until clients are disconnected */
 		g_mutex_lock(msg->mutex);
 		g_mutex_lock(msg->mutex);

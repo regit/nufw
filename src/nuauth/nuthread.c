@@ -86,6 +86,18 @@ void thread_list_stop(GSList *thread_list)
 	return;
 }
 
+void thread_list_stop_ev(GSList *thread_list)
+{
+	GSList *thread_p = thread_list;
+	struct tls_user_context_t *context;
+	while (thread_p) {
+		context = (struct tls_user_context_t *)((struct nuauth_thread_t *)thread_p->data)->data;
+		ev_async_send(context->loop, &context->loop_fini_signal);
+		thread_p = thread_p->next;
+	}
+	return;
+}
+
 /**
  * Wait the end of thread using g_thread_join(). Avoid deadlock: if the
  * active thread is the thread to join, we just skip it.

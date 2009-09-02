@@ -331,8 +331,13 @@ if test "${build_pam_nufw}" = "yes"; then
 fi
 
 if test "${build_emc}" = "yes"; then
-    AC_CHECK_HEADERS([ev.h])
-    AC_CHECK_LIB([ev], [ev_loop], have_libev="yes", build_emc="")
+	AC_CHECK_HEADERS([ev.h])
+	AC_CHECK_LIB([ev], [ev_loop],,[AC_MSG_ERROR([libev is required to build emc])])
+fi
+
+if test "${build_nuauth}" = "yes"; then
+	AC_CHECK_HEADERS([ev.h])
+	AC_CHECK_LIB([ev], [ev_loop],,[AC_MSG_ERROR([libev is required to build nuauth])])
 fi
 
 

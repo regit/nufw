@@ -24,7 +24,7 @@ nuauth_SOURCES = nuthread.c acls.c audit.c auth_common.c authsrv.c cache.c \
 	command.c command_enc.c nufw_servers.c connections.c \
 	${nodist_nuauth_SOURCES}
 
-nuauth_LDADD = $(GLIB_LIBS) -lm -lsasl2 ../libs/nubase/libnubase.la ../libs/nussl/libnussl.la ../libs/nuconfparser/libnuconfparser.la
+nuauth_LDADD = $(GLIB_LIBS) -lm -lsasl2 ../libs/nubase/libnubase.la ../libs/nussl/libnussl.la ../libs/nuconfparser/libnuconfparser.la -lev
 
 if BUILD_NUAUTH_COMMAND
 install-exec-local:
