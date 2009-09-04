@@ -491,13 +491,15 @@ static void client_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 {
 	struct tls_user_context_t *context = (struct tls_user_context_t *) w->data;
 	ev_io_stop(context->loop, w);
-	if (revents & EV_READ) {
-		tls_user_check_activity(context, w->fd);
-	}
+
 	if (revents & EV_ERROR) {
 		log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 				"Error on socket %d", w->fd);
 		delete_client_by_socket(w->fd);
+		return;
+	}
+	if (revents & EV_READ) {
+		tls_user_check_activity(context, w->fd);
 	}
 }
 
@@ -511,6 +513,8 @@ static void client_injector_cb(struct ev_loop *loop, ev_async *w, int revents)
 	 */
 	session = (user_session_t *) g_async_queue_pop(mx_queue);
 
+	if (session == NULL)
+		return;
 	ev_io_init(&session->client_watcher, client_activity_cb, session->socket, EV_READ);
 	session->client_watcher.data = context;
 	ev_io_start(context->loop, &session->client_watcher);
@@ -551,7 +555,7 @@ static void loop_destructor_cb(struct ev_loop *loop, ev_async *w, int revents)
  */
 void tls_user_main_loop(struct tls_user_context_t *context, GMutex * mutex)
 {
-	ev_io *client_watcher;
+	ev_io client_watcher;
 
 	context->loop = ev_loop_new(0);
 	/* register injector cb */
@@ -571,17 +575,15 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex * mutex)
 	context->loop_fini_signal.data = context;
 
 	/* register accept cb */
-	client_watcher = g_new0(ev_io, 1);
-	ev_io_init(client_watcher, client_accept_cb, context->sck_inet, EV_READ);
-	ev_io_start(context->loop, client_watcher);
-	client_watcher->data = context;
+	ev_io_init(&client_watcher, client_accept_cb, context->sck_inet, EV_READ);
+	ev_io_start(context->loop, &client_watcher);
+	client_watcher.data = context;
 
 	log_message(INFO, DEBUG_AREA_USER,
 			"[+] NuAuth is waiting for client connections.");
-	ev_loop(context->loop, 0 /* or: EVLOOP_NONBLOCK */ );
+	ev_loop(context->loop, 0);
 
 	ev_loop_destroy(context->loop);
-	g_free(client_watcher);
 
 	close(context->sck_inet);
 }

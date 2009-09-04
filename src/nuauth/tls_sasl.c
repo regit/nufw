@@ -122,7 +122,7 @@ static void tls_sasl_connect_ok(user_session_t * c_session, struct client_connec
 	/* send new valid session to user session logging system */
 	log_user_session(c_session, SESSION_OPEN);
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
-			  "Says we need to work on %d", client->socket);
+			  "Says we need to work on %d", c_session->socket);
 	g_async_queue_push(mx_queue, c_session);
 	ev_async_send (client->srv_context->loop, &client->srv_context->client_injector_signal);
 }
