@@ -348,8 +348,7 @@ int tls_user_accept(struct tls_user_context_t *context)
 
 	current_client_conn->nussl = nussl_session_accept(context->nussl);
 	if ( ! current_client_conn->nussl ) {
-		log_message(WARNING, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
-			    "New client connection failed during nussl_session_accept(): %s", nussl_get_error(context->nussl));
+		/* can be triggered by EAGAIN on non blocking accept socket */
 		g_free(current_client_conn);
 		return 1;
 	}
@@ -490,7 +489,18 @@ void user_writer(gpointer pworkunit, gpointer data)
 static void client_accept_cb(struct ev_loop *loop, ev_io *w, int revents)
 {
 	struct tls_user_context_t *context = (struct tls_user_context_t *) w->data;
-	tls_user_accept(context);
+#ifdef DEBUG_ENABLE
+	int i = 0;
+#endif
+	while(tls_user_accept(context) == 0) {
+#ifdef DEBUG_ENABLE
+		log_message(INFO, DEBUG_AREA_USER,
+				"New client connection. (%d)",
+				i);
+		i++;
+#endif
+		continue;
+	}
 }
 
 static void client_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
@@ -509,38 +519,70 @@ static void client_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 	}
 }
 
+static void __client_writer_cb(struct ev_loop *loop, struct tls_user_context_t *context, int revents)
+{
+	tls_workunit_t *workunit;
+#if DEBUG_ENABLE
+	int i = 0;
+#endif
+
+	while ((workunit = g_async_queue_try_pop(writer_queue))) {
+		ev_io_stop(context->loop, &workunit->user_session->client_watcher);
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER, "sending workunit to user_writers (%d)", i);
+		thread_pool_push(nuauthdatas->user_writers, workunit, NULL);
+#if DEBUG_ENABLE
+		i++;
+#endif
+	}
+}
 
 static void client_writer_cb(struct ev_loop *loop, ev_async *w, int revents)
 {
 	struct tls_user_context_t *context = (struct tls_user_context_t *) w->data;
-	tls_workunit_t *workunit;
-
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER, "entering writer callback");
-	workunit = g_async_queue_pop(writer_queue);
-
-	ev_io_stop(context->loop, &workunit->user_session->client_watcher);
-	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER, "sending workunit to user_writers");
-	thread_pool_push(nuauthdatas->user_writers, workunit, NULL);
+	__client_writer_cb(loop, context, revents);
 }
 
 
-static void client_injector_cb(struct ev_loop *loop, ev_async *w, int revents)
+static void __client_injector_cb(struct ev_loop *loop, struct tls_user_context_t *context, int revents)
 {
-	struct tls_user_context_t *context = (struct tls_user_context_t *) w->data;
 	user_session_t * session;
+#if DEBUG_ENABLE
+	int i = 0;
+#endif
 	/*
 	 * Try to get new file descriptor to update set. Messages come from
 	 * tls_sasl_connect_ok() and are send when a new user is connected.
 	 */
-	session = (user_session_t *) g_async_queue_pop(mx_queue);
+	while ((session = (user_session_t *) g_async_queue_try_pop(mx_queue))) {
+		if (session == NULL)
+			continue;
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER, "reinjecting %d (%d)",
+				  session->socket, i);
+		ev_io_init(&session->client_watcher, client_activity_cb, session->socket, EV_READ);
+		session->client_watcher.data = context;
+		ev_io_start(context->loop, &session->client_watcher);
+		activate_client_by_socket(session->socket);
+#if DEBUG_ENABLE
+		i++;
+#endif
+	}
 
-	if (session == NULL)
-		return;
-	ev_io_init(&session->client_watcher, client_activity_cb, session->socket, EV_READ);
-	session->client_watcher.data = context;
-	ev_io_start(context->loop, &session->client_watcher);
-	activate_client_by_socket(session->socket);
 }
+static void client_injector_cb(struct ev_loop *loop, ev_async *w, int revents)
+{
+	struct tls_user_context_t *context = (struct tls_user_context_t *) w->data;
+	__client_injector_cb(loop, context, revents);
+}
+
+static void client_timeout_cb(struct ev_loop *loop, ev_timer *w, int revents)
+{
+	struct tls_user_context_t *context = (struct tls_user_context_t *) w->data;
+	__client_writer_cb(loop, context, revents);
+	__client_injector_cb(loop, context, revents);
+}
+
+
 
 /*
  * execute client destruction task
@@ -577,6 +619,7 @@ static void loop_destructor_cb(struct ev_loop *loop, ev_async *w, int revents)
 void tls_user_main_loop(struct tls_user_context_t *context, GMutex * mutex)
 {
 	ev_io client_watcher;
+	ev_timer timer;
 
 	context->loop = ev_loop_new(0);
 	/* register injector cb */
@@ -588,6 +631,9 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex * mutex)
 	ev_async_init(&context->client_writer_signal, client_writer_cb);
 	ev_async_start(context->loop, &context->client_writer_signal);
 	context->client_writer_signal.data = context;
+
+	ev_timer_init (&timer, client_timeout_cb, 0, 0.200);
+	ev_timer_start (context->loop, &timer);
 
 	/* register destructor cb */
 	ev_async_init(&context->client_destructor_signal, client_destructor_cb);
@@ -601,6 +647,7 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex * mutex)
 	context->loop_fini_signal.data = context;
 
 	/* register accept cb */
+	fcntl(context->sck_inet,F_SETFL,(fcntl(context->sck_inet,F_GETFL)|O_NONBLOCK));
 	ev_io_init(&client_watcher, client_accept_cb, context->sck_inet, EV_READ);
 	ev_io_start(context->loop, &client_watcher);
 	client_watcher.data = context;
