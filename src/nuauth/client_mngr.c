@@ -179,8 +179,6 @@ static nu_error_t cleanup_session(user_session_t * session)
 		return NU_EXIT_ERROR;
 	}
 
-	tls_user_remove_client(session->socket);
-
 	return NU_EXIT_OK;
 }
 
@@ -387,8 +385,6 @@ char warn_clients(struct msg_addr_set *global_msg,
 {
 	ip_sessions_t *ipsessions = NULL;
 	GSList *ipsockets = NULL;
-	GSList *badsockets = NULL;
-	GSList *goodsockets = NULL;
 	struct timeval timestamp;
 	struct timeval interval;
 #if DEBUG_ENABLE
@@ -407,7 +403,7 @@ char warn_clients(struct msg_addr_set *global_msg,
 		if ((!(data || scheck)) && ipsessions->proto_version >= PROTO_VERSION_V22_1) {
 			gettimeofday(&timestamp, NULL);
 			timeval_substract(&interval, &timestamp, &(ipsessions->last_message));
-			if (interval.tv_sec || ((unsigned)interval.tv_usec < nuauthconf->push_delay)) {
+			if ((interval.tv_sec == 0) && ((unsigned)interval.tv_usec < nuauthconf->push_delay)) {
 				g_mutex_unlock(client_mutex);
 				return 1;
 			} else {
@@ -417,47 +413,27 @@ char warn_clients(struct msg_addr_set *global_msg,
 		}
 		for (ipsockets = ipsessions->sessions; ipsockets; ipsockets = ipsockets->next) {
 			user_session_t *session = (user_session_t *)ipsockets->data;
-			int ret;
 
 			if ((!scheck) || scheck(session, data)) {
-				/* remove from event loop */
-				ev_io_stop(session->srv_context->loop, &session->client_watcher);
-				/* send message */
-				ret = nussl_write(session->nussl,
-						(char*)global_msg->msg,
-						ntohs(global_msg->msg->length));
-				if (ret < 0) {
-					log_message(WARNING, DEBUG_AREA_USER,
-							"Failed to send warning to client(s): %s", nussl_get_error(session->nussl));
-					badsockets = g_slist_prepend(badsockets, ipsockets->data);
-				} else {
-					debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
-							  "Message sent to client.");
-					goodsockets = g_slist_prepend(goodsockets, session);
+				tls_workunit_t *workunit = g_new0(tls_workunit_t, 1);
+				workunit->global_msg = g_memdup(global_msg, sizeof(*global_msg));
+				workunit->global_msg->msg = g_memdup(global_msg->msg,
+								     ntohs(global_msg->msg->length));
+				workunit->user_session = session;
+#if DEBUG_ENABLE
+				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG, DEBUG_AREA_USER)) {
+					char addr_ascii[INET6_ADDRSTRLEN];
+					format_ipv6(&global_msg->addr, addr_ascii, INET6_ADDRSTRLEN, NULL);
+					g_message("Queuing message for %s (%d)",
+						  addr_ascii,
+						  session->socket);
 				}
+#endif
+				g_async_queue_push(writer_queue, workunit);
+				ev_async_send(session->srv_context->loop, &session->srv_context->client_writer_signal);
 			}
 		}
-		if (goodsockets) {
-			for (; goodsockets; goodsockets = goodsockets->next) {
-				user_session_t *session = goodsockets->data;
-				/* insert socket in event loop */
-				g_async_queue_push(mx_queue, session);
-				ev_async_send (session->srv_context->loop,
-					       &session->srv_context->client_injector_signal);
-			}
-			g_slist_free(goodsockets);
-		}
-		if (badsockets) {
-			for (; badsockets; badsockets = badsockets->next) {
-				user_session_t *session = goodsockets->data;
-				nu_error_t ret = delete_client_by_session(session);
-				if (ret != NU_EXIT_OK) {
-					log_message(WARNING, DEBUG_AREA_USER,
-						"Fails to destroy session in hash.");
-				}
-			}
-			g_slist_free(badsockets);
-		}
+
 		g_mutex_unlock(client_mutex);
 		return 1;
 	} else {

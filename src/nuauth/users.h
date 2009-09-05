@@ -85,6 +85,11 @@ typedef struct {
 	gboolean activated;	/*!< \brief TRUE if user server listen for event for this session */
 } user_session_t;
 
+typedef struct {
+	user_session_t *user_session;
+	struct msg_addr_set *global_msg;
+} tls_workunit_t;
+
 char *capa_array[32];
 
 #endif

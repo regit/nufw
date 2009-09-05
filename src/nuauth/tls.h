@@ -57,6 +57,7 @@ typedef enum {
  * function and tls_user_authsrv() thread
  */
 GAsyncQueue *mx_queue;
+GAsyncQueue *writer_queue;
 
 /* cache system related */
 struct client_connection {
@@ -184,6 +185,7 @@ struct tls_user_context_t {
 	int sck_inet;
 	struct ev_loop *loop;
 	ev_async client_injector_signal;
+	ev_async client_writer_signal;
 	ev_async client_destructor_signal;
 	ev_async loop_fini_signal;
 	fd_set tls_rx_set;	/* read set */
@@ -203,6 +205,8 @@ typedef struct {
 } disconnect_user_msg_t;
 
 extern struct tls_user_context_t tls_user_context;
+
+void user_writer(gpointer workunit, gpointer data);
 
 void tls_user_remove_client(int sock);
 void tls_user_start_servers(GSList *servers);

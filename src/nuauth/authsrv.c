@@ -103,6 +103,7 @@ void wait_all_thread_pools()
 	wait_thread_pool("packet logger", nuauthdatas->user_loggers);
 	wait_thread_pool("acl checker", nuauthdatas->acl_checkers);
 	wait_thread_pool("users checker", nuauthdatas->user_checkers);
+	wait_thread_pool("users writer", nuauthdatas->user_writers);
 
 	if (nuauthconf->log_users_sync) {
 		wait_thread_pool("decision worker",
@@ -154,6 +155,9 @@ void start_all_thread_pools()
 	nuauthdatas->user_checkers =
 	    g_thread_pool_new((GFunc) user_check_and_decide, NULL,
 			      nuauthconf->nbuser_check, POOL_TYPE, NULL);
+	nuauthdatas->user_writers =
+	    g_thread_pool_new((GFunc) user_writer, NULL,
+			      nuauthconf->nbuser_check, POOL_TYPE, NULL);
 
 	/* create user logger workers */
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN, "Creating %d user logger threads",
@@ -203,6 +207,7 @@ void stop_all_thread_pools(gboolean soft)
 		stop_thread_pool("packet logger", &nuauthdatas->user_loggers);
 		stop_thread_pool("acl checker", &nuauthdatas->acl_checkers);
 		stop_thread_pool("users checker", &nuauthdatas->user_checkers);
+		stop_thread_pool("users writer", &nuauthdatas->user_writers);
 
 		if (nuauthconf->log_users_sync) {
 			stop_thread_pool("decision worker",
@@ -1039,8 +1044,6 @@ void nuauth_main_loop()
 	struct timespec sleep;
 	GList *cleanup_it;
 	GTimer *timer;
-	double sec;
-	unsigned long ms;
 
 	log_message(FATAL, DEBUG_AREA_MAIN, "[+] NuAuth started.");
 

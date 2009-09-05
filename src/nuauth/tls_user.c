@@ -458,27 +458,33 @@ void tls_user_check_activity(struct tls_user_context_t *context,
 	thread_pool_push(nuauthdatas->user_checkers, c_session, NULL);
 }
 
-
-/**
- * Remove a client from rx set
- *
- * This function has to be called when mutex is locked.
- */
-void tls_user_remove_client(int sock)
+void user_writer(gpointer pworkunit, gpointer data)
 {
-	struct tls_user_context_t *this;
-	GSList *thread_p = nuauthdatas->tls_auth_servers;
-	while (thread_p) {
-		this = ((struct nuauth_thread_t *)thread_p->data)->data;
-		/* search sock among existing select */
-		/* FIXME */
-#if 0
-		ev_io_stop(EV_DEFAULT_ w);
-		ev_async_send(this->loop,
-			      &this->client_destructor_signal);
-#endif
-		thread_p = thread_p->next;
+	tls_workunit_t *workunit = (tls_workunit_t *) pworkunit;
+	user_session_t *usersession = workunit->user_session;
+	int ret;
+
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER, "writing message to \"%s\"",
+			  usersession->user_name);
+
+	/* send message */
+	ret = nussl_write(usersession->nussl,
+			(char*)workunit->global_msg->msg,
+			ntohs(workunit->global_msg->msg->length));
+	if (ret < 0) {
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+				"client disconnect");
+		/* clean client structure */
+		delete_client_by_socket(usersession->socket);
 	}
+	g_free(workunit->global_msg->msg);
+	g_free(workunit->global_msg);
+	g_free(workunit);
+	/* send socket back to user select */
+	g_async_queue_push(mx_queue, usersession);
+	ev_async_send(usersession->srv_context->loop, &usersession->srv_context->client_injector_signal);
+
+	return;
 }
 
 static void client_accept_cb(struct ev_loop *loop, ev_io *w, int revents)
@@ -502,6 +508,21 @@ static void client_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 		tls_user_check_activity(context, w->fd);
 	}
 }
+
+
+static void client_writer_cb(struct ev_loop *loop, ev_async *w, int revents)
+{
+	struct tls_user_context_t *context = (struct tls_user_context_t *) w->data;
+	tls_workunit_t *workunit;
+
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER, "entering writer callback");
+	workunit = g_async_queue_pop(writer_queue);
+
+	ev_io_stop(context->loop, &workunit->user_session->client_watcher);
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER, "sending workunit to user_writers");
+	thread_pool_push(nuauthdatas->user_writers, workunit, NULL);
+}
+
 
 static void client_injector_cb(struct ev_loop *loop, ev_async *w, int revents)
 {
@@ -562,6 +583,11 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex * mutex)
 	ev_async_init(&context->client_injector_signal, client_injector_cb);
 	ev_async_start(context->loop, &context->client_injector_signal);
 	context->client_injector_signal.data = context;
+
+	/* register writer cb */
+	ev_async_init(&context->client_writer_signal, client_writer_cb);
+	ev_async_start(context->loop, &context->client_writer_signal);
+	context->client_writer_signal.data = context;
 
 	/* register destructor cb */
 	ev_async_init(&context->client_destructor_signal, client_destructor_cb);
@@ -696,6 +722,7 @@ int tls_user_init(struct tls_user_context_t *context)
 	FD_SET(context->sck_inet, &context->tls_rx_set);
 	context->mx = context->sck_inet + 1;
 	mx_queue = g_async_queue_new();
+	writer_queue = g_async_queue_new();
 
 	/* Init ssl session */
 	/* TODO: make sure request_cert | auth_by_cert is for user and change to nufw if required */
