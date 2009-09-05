@@ -315,20 +315,19 @@ static void multi_warn_clients(struct in6_addr *saddr,
 			      )
 {
 	char buf[1024];
-	struct nu_header * header = (struct nu_header *) buf;
+	struct nu_srv_message * header = (struct nu_srv_message *) buf;
 	char * enc_field = buf + sizeof(* header);
 	struct msg_addr_set global_msg;
 	int ret;
 
-	header->proto = PROTO_VERSION;
-	header->msg_type = EXTENDED_PROTO;
+	header->type = EXTENDED_PROTO;
 	header->option = 0;
 
 	ret = snprintf(enc_field, sizeof(buf) - sizeof(*header),
 				"BEGIN\n" MULTI_EXT_NAME "\n" MULTI_CONNECT_CMD " %s\nEND\n",
 				connect_string);
 
-	header->length = sizeof(struct nu_header) + ret;
+	header->length = sizeof(struct nu_srv_message) + ret;
 	header->length = htons(header->length);
 
 	global_msg.msg = (struct nu_srv_message *) header;
