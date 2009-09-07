@@ -527,7 +527,8 @@ static void __client_writer_cb(struct ev_loop *loop, struct tls_user_context_t *
 #endif
 
 	while ((workunit = g_async_queue_try_pop(writer_queue))) {
-		ev_io_stop(context->loop, &workunit->user_session->client_watcher);
+		ev_io_stop(workunit->user_session->srv_context->loop,
+			   &workunit->user_session->client_watcher);
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER, "sending workunit to user_writers (%d)", i);
 		thread_pool_push(nuauthdatas->user_writers, workunit, NULL);
 #if DEBUG_ENABLE
@@ -557,12 +558,16 @@ static void __client_injector_cb(struct ev_loop *loop, struct tls_user_context_t
 	while ((session = (user_session_t *) g_async_queue_try_pop(mx_queue))) {
 		if (session == NULL)
 			continue;
+		if (session->activated == FALSE) {
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER, "Disappeared %d (%d)",
+				  session->socket, i);
+			continue;
+		}
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER, "reinjecting %d (%d)",
 				  session->socket, i);
 		ev_io_init(&session->client_watcher, client_activity_cb, session->socket, EV_READ);
-		session->client_watcher.data = context;
-		ev_io_start(context->loop, &session->client_watcher);
-		activate_client_by_socket(session->socket);
+		session->client_watcher.data = session->srv_context;
+		ev_io_start(session->srv_context->loop, &session->client_watcher);
 #if DEBUG_ENABLE
 		i++;
 #endif
