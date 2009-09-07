@@ -332,14 +332,17 @@ fi
 
 if test "${build_emc}" = "yes"; then
 	AC_CHECK_HEADERS([ev.h])
-	AC_CHECK_LIB([ev], [ev_loop],,[AC_MSG_ERROR([libev is required to build emc])])
+	AC_CHECK_LIB([ev], [ev_loop], have_libev="yes",AC_MSG_ERROR([libev is required to build emc]))
 fi
 
 if test "${build_nuauth}" = "yes"; then
 	AC_CHECK_HEADERS([ev.h])
-	AC_CHECK_LIB([ev], [ev_loop],,[AC_MSG_ERROR([libev is required to build nuauth])])
+	AC_CHECK_LIB([ev], [ev_loop],have_libev="yes", AC_MSG_ERROR([libev is required to build nuauth]))
 fi
 
+if test "${have_libev}" = "yes"; then
+	AC_DEFINE_UNQUOTED([HAVE_LIBEV],[1],[libev flag])
+fi
 
 AM_CONDITIONAL(BUILD_EMC, test x${build_emc} = xyes)
 AM_CONDITIONAL(BUILD_NUFW, test x${build_nufw} = xyes)
