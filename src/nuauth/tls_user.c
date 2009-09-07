@@ -764,10 +764,7 @@ int tls_user_init(struct tls_user_context_t *context)
 		exit(EXIT_FAILURE);
 	}
 
-	/* init fd_set */
-	FD_ZERO(&context->tls_rx_set);
-	FD_SET(context->sck_inet, &context->tls_rx_set);
-	context->mx = context->sck_inet + 1;
+	/* FIXME this *has* to be context dependant */
 	mx_queue = g_async_queue_new();
 	writer_queue = g_async_queue_new();
 

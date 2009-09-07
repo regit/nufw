@@ -181,14 +181,12 @@ void tls_sasl_connect(gpointer userdata, gpointer data);
 
 
 struct tls_user_context_t {
-	int mx;
 	int sck_inet;
 	struct ev_loop *loop;
 	ev_async client_injector_signal;
 	ev_async client_writer_signal;
 	ev_async client_destructor_signal;
 	ev_async loop_fini_signal;
-	fd_set tls_rx_set;	/* read set */
 	unsigned int nuauth_tls_max_clients;
 	int nuauth_number_authcheckers;
 	int nuauth_auth_nego_timeout;
