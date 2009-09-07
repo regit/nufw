@@ -474,6 +474,8 @@ void tls_user_remove_client(int sock)
 		/* FIXME */
 #if 0
 		ev_io_stop(EV_DEFAULT_ w);
+		ev_async_send(this->loop,
+			      &this->client_destructor_signal);
 #endif
 		thread_p = thread_p->next;
 	}
@@ -489,25 +491,30 @@ static void client_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 {
 	struct tls_user_context_t *context = (struct tls_user_context_t *) w->data;
 	ev_io_stop(context->loop, w);
-	tls_user_check_activity(context, w->fd);
+	if (revents & EV_READ) {
+		tls_user_check_activity(context, w->fd);
+	}
+	if (revents & EV_ERROR) {
+		log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+				"Error on socket %d", w->fd);
+		delete_client_by_socket(w->fd);
+	}
 }
 
 static void client_injector_cb(struct ev_loop *loop, ev_async *w, int revents)
 {
 	struct tls_user_context_t *context = (struct tls_user_context_t *) w->data;
-	ev_io *client_watcher = NULL;
-	void *c_pop;
+	user_session_t * session;
 	/*
 	 * Try to get new file descriptor to update set. Messages come from
 	 * tls_sasl_connect_ok() and are send when a new user is connected.
 	 */
-	c_pop = g_async_queue_pop(mx_queue);
+	session = (user_session_t *) g_async_queue_pop(mx_queue);
 
-	client_watcher = g_new0(ev_io, 1);
-	ev_io_init(client_watcher, client_activity_cb, GPOINTER_TO_INT(c_pop), EV_READ);
-	client_watcher->data = context;
-	ev_io_start(context->loop, client_watcher);
-	activate_client_by_socket(GPOINTER_TO_INT(c_pop));
+	ev_io_init(&session->client_watcher, client_activity_cb, session->socket, EV_READ);
+	session->client_watcher.data = context;
+	ev_io_start(context->loop, &session->client_watcher);
+	activate_client_by_socket(session->socket);
 }
 
 /*

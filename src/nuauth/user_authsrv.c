@@ -68,7 +68,7 @@ void user_check_and_decide(gpointer user_session, gpointer data)
 
 
 	/* send socket back to user select */
-	g_async_queue_push(mx_queue, GINT_TO_POINTER(usersession->socket));
+	g_async_queue_push(mx_queue, usersession);
 	ev_async_send(usersession->srv_context->loop, &usersession->srv_context->client_injector_signal);
 
 	if (userdata == NULL) {

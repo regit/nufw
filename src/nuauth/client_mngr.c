@@ -388,6 +388,7 @@ char warn_clients(struct msg_addr_set *global_msg,
 	ip_sessions_t *ipsessions = NULL;
 	GSList *ipsockets = NULL;
 	GSList *badsockets = NULL;
+	GSList *goodsockets = NULL;
 	struct timeval timestamp;
 	struct timeval interval;
 #if DEBUG_ENABLE
@@ -419,30 +420,40 @@ char warn_clients(struct msg_addr_set *global_msg,
 			int ret;
 
 			if ((!scheck) || scheck(session, data)) {
+				/* remove from event loop */
+				ev_io_stop(session->srv_context->loop, &session->client_watcher);
+				/* send message */
 				ret = nussl_write(session->nussl,
 						(char*)global_msg->msg,
 						ntohs(global_msg->msg->length));
 				if (ret < 0) {
 					log_message(WARNING, DEBUG_AREA_USER,
 							"Failed to send warning to client(s): %s", nussl_get_error(session->nussl));
-					badsockets = g_slist_prepend(badsockets, GINT_TO_POINTER(ipsockets->data));
+					badsockets = g_slist_prepend(badsockets, ipsockets->data);
+				} else {
+					debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+							  "Message sent to client.");
+					goodsockets = g_slist_prepend(goodsockets, session);
 				}
-#if DEBUG_ENABLE
-				else {
-					log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
-							"Message sent to client.");
-
-				}
-#endif /* DEBUG_ENABLE */
 			}
+		}
+		if (goodsockets) {
+			for (; goodsockets; goodsockets = goodsockets->next) {
+				user_session_t *session = goodsockets->data;
+				/* insert socket in event loop */
+				g_async_queue_push(mx_queue, session);
+				ev_async_send (session->srv_context->loop,
+					       &session->srv_context->client_injector_signal);
+			}
+			g_slist_free(goodsockets);
 		}
 		if (badsockets) {
 			for (; badsockets; badsockets = badsockets->next) {
-				int sockno = GPOINTER_TO_INT(badsockets->data);
-				nu_error_t ret = delete_client_by_socket_ext(sockno, 0);
+				user_session_t *session = goodsockets->data;
+				nu_error_t ret = delete_client_by_session(session);
 				if (ret != NU_EXIT_OK) {
 					log_message(WARNING, DEBUG_AREA_USER,
-						"Fails to destroy socket in hash.");
+						"Fails to destroy session in hash.");
 				}
 			}
 			g_slist_free(badsockets);

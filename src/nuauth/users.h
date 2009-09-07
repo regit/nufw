@@ -62,6 +62,7 @@ typedef struct {
 	* It identify the client and it is used as the key
 	*/
 	int32_t socket;
+	ev_io client_watcher;
 	/* tls should be removed by ssl */
 	nussl_session *nussl;	/*!< \brief SSL session opened with tls_connect() */
 	struct tls_user_context_t *srv_context;
