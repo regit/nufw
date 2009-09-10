@@ -97,6 +97,7 @@ static void tls_sasl_connect_ok(user_session_t * c_session, struct client_connec
 		}
 	}
 
+	c_session->workunits_queue =  g_async_queue_new();
 	/* unlock hash client */
 	if (nuauthconf->push) {
 		struct internal_message *message =
@@ -698,6 +699,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 	c_session->nussl = client->nussl;
 	c_session->socket = socket_fd;
 	c_session->tls_lock = g_mutex_new();
+	c_session->rw_lock = g_mutex_new();
 	c_session->addr = client->addr;
 	(void)getsockname_ipv6(socket_fd, &c_session->server_addr);
 	c_session->sport = client->sport;

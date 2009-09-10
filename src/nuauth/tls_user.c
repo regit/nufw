@@ -457,32 +457,41 @@ void tls_user_check_activity(struct tls_user_context_t *context,
 	thread_pool_push(nuauthdatas->user_checkers, c_session, NULL);
 }
 
-void user_writer(gpointer pworkunit, gpointer data)
+void user_writer(gpointer psession, gpointer data)
 {
-	tls_workunit_t *workunit = (tls_workunit_t *) pworkunit;
-	user_session_t *usersession = workunit->user_session;
+	user_session_t *usersession = (user_session_t *) psession;
+	struct msg_addr_set *gmsg;
 	int ret;
 
-	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER, "writing message to \"%s\"",
-			  usersession->user_name);
 
-	/* send message */
-	ret = nussl_write(usersession->nussl,
-			(char*)workunit->global_msg->msg,
-			ntohs(workunit->global_msg->msg->length));
-	if (ret < 0) {
-		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
-				"client disconnect");
-		/* clean client structure */
-		delete_client_by_socket(usersession->socket);
+	if (g_mutex_trylock(usersession->rw_lock)) {
+		while ((gmsg = g_async_queue_try_pop(usersession->workunits_queue))) {
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+					"writing message to \"%s\"",
+					usersession->user_name);
+
+			/* send message */
+			ret = nussl_write(usersession->nussl,
+					(char*)gmsg->msg,
+					ntohs(gmsg->msg->length));
+			g_free(gmsg->msg);
+			g_free(gmsg);
+			if (ret < 0) {
+				debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+						"client disconnect");
+				/* clean client structure, session is outside event loop */
+				delete_client_by_socket(usersession->socket);
+				g_mutex_unlock(usersession->rw_lock);
+				return;
+			}
+		}
+		/* send socket back to user select no message are waiting */
+		g_async_queue_push(mx_queue, usersession);
+		ev_async_send(usersession->srv_context->loop,
+				&usersession->srv_context->client_injector_signal);
+
+		g_mutex_unlock(usersession->rw_lock);
 	}
-	g_free(workunit->global_msg->msg);
-	g_free(workunit->global_msg);
-	g_free(workunit);
-	/* send socket back to user select */
-	g_async_queue_push(mx_queue, usersession);
-	ev_async_send(usersession->srv_context->loop, &usersession->srv_context->client_injector_signal);
-
 	return;
 }
 
@@ -519,18 +528,20 @@ static void client_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 	}
 }
 
+
+
 static void __client_writer_cb(struct ev_loop *loop, struct tls_user_context_t *context, int revents)
 {
-	tls_workunit_t *workunit;
+	user_session_t *session;
 #if DEBUG_ENABLE
 	int i = 0;
 #endif
 
-	while ((workunit = g_async_queue_try_pop(writer_queue))) {
-		ev_io_stop(workunit->user_session->srv_context->loop,
-			   &workunit->user_session->client_watcher);
+	while ((session = g_async_queue_try_pop(writer_queue))) {
+		ev_io_stop(session->srv_context->loop,
+				&session->client_watcher);
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER, "sending workunit to user_writers (%d)", i);
-		thread_pool_push(nuauthdatas->user_writers, workunit, NULL);
+		thread_pool_push(nuauthdatas->user_writers, session, NULL);
 #if DEBUG_ENABLE
 		i++;
 #endif
@@ -558,16 +569,12 @@ static void __client_injector_cb(struct ev_loop *loop, struct tls_user_context_t
 	while ((session = (user_session_t *) g_async_queue_try_pop(mx_queue))) {
 		if (session == NULL)
 			continue;
-		if (session->activated == FALSE) {
-			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER, "Disappeared %d (%d)",
-				  session->socket, i);
-			continue;
-		}
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER, "reinjecting %d (%d)",
 				  session->socket, i);
 		ev_io_init(&session->client_watcher, client_activity_cb, session->socket, EV_READ);
 		session->client_watcher.data = session->srv_context;
 		ev_io_start(session->srv_context->loop, &session->client_watcher);
+		session->activated = TRUE;
 #if DEBUG_ENABLE
 		i++;
 #endif

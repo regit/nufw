@@ -79,6 +79,9 @@ void clean_session(user_session_t * c_session)
 		g_free(c_session->version);
 
 	g_mutex_free(c_session->tls_lock);
+	g_mutex_free(c_session->rw_lock);
+	if (c_session->workunits_queue)
+		g_async_queue_unref(c_session->workunits_queue);
 
 	g_free(c_session);
 }
@@ -415,11 +418,10 @@ char warn_clients(struct msg_addr_set *global_msg,
 			user_session_t *session = (user_session_t *)ipsockets->data;
 
 			if ((!scheck) || scheck(session, data)) {
-				tls_workunit_t *workunit = g_new0(tls_workunit_t, 1);
-				workunit->global_msg = g_memdup(global_msg, sizeof(*global_msg));
-				workunit->global_msg->msg = g_memdup(global_msg->msg,
+				struct msg_addr_set *gmsg = g_new0(struct msg_addr_set, 1);
+				gmsg = g_memdup(global_msg, sizeof(*global_msg));
+				gmsg->msg = g_memdup(global_msg->msg,
 								     ntohs(global_msg->msg->length));
-				workunit->user_session = session;
 #if DEBUG_ENABLE
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG, DEBUG_AREA_USER)) {
 					char addr_ascii[INET6_ADDRSTRLEN];
@@ -429,8 +431,13 @@ char warn_clients(struct msg_addr_set *global_msg,
 						  session->socket);
 				}
 #endif
-				g_async_queue_push(writer_queue, workunit);
-				ev_async_send(session->srv_context->loop, &session->srv_context->client_writer_signal);
+				g_async_queue_push(session->workunits_queue, gmsg);
+				if (session->activated) {
+					session->activated = FALSE;
+					g_async_queue_push(writer_queue, session);
+					ev_async_send(session->srv_context->loop,
+							&session->srv_context->client_writer_signal);
+				}
 			}
 		}
 

@@ -63,6 +63,8 @@ typedef struct {
 	*/
 	int32_t socket;
 	ev_io client_watcher;
+	GAsyncQueue *workunits_queue;
+	GMutex *rw_lock;
 	/* tls should be removed by ssl */
 	nussl_session *nussl;	/*!< \brief SSL session opened with tls_connect() */
 	struct tls_user_context_t *srv_context;
@@ -84,11 +86,6 @@ typedef struct {
 	time_t last_request;
 	gboolean activated;	/*!< \brief TRUE if user server listen for event for this session */
 } user_session_t;
-
-typedef struct {
-	user_session_t *user_session;
-	struct msg_addr_set *global_msg;
-} tls_workunit_t;
 
 char *capa_array[32];
 
