@@ -706,11 +706,13 @@ int auth_request_send(uint8_t type, struct queued_pckt *pckt_data)
 
 		if (tls.session) {
 			char buf[256];
+			buf[0] = '\0';
 			nussl_session_get_cipher(tls.session, buf, sizeof(buf));
 			log_area_printf(DEBUG_AREA_GW,
 					DEBUG_LEVEL_WARNING,
 					"[+] TLS connection to nuauth restored (%s:%d), cipher is %s",
-					authreq_addr, authreq_port, buf);
+					authreq_addr, authreq_port,
+					(buf[0] != '\0') ? buf : "none" );
 
 		} else {
 			log_area_printf(DEBUG_AREA_GW,

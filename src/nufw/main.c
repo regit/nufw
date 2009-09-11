@@ -759,11 +759,13 @@ int main(int argc, char *argv[])
 	tls_connect();
 	if (tls.session) {
 		char buf[256];
+		buf[0] = '\0';
 		nussl_session_get_cipher(tls.session, buf, sizeof(buf));
 		log_area_printf(DEBUG_AREA_GW,
 				DEBUG_LEVEL_WARNING,
 				"[+] TLS connection to nuauth established (%s:%d), cipher is %s",
-				authreq_addr, authreq_port, buf);
+				authreq_addr, authreq_port,
+				(buf[0] != '\0') ? buf : "none" );
 	} else {
 		log_area_printf(DEBUG_AREA_GW,
 				DEBUG_LEVEL_CRITICAL,

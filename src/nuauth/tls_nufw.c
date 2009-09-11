@@ -292,6 +292,7 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 		return 1;
 	}
 
+	cipher[0] = '\0';
 	nussl_session_get_cipher(nu_session->nufw_client, cipher, sizeof(cipher));
 	log_message(INFO, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
 		    "TLS handshake with nufw server %s succeeded, cipher is %s",
