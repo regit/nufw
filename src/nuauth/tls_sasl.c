@@ -685,6 +685,7 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 	/* complete handshake */
 	ret = tls_user_do_handshake(client, client->srv_context);
 	if (ret != 0) {
+		remove_socket_from_pre_client_list(socket_fd);
 		/* error, cleanup & exit */
 		log_message(INFO, DEBUG_AREA_USER,
 				"Handshake failed, exiting client %s\n",
