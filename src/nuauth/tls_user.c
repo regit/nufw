@@ -771,6 +771,8 @@ int tls_user_init(struct tls_user_context_t *context)
 		exit(EXIT_FAILURE);
 	}
 
+	fcntl(context->sck_inet,F_SETFL,(fcntl(context->sck_inet,F_GETFL)|O_NONBLOCK));
+
 	context->cmd_queue = g_async_queue_new();
 
 	/* listen */
