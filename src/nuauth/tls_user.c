@@ -538,10 +538,15 @@ static void __client_writer_cb(struct ev_loop *loop, struct tls_user_context_t *
 #endif
 
 	while ((session = g_async_queue_try_pop(writer_queue))) {
-		ev_io_stop(session->srv_context->loop,
-				&session->client_watcher);
-		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER, "sending workunit to user_writers (%d)", i);
-		thread_pool_push(nuauthdatas->user_writers, session, NULL);
+		if (g_mutex_trylock(session->rw_lock)) {
+			ev_io_stop(session->srv_context->loop,
+					&session->client_watcher);
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+					  "sending session to user_writers (%d)",
+					  i);
+			g_mutex_unlock(session->rw_lock);
+			thread_pool_push(nuauthdatas->user_writers, session, NULL);
+		}
 #if DEBUG_ENABLE
 		i++;
 #endif
