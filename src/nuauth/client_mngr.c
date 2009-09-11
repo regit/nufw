@@ -418,10 +418,9 @@ char warn_clients(struct msg_addr_set *global_msg,
 			user_session_t *session = (user_session_t *)ipsockets->data;
 
 			if ((!scheck) || scheck(session, data)) {
-				struct msg_addr_set *gmsg = g_new0(struct msg_addr_set, 1);
-				gmsg = g_memdup(global_msg, sizeof(*global_msg));
+				struct msg_addr_set *gmsg = g_memdup(global_msg, sizeof(*global_msg));
 				gmsg->msg = g_memdup(global_msg->msg,
-								     ntohs(global_msg->msg->length));
+						     ntohs(global_msg->msg->length));
 #if DEBUG_ENABLE
 				if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG, DEBUG_AREA_USER)) {
 					char addr_ascii[INET6_ADDRSTRLEN];
