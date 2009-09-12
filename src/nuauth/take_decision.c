@@ -393,6 +393,84 @@ void decisions_queue_work(gpointer userdata, gpointer data)
 	free_connection(element);
 }
 
+void add_icmp_reject_data(connection_t *element, char *data)
+{
+	char payload[IPHDR_REJECT_LENGTH +
+		STORED_PAYLOAD_SIZE];
+	struct iphdr *ip =
+		(struct iphdr *) payload;
+	int payload_size = IPHDR_REJECT_LENGTH +
+				element->payload_len;
+
+	/* create ip header */
+	memset(payload, 0,
+			IPHDR_REJECT_LENGTH);
+	ip->version = AF_INET;
+	ip->ihl =
+		IPHDR_REJECT_LENGTH_BWORD;
+	ip->tot_len =
+		htons(IPHDR_REJECT_LENGTH +
+				element->payload_len);
+	ip->ttl = 64;	/* write dummy ttl */
+	ip->protocol =
+		element->tracking.protocol;
+	ip->saddr =
+		element->tracking.saddr.s6_addr32[3];
+	ip->daddr =
+		element->tracking.daddr.s6_addr32[3];
+
+	/* write transport layer */
+	memcpy(payload +
+			IPHDR_REJECT_LENGTH,
+			element->payload,
+			element->payload_len);
+
+	/* write icmp reject packet */
+	memcpy( data,
+			/* (char *) response +
+			sizeof
+			(nuv4_nuauth_decision_response_t), */
+			payload, payload_size);
+
+}
+
+void add_icmpv6_reject_data(connection_t *element, char *data)
+{
+	char payload[IP6HDR_REJECT_LENGTH +
+		STORED_PAYLOAD_SIZE];
+	struct ip6_hdr *ip =
+		(struct ip6_hdr *) payload;
+	int payload_size = IP6HDR_REJECT_LENGTH +
+				element->payload_len;
+
+	/* create ip header */
+	memset(payload, 0,
+			IPHDR_REJECT_LENGTH);
+	ip->ip6_flow = 0x60000000;
+	ip->ip6_plen = htons(payload_size);
+	ip->ip6_hops = 64;	/* write dummy hop limit */
+	ip->ip6_nxt =
+		element->tracking.protocol;
+	ip->ip6_src =
+		element->tracking.saddr;
+	ip->ip6_dst =
+		element->tracking.daddr;
+
+	/* write transport layer */
+	memcpy(payload +
+			IP6HDR_REJECT_LENGTH,
+			element->payload,
+			element->payload_len);
+
+	/* write icmp reject packet */
+	memcpy( data,
+			/* (char *) response +
+			sizeof
+			(nuv4_nuauth_decision_response_t), */
+			payload, payload_size);
+
+}
+
 /**
  * Send authentication response (decision of type ::decision_t) to the NuFW.
  *
@@ -439,36 +517,8 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 			response->packet_id = htonl(packet_id);
 			response->payload_len = htons(payload_size);
 			if (element->decision == DECISION_REJECT) {
-				char payload[IPHDR_REJECT_LENGTH +
-					     STORED_PAYLOAD_SIZE];
-				struct iphdr *ip =
-				    (struct iphdr *) payload;
-
-				/* create ip header */
-				memset(payload, 0, IPHDR_REJECT_LENGTH);
-				ip->version = AF_INET;
-				ip->ihl = IPHDR_REJECT_LENGTH_BWORD;
-				ip->tot_len =
-				    htons(IPHDR_REJECT_LENGTH +
-					  element->payload_len);
-				ip->ttl = 64;	/* write dummy ttl */
-				ip->protocol = element->tracking.protocol;
-				/* dummy convert to IPv4 as nufw on the other side does not support IPv6 at all */
-				ip->saddr =
-				    element->tracking.saddr.s6_addr32[3];
-				ip->daddr =
-				    element->tracking.daddr.s6_addr32[3];
-
-				/* write transport layer */
-				memcpy(payload + IPHDR_REJECT_LENGTH,
-				       element->payload,
-				       element->payload_len);
-
-				/* write icmp reject packet */
-				memcpy((char *) response +
-				       sizeof
-				       (nuv3_nuauth_decision_response_t),
-				       payload, payload_size);
+				add_icmp_reject_data(element, (char *) response +
+				       sizeof(nuv3_nuauth_decision_response_t));
 			}
 
 		}
@@ -507,74 +557,61 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 			response->payload_len = htons(payload_size);
 			if (element->decision == DECISION_REJECT) {
 				if (use_icmp6) {
-					char payload[IP6HDR_REJECT_LENGTH +
-						     STORED_PAYLOAD_SIZE];
-					struct ip6_hdr *ip =
-					    (struct ip6_hdr *) payload;
-
-					/* create ip header */
-					memset(payload, 0,
-					       IPHDR_REJECT_LENGTH);
-					ip->ip6_flow = 0x60000000;
-					ip->ip6_plen = htons(payload_size);
-					ip->ip6_hops = 64;	/* write dummy hop limit */
-					ip->ip6_nxt =
-					    element->tracking.protocol;
-					ip->ip6_src =
-					    element->tracking.saddr;
-					ip->ip6_dst =
-					    element->tracking.daddr;
-
-					/* write transport layer */
-					memcpy(payload +
-					       IP6HDR_REJECT_LENGTH,
-					       element->payload,
-					       element->payload_len);
-
-					/* write icmp reject packet */
-					memcpy((char *) response +
-					       sizeof
-					       (nuv4_nuauth_decision_response_t),
-					       payload, payload_size);
+					add_icmpv6_reject_data(element, (char *) response +
+					       sizeof(nuv4_nuauth_decision_response_t));
 				} else {
-					char payload[IPHDR_REJECT_LENGTH +
-						     STORED_PAYLOAD_SIZE];
-					struct iphdr *ip =
-					    (struct iphdr *) payload;
-
-					/* create ip header */
-					memset(payload, 0,
-					       IPHDR_REJECT_LENGTH);
-					ip->version = AF_INET;
-					ip->ihl =
-					    IPHDR_REJECT_LENGTH_BWORD;
-					ip->tot_len =
-					    htons(IPHDR_REJECT_LENGTH +
-						  element->payload_len);
-					ip->ttl = 64;	/* write dummy ttl */
-					ip->protocol =
-					    element->tracking.protocol;
-					ip->saddr =
-					    element->tracking.saddr.s6_addr32[3];
-					ip->daddr =
-					    element->tracking.daddr.s6_addr32[3];
-
-					/* write transport layer */
-					memcpy(payload +
-					       IPHDR_REJECT_LENGTH,
-					       element->payload,
-					       element->payload_len);
-
-					/* write icmp reject packet */
-					memcpy((char *) response +
-					       sizeof
-					       (nuv4_nuauth_decision_response_t),
-					       payload, payload_size);
+					add_icmp_reject_data(element, (char *) response +
+					       sizeof(nuv4_nuauth_decision_response_t));
 				}
 			}
 
 		}
 		break;
+	case PROTO_VERSION_NUFW_V24:
+		{
+			nuv5_nuauth_decision_response_t *response = (nuv5_nuauth_decision_response_t *) buffer;
+			int use_icmp6 = 0;
+			uint32_t mark = element->mark;
+
+			use_icmp6 = (!is_ipv4(&element->tracking.saddr)
+				     || !is_ipv4(&element->tracking.
+						 daddr));
+
+			if (element->decision == DECISION_REJECT) {
+				if (use_icmp6)
+					payload_size =
+					    IP6HDR_REJECT_LENGTH +
+					    element->payload_len;
+				else
+					payload_size =
+					    IPHDR_REJECT_LENGTH +
+					    element->payload_len;
+			}
+			/* allocate */
+			total_size =
+			    sizeof(nuv5_nuauth_decision_response_t) +
+			    payload_size;
+			response->protocol_version = PROTO_VERSION_NUFW_V24;
+			response->msg_type = AUTH_ANSWER;
+			response->tcmark = htonl(mark);
+			response->decision = element->decision;
+			response->priority = 1;
+			response->padding = 0;
+			response->packet_id = htonl(packet_id);
+			response->expiration = htonl(element->expire);
+			response->payload_len = htons(payload_size);
+			if (element->decision == DECISION_REJECT) {
+				if (use_icmp6) {
+					add_icmpv6_reject_data(element, (char *) response +
+							sizeof(nuv5_nuauth_decision_response_t));
+				} else {
+					add_icmp_reject_data(element, (char *) response +
+							sizeof(nuv5_nuauth_decision_response_t));
+				}
+			}
+		}
+		break;
+
 	default:
 		log_message(WARNING, DEBUG_AREA_GW,
 			    "Unknown nufw protocol at %s:%d", __FILE__, __LINE__);

@@ -59,10 +59,11 @@ enum proto_client_version_t {
 enum proto_nufw_version_t {
 	PROTO_VERSION_NUFW_V20 = 3,
 	PROTO_VERSION_NUFW_V22,
-	PROTO_VERSION_NUFW_V22_2
+	PROTO_VERSION_NUFW_V22_2,
+	PROTO_VERSION_NUFW_V24
 };
 
-#define PROTO_NUFW_VERSION PROTO_VERSION_NUFW_V22_2
+#define PROTO_NUFW_VERSION PROTO_VERSION_NUFW_V24
 
 /* header common for all packets
    1         4            8            16          24     32
@@ -270,5 +271,8 @@ struct nu_srv_helloreq {
 
 /* include definition for NuFW 2.2 */
 #include <proto_v4.h>
+
+/* include definition for NuFW 2.4 */
+#include <proto_v5.h>
 
 #endif

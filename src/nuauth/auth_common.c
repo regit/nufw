@@ -156,6 +156,8 @@ nu_error_t check_protocol_version(enum proto_type_t type, int version)
 					return NU_EXIT_ERROR;
 				case PROTO_VERSION_NUFW_V22_2:
 					return NU_EXIT_OK;
+				case PROTO_VERSION_NUFW_V24:
+					return NU_EXIT_OK;
 				default:
 					log_message(CRITICAL,
 						    DEBUG_AREA_PACKET | DEBUG_AREA_GW,

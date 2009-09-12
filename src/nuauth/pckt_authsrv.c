@@ -247,8 +247,7 @@ nu_error_t authpckt_new_connection(unsigned char *dgram,
 	}
 
 	connection->flags = ACL_FLAGS_NONE;
-	/* connection is proto v4 because we are here */
-	connection->nufw_version = PROTO_NUFW_VERSION;
+	connection->nufw_version = msg->protocol_version;
 
 	ret = parse_dgram(connection, dgram, dgram_size, conn,
 			msg->msg_type);
@@ -390,6 +389,7 @@ nu_error_t authpckt_decode(unsigned char **pdgram,
 	header = (nufw_to_nuauth_message_header_t *) dgram;
 	switch (header->protocol_version) {
 	case PROTO_VERSION_NUFW_V22_2:
+	case PROTO_VERSION_NUFW_V24:
 		switch (header->msg_type) {
 		case AUTH_REQUEST:
 		case AUTH_CONTROL:
