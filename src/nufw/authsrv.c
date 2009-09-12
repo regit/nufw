@@ -37,7 +37,7 @@ pthread_mutex_t ipq_mutex = PTHREAD_MUTEX_INITIALIZER;
  */
 int auth_process_answer(char *dgram, int dgram_size)
 {
-	nuv4_nuauth_decision_response_t *answer;
+	nuv5_nuauth_decision_response_t *answer;
 	uint32_t nfmark;
 	int sandf;
 	u_int32_t packet_id;
@@ -47,20 +47,20 @@ int auth_process_answer(char *dgram, int dgram_size)
 	if (dgram_size < (int) sizeof(nuv4_nuauth_decision_response_t)) {
 		return -1;
 	}
-	answer = (nuv4_nuauth_decision_response_t *) dgram;
+	answer = (nuv5_nuauth_decision_response_t *) dgram;
 
 	/* check payload length */
 	payload_len = ntohs(answer->payload_len);
 	if (dgram_size <
-	    (int) (sizeof(nuv4_nuauth_decision_response_t) + payload_len)
+	    (int) (sizeof(nuv5_nuauth_decision_response_t) + payload_len)
 	    || ((payload_len != 0) && (payload_len != (20 + 8))
 		&& (payload_len != (40 + 8)) &&
-		(dgram_size != (int) (sizeof(nuv4_nuauth_decision_response_t) + payload_len)))) {
+		(dgram_size != (int) (sizeof(nuv5_nuauth_decision_response_t) + payload_len)))) {
 		log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_WARNING,
 				"[!] Packet with improper size: payload of %d, received %d (vs %d)",
 				payload_len,
 				dgram_size,
-				(int) (sizeof(nuv4_nuauth_decision_response_t) + payload_len));
+				(int) (sizeof(nuv5_nuauth_decision_response_t) + payload_len));
 		return -1;
 	}
 
@@ -89,8 +89,19 @@ int auth_process_answer(char *dgram, int dgram_size)
 					 DEBUG_LEVEL_VERBOSE_DEBUG,
 					 "(*) Marking packet with %d",
 					 ntohl(answer->tcmark));
+#if HAVE_NFQ_MARK_EXPTIME
+			if (nothl(answer->expiration) != -1) {
+				IPQ_SET_VWMARK_EXPTIME(packet_id, NF_ACCEPT,
+					       answer->tcmark,
+					       answer->expiration);
+			} else {
+				IPQ_SET_VWMARK(packet_id, NF_ACCEPT,
+					       answer->tcmark);
+			}
+#else
 			IPQ_SET_VWMARK(packet_id, NF_ACCEPT,
 				       answer->tcmark);
+#endif
 		} else {
 			IPQ_SET_VERDICT(packet_id, NF_ACCEPT);
 		}
@@ -103,7 +114,7 @@ int auth_process_answer(char *dgram, int dgram_size)
 				"(*) Rejecting %" PRIu32, packet_id);
 		IPQ_SET_VERDICT(packet_id, NF_DROP);
 		if (send_icmp_unreach(dgram +
-				  sizeof(nuv4_nuauth_decision_response_t),
+				  sizeof(nuv5_nuauth_decision_response_t),
 				  payload_len) == -1) {
 			log_area_printf(DEBUG_AREA_PACKET, DEBUG_LEVEL_WARNING,
 					"(*) Could not sent ICMP reject for %" PRIu32, packet_id);
@@ -117,7 +128,7 @@ int auth_process_answer(char *dgram, int dgram_size)
 				 "(*) Drop packet %u", packet_id);
 		IPQ_SET_VERDICT(packet_id, NF_DROP);
 	}
-	return sizeof(nuv4_nuauth_decision_response_t) + payload_len;
+	return sizeof(nuv5_nuauth_decision_response_t) + payload_len;
 }
 
 /**

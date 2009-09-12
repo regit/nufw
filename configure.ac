@@ -281,6 +281,7 @@ if test "${build_nufw}" = "yes"; then
         AC_CHECK_LIB([nfnetlink], [nfnl_open], have_nfqueue="yes", build_nufw="")
         AC_CHECK_LIB([netfilter_queue], [nfq_open], have_nfqueue="yes",[AC_MSG_ERROR([libnetfilter_queue not present])],[-lnfnetlink])
         AC_CHECK_LIB([netfilter_queue], [nfq_set_queue_maxlen],AC_DEFINE_UNQUOTED([HAVE_NFQ_SET_QUEUE_MAXLEN],[1],[Found queue max length support in netfilter_queue]) ,,[-lnfnetlink])
+        AC_CHECK_LIB([netfilter_queue], [nfq_set_verdict_mark_exptime],AC_DEFINE_UNQUOTED([HAVE_NFQ_MARK_EXPTIME],[1],[Found verdict with mark and exptime support in netfilter_queue]) ,,[-lnfnetlink])
 	AC_CHECK_LIB([nfnetlink], [nlif_catch],
 			AC_CHECK_LIB([netfilter_queue], [nfq_get_indev_name],
 				AC_DEFINE_UNQUOTED([HAVE_NFQ_INDEV_NAME],

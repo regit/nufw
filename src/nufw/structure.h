@@ -194,6 +194,14 @@ extern pthread_mutex_t ipq_mutex;
 		pthread_mutex_unlock(&ipq_mutex); \
 	} while(0)
 
+#define IPQ_SET_VWMARK_EXPTIME(PACKETID, DECISION, NFMARK, EXPTIME) \
+	do { \
+		pthread_mutex_lock(&ipq_mutex); \
+		nfq_set_verdict_mark_exptime(hndl, PACKETID, DECISION, NFMARK, \
+					     EXPTIME, 0, NULL); \
+		pthread_mutex_unlock(&ipq_mutex); \
+	} while(0)
+
 int pckt_tx;			/*!< Number of transmitted packets since NuFW is running */
 int pckt_rx;			/*!< Number of received packets since NuFW is running */
 
