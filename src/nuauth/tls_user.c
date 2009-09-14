@@ -622,7 +622,7 @@ static void client_destructor_cb(struct ev_loop *loop, ev_async *w, int revents)
 
 static void loop_destructor_cb(struct ev_loop *loop, ev_async *w, int revents)
 {
-	ev_unloop(loop, EVUNLOOP_ALL);
+	ev_unloop(loop, EVUNLOOP_ONE);
 }
 
 
