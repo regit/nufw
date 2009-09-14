@@ -813,17 +813,6 @@ int tls_user_init(struct tls_user_context_t *context)
 		exit(EXIT_FAILURE);
 	}
 
-	ret = NUSSL_ERROR;
-	if (dh_params_file) {
-		ret = nussl_session_set_dh_file(context->nussl, dh_params_file);
-	}
-	if (ret != NUSSL_OK &&
-	    nussl_session_set_dh_bits(context->nussl, DH_BITS) != NUSSL_OK) {
-		log_message(FATAL, DEBUG_AREA_MAIN,
-			    "Unable to initialize Diffie Hellman params.");
-		exit(EXIT_FAILURE);
-	}
-
 	ret = nussl_ssl_set_keypair(context->nussl, nuauth_tls.cert, nuauth_tls.key);
 	if ( ret != NUSSL_OK ) {
 		log_message(FATAL, DEBUG_AREA_MAIN,
@@ -858,6 +847,17 @@ int tls_user_init(struct tls_user_context_t *context)
 					nussl_get_error(context->nussl));
 			exit(EXIT_FAILURE);
 		}
+	}
+
+	ret = NUSSL_ERROR;
+	if (dh_params_file) {
+		ret = nussl_session_set_dh_file(context->nussl, dh_params_file);
+	}
+	if (ret != NUSSL_OK &&
+	    nussl_session_set_dh_bits(context->nussl, DH_BITS) != NUSSL_OK) {
+		log_message(FATAL, DEBUG_AREA_MAIN,
+			    "Unable to initialize Diffie Hellman params.");
+		exit(EXIT_FAILURE);
 	}
 
 	if (nuauth_tls.ciphers) {
