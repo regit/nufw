@@ -92,7 +92,9 @@ void thread_list_stop_ev(GSList *thread_list)
 	struct tls_user_context_t *context;
 	while (thread_p) {
 		context = (struct tls_user_context_t *)((struct nuauth_thread_t *)thread_p->data)->data;
-		ev_async_send(context->loop, &context->loop_fini_signal);
+		if (context->loop) {
+			ev_async_send(context->loop, &context->loop_fini_signal);
+		}
 		thread_p = thread_p->next;
 	}
 	return;
