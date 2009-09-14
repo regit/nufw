@@ -68,6 +68,8 @@
 
 #include <fcntl.h>
 
+#include <ev.h>
+
 #include "nussl_ssl.h"
 #include "nussl_ssl_common.h"
 #include "nussl_string.h"
@@ -1407,14 +1409,56 @@ void nussl__ssl_exit(void)
 #endif
 }
 
+static void ssl_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
+{
+	int sslerr, status;
+	SSL *ssl= (SSL *)w->data;
+
+	status = SSL_accept(ssl);
+	sslerr = SSL_get_error(ssl,status);
+	if (status == 1) {
+		ev_io_stop(loop, w);
+		ev_unloop(loop, EVUNLOOP_ONE);
+		return;
+	} else {
+		switch (sslerr) {
+			case SSL_ERROR_WANT_READ:
+			case SSL_ERROR_WANT_WRITE:
+				break;
+			default:
+				ev_io_stop(loop, w);
+				ev_unloop(loop, EVUNLOOP_ONE);
+				/* FIXME */
+				//snprintf(errbuf, errbufsz, "%s", ERR_error_string(ERR_get_error(),NULL));
+				NUSSL_DEBUG(NUSSL_DBG_SOCKET,
+						"ssl: error in handshake %s\n",
+						ERR_error_string(ERR_get_error(),NULL));
+				w->data = NULL;
+		}
+		return;
+	}
+}
+
+
+static void ssl_timeout_cb(struct ev_loop *loop, ev_timer *w, int revents)
+{
+
+	NUSSL_DEBUG(NUSSL_DBG_SOCKET,
+			"ssl: timeout in ssl handshake\n");
+	ev_unloop(loop, EVUNLOOP_ONE);
+	ev_io_stop(loop, w->data);
+	w->data = NULL;
+}
+
 int nussl_ssl_accept(nussl_ssl_socket * ssl_sock, unsigned int timeout, char *errbuf, size_t errbufsz)
 {
-	int ret, status, sslerr;
+	int ret;
 	int sock;
 	int blocking_state;
-	fd_set fd_r, fd_w;
-	struct timeval tv;
 	SSL *ssl = *ssl_sock;
+	struct ev_loop *loop;
+	ev_io ssl_watcher;
+	ev_timer timer;
 
 	if (timeout == 0) {
 		return SSL_accept(ssl);
@@ -1427,40 +1471,24 @@ int nussl_ssl_accept(nussl_ssl_socket * ssl_sock, unsigned int timeout, char *er
 
 	ret = -1;
 
-	do {
-		status = SSL_accept(ssl);
-		sslerr = SSL_get_error(ssl,status);
+	loop = ev_loop_new(0);
+	ev_io_init(&ssl_watcher, ssl_activity_cb, sock , EV_READ|EV_WRITE);
+	ssl_watcher.data = ssl;
+	ev_io_start(loop, &ssl_watcher);
+	ev_timer_init (&timer, ssl_timeout_cb, 1.0 * timeout, 0);
+	timer.data = &ssl_watcher;
+	ev_timer_start (loop, &timer);
 
-		if (status == 1) {
-			ret = 1; /* ok */
-			break;
-		} else {
-			FD_ZERO(&fd_r);
-			FD_ZERO(&fd_w);
-			tv.tv_usec = 0;
-			tv.tv_sec = timeout;
-			switch (sslerr) {
-				case SSL_ERROR_WANT_READ:
-					FD_SET(sock,&fd_r);
-					break;
-				case SSL_ERROR_WANT_WRITE:
-					FD_SET(sock,&fd_w);
-					break;
-				default:
-					snprintf(errbuf, errbufsz, "%s", ERR_error_string(ERR_get_error(),NULL));
-					ret = -1; /* error */
-					goto exit_accept_handshake;
-			}
-			ret = select(sock + 1, &fd_r, &fd_w, NULL, &tv);
-			if ( ! (FD_ISSET(sock,&fd_r) || FD_ISSET(sock,&fd_w)) ) { /* timeout */
-				ret = 0; /* timeout */
-				goto exit_accept_handshake;
-			}
-		}
-	} while (status == -1 && ret != 0);
+	ev_loop(loop, 0);
 
-exit_accept_handshake:
-	/* restore blocking state */
+	ev_loop_destroy(loop);
+
+	if ((timer.data == NULL) || (ssl_watcher.data == NULL)) {
+		ret = -1;
+	} else {
+		ret = 1;
+	}
+
 	fcntl(sock,F_SETFL,blocking_state);
 
 	return ret;

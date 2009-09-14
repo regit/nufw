@@ -34,6 +34,6 @@ else
 libnussl_la_LIBADD = -lpthread -lgcrypt -lgnutls
 endif
 
-libnussl_la_LDFLAGS = -version-info ${LIBNUSSL_AC}:${LIBNUSSL_REV}:${LIBNUSSL_ANC}
+libnussl_la_LDFLAGS = -version-info ${LIBNUSSL_AC}:${LIBNUSSL_REV}:${LIBNUSSL_ANC} -lev
 
 
