@@ -75,6 +75,7 @@ static nu_error_t suppress_nufw_session(nufw_session_t * session)
 	return NU_EXIT_OK;
 }
 
+extern int nufw_servers_connected;
 /**
  * Clean a NuFW TLS session: send "bye", deinit the connection
  * and free the memory.
@@ -85,6 +86,8 @@ void clean_nufw_session(nufw_session_t * c_session)
 
 	g_mutex_free(c_session->tls_lock);
 	g_free(c_session);
+
+	nufw_servers_connected--;
 
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW, "close nufw session: done");
 }

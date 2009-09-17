@@ -44,7 +44,7 @@
  */
 
 int nuauth_tls_max_servers = NUAUTH_TLS_MAX_SERVERS;
-static int nufw_servers_connected = 0;
+int nufw_servers_connected = 0;
 
 extern struct nuauth_tls_t nuauth_tls;
 
@@ -215,14 +215,6 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 
 	nufw_session_t *nu_session;
 
-	/* Check number of connected servers */
-	if ( nufw_servers_connected >= nuauth_tls_max_servers ) {
-		log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_WARNING,
-				"too many servers (%d configured)",
-				nuauth_tls_max_servers);
-		return 1;
-	}
-
 	/* initialize TLS */
 	nu_session = g_new0(nufw_session_t, 1);
 
@@ -239,6 +231,16 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 		log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_WARNING,
 				"Unable to allocate nufw server connection : %s",
 				nussl_get_error(context->server));
+		return 1;
+	}
+
+	/* Check number of connected servers */
+	if ( nufw_servers_connected >= nuauth_tls_max_servers ) {
+		log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_WARNING,
+				"too many servers (%d configured)",
+				nuauth_tls_max_servers);
+		nussl_session_destroy(nu_session->nufw_client);
+		g_free(nu_session);
 		return 1;
 	}
 
@@ -332,14 +334,6 @@ int tls_nufw_accept_unix(struct tls_nufw_context_t *context)
 
 	nufw_session_t *nu_session;
 
-	/* Check number of connected servers */
-	if ( nufw_servers_connected >= nuauth_tls_max_servers ) {
-		log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_WARNING,
-				"too many servers (%d configured)",
-				nuauth_tls_max_servers);
-		return 1;
-	}
-
 	/* initialize TLS */
 	nu_session = g_new0(nufw_session_t, 1);
 
@@ -360,8 +354,19 @@ int tls_nufw_accept_unix(struct tls_nufw_context_t *context)
 		return 1;
 	}
 
+	/* Check number of connected servers */
+	if ( nufw_servers_connected >= nuauth_tls_max_servers ) {
+		log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_WARNING,
+				"too many servers (%d configured)",
+				nuauth_tls_max_servers);
+		close(conn_fd);
+		g_free(nu_session);
+		return 1;
+	}
+
 	nu_session->nufw_client = nussl_session_create_with_fd(conn_fd, 0 /* verify */);
 	if ( ! nu_session->nufw_client ) {
+		close(conn_fd);
 		g_free(nu_session);
 		log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_WARNING,
 				"Unable to allocate nufw server connection : %s",
