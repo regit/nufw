@@ -37,14 +37,13 @@ static GSList *userpckt_decode(struct tls_buffer_read *data);
  * \param user_session Pointer to a struct user_session_t: containing the data to treat
  * \param data NULL (unused)
  */
-void user_check_and_decide(gpointer user_session, gpointer data)
+nu_error_t user_check_and_decide(user_session_t *usersession)
 {
 	GSList *conn_elts = NULL;
 	GSList *conn_elt_l;
 	connection_t *conn_elt;
 	struct tls_buffer_read *userdata = NULL;
 	nu_error_t u_request;
-	user_session_t *usersession = user_session;
 
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER, "entering user_check");
 
@@ -55,7 +54,7 @@ void user_check_and_decide(gpointer user_session, gpointer data)
 				  "client disconnect");
 		/* clean client structure */
 		delete_client_by_socket(usersession->socket);
-		RETURN_NO_LOG;
+		return NU_EXIT_ERROR;
 	} else if (u_request != NU_EXIT_CONTINUE) {
 #ifdef DEBUG_ENABLE
 		log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
@@ -63,16 +62,12 @@ void user_check_and_decide(gpointer user_session, gpointer data)
 #endif
 		/* better to disconnect: cleaning client structure */
 		delete_client_by_socket(usersession->socket);
-		RETURN_NO_LOG;
+		return NU_EXIT_ERROR;
 	}
 
 
-	/* send socket back to user select */
-	g_async_queue_push(mx_queue, usersession);
-	ev_async_send(usersession->srv_context->loop, &usersession->srv_context->client_injector_signal);
-
 	if (userdata == NULL) {
-		RETURN_NO_LOG;
+		return NU_EXIT_ERROR;
 	}
 
 	/* reload condition */
@@ -84,7 +79,7 @@ void user_check_and_decide(gpointer user_session, gpointer data)
 					"User packet decoding failed");
 		}
 		free_buffer_read(userdata);
-		return;
+		return NU_EXIT_ERROR;
 	}
 
 	/* if OK search and fill */
@@ -134,6 +129,8 @@ void user_check_and_decide(gpointer user_session, gpointer data)
 	}
 	g_slist_free(conn_elts);
 	free_buffer_read(userdata);
+
+	return NU_EXIT_OK;
 }
 
 void user_process_field_hello(connection_t * connection,

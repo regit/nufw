@@ -91,7 +91,7 @@ void init_audit()
 
 	struct sigaction act;
 	myaudit = g_new0(struct audit_struct, 1);
-	myaudit->users = nuauthdatas->user_checkers;
+	myaudit->users = nuauthdatas->user_workers;
 	myaudit->acls = nuauthdatas->acl_checkers;
 	myaudit->loggers = nuauthdatas->user_loggers;
 	myaudit->conn_list = conn_list;

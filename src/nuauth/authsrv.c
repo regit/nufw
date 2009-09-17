@@ -102,8 +102,7 @@ void wait_all_thread_pools()
 	wait_thread_pool("session logger", nuauthdatas->user_session_loggers);
 	wait_thread_pool("packet logger", nuauthdatas->user_loggers);
 	wait_thread_pool("acl checker", nuauthdatas->acl_checkers);
-	wait_thread_pool("users checker", nuauthdatas->user_checkers);
-	wait_thread_pool("users writer", nuauthdatas->user_writers);
+	wait_thread_pool("users worker", nuauthdatas->user_workers);
 
 	if (nuauthconf->log_users_sync) {
 		wait_thread_pool("decision worker",
@@ -149,14 +148,10 @@ void start_all_thread_pools()
 	    g_thread_pool_new((GFunc) acl_check_and_decide, NULL,
 			      nuauthconf->nbacl_check, POOL_TYPE, NULL);
 
-	/* create user checker workers */
-	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN, "Creating %d user checker threads",
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN, "Creating %d user worker threads",
 		    nuauthconf->nbuser_check);
-	nuauthdatas->user_checkers =
-	    g_thread_pool_new((GFunc) user_check_and_decide, NULL,
-			      nuauthconf->nbuser_check, POOL_TYPE, NULL);
-	nuauthdatas->user_writers =
-	    g_thread_pool_new((GFunc) user_writer, NULL,
+	nuauthdatas->user_workers =
+	    g_thread_pool_new((GFunc) user_worker, NULL,
 			      nuauthconf->nbuser_check, POOL_TYPE, NULL);
 
 	/* create user logger workers */
@@ -206,8 +201,7 @@ void stop_all_thread_pools(gboolean soft)
 		stop_thread_pool("session logger", &nuauthdatas->user_session_loggers);
 		stop_thread_pool("packet logger", &nuauthdatas->user_loggers);
 		stop_thread_pool("acl checker", &nuauthdatas->acl_checkers);
-		stop_thread_pool("users checker", &nuauthdatas->user_checkers);
-		stop_thread_pool("users writer", &nuauthdatas->user_writers);
+		stop_thread_pool("users workers", &nuauthdatas->user_workers);
 
 		if (nuauthconf->log_users_sync) {
 			stop_thread_pool("decision worker",
@@ -862,7 +856,6 @@ void configure_app(int argc, char **argv)
  *   - Create thread pools:
  *      - ip_authentication_workers with external_ip_auth() (if enabled) ;
  *      - acl_checkers with acl_check_and_decide() ;
- *      - user_checkers with user_check_and_decide() ;
  *      - user_loggers with real_log_user_packet() ;
  *      - user_session_loggers with log_user_session_thread() ;
  *      - decisions_workers with decisions_queue_work().
@@ -990,7 +983,7 @@ void main_cleanup()
 
 	/* info message about thread pools */
 	if (DEBUG_OR_NOT(DEBUG_LEVEL_INFO, DEBUG_AREA_MAIN)) {
-		if (g_thread_pool_unprocessed(nuauthdatas->user_checkers)
+		if (g_thread_pool_unprocessed(nuauthdatas->user_workers)
 		    || g_thread_pool_unprocessed(nuauthdatas->
 						 acl_checkers)
 		    || g_thread_pool_unprocessed(nuauthdatas->
@@ -999,7 +992,7 @@ void main_cleanup()
 			    ("%u user/%u acl/%u log unassigned task(s), %d "
 			     "connection(s)",
 			     g_thread_pool_unprocessed(nuauthdatas->
-						       user_checkers),
+						       user_workers),
 			     g_thread_pool_unprocessed(nuauthdatas->
 						       acl_checkers),
 			     g_thread_pool_unprocessed(nuauthdatas->

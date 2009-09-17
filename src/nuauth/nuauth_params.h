@@ -175,8 +175,7 @@ struct nuauth_datas {
 	/**
 	 * pools of thread which treat user packet.
 	 */
-	GThreadPool *user_checkers;
-	GThreadPool *user_writers;
+	GThreadPool *user_workers;
 	GThreadPool *tls_sasl_worker;
 
 	/**

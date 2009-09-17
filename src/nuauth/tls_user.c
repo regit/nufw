@@ -430,34 +430,22 @@ int tls_user_accept(struct tls_user_context_t *context)
  *      send #FREE_MESSAGE to tls_push_queue (see push_worker()) if using
  *      PUSH mode (::nuauthconf->push), or call delete_client_by_socket().
  */
-void tls_user_check_activity(struct tls_user_context_t *context,
-			     int socket)
+nu_error_t tls_user_check_activity(user_session_t *c_session)
 {
-	user_session_t *c_session;
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
-			  "user activity on socket %d", socket);
-
-	/* we lock here but can do other thing on hash as it is not destructive
-	 * in push mode modification of hash are done in push_worker */
-	c_session = get_client_datas_by_socket(socket);
-
-	if (c_session == NULL) {
-		log_message(INFO, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
-			  "User session can not be found");
-		return;
-	}
+			  "user activity on socket %d", c_session->socket);
 
 	if (nuauthconf->session_duration && c_session->expire < time(NULL)) {
-		delete_client_by_socket(socket);
-		return;
+		delete_client_by_socket(c_session->socket);
+		return NU_EXIT_ERROR;
 	}
 
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
 			  "Pushing packet to user_checker");
-	thread_pool_push(nuauthdatas->user_checkers, c_session, NULL);
+	return user_check_and_decide(c_session);
 }
 
-void user_writer(gpointer psession, gpointer data)
+void user_worker(gpointer psession, gpointer data)
 {
 	user_session_t *usersession = (user_session_t *) psession;
 	struct msg_addr_set *gmsg;
@@ -466,23 +454,33 @@ void user_writer(gpointer psession, gpointer data)
 
 	if (g_mutex_trylock(usersession->rw_lock)) {
 		while ((gmsg = g_async_queue_try_pop(usersession->workunits_queue))) {
-			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
-					"writing message to \"%s\"",
-					usersession->user_name);
-
-			/* send message */
-			ret = nussl_write(usersession->nussl,
-					(char*)gmsg->msg,
-					ntohs(gmsg->msg->length));
-			g_free(gmsg->msg);
-			g_free(gmsg);
-			if (ret < 0) {
+			if (gmsg == GINT_TO_POINTER(0x1)) {
 				debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
-						"client disconnect");
-				/* clean client structure, session is outside event loop */
-				delete_client_by_socket(usersession->socket);
-				g_mutex_unlock(usersession->rw_lock);
-				return;
+						"reading message from \"%s\"",
+						usersession->user_name);
+				if (tls_user_check_activity(usersession) != NU_EXIT_OK) {
+					g_mutex_unlock(usersession->rw_lock);
+					return;
+				}
+			} else {
+				debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+						"writing message to \"%s\"",
+						usersession->user_name);
+
+				/* send message */
+				ret = nussl_write(usersession->nussl,
+						(char*)gmsg->msg,
+						ntohs(gmsg->msg->length));
+				g_free(gmsg->msg);
+				g_free(gmsg);
+				if (ret < 0) {
+					debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+							"client disconnect");
+					/* clean client structure, session is outside event loop */
+					delete_client_by_socket(usersession->socket);
+					g_mutex_unlock(usersession->rw_lock);
+					return;
+				}
 			}
 		}
 		/* send socket back to user select no message are waiting */
@@ -501,6 +499,8 @@ static void client_accept_cb(struct ev_loop *loop, ev_io *w, int revents)
 #ifdef DEBUG_ENABLE
 	int i = 0;
 #endif
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+				"Going to accept new user session");
 	while(tls_user_accept(context) == 0) {
 #ifdef DEBUG_ENABLE
 		log_message(INFO, DEBUG_AREA_USER,
@@ -515,7 +515,12 @@ static void client_accept_cb(struct ev_loop *loop, ev_io *w, int revents)
 static void client_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 {
 	struct tls_user_context_t *context = (struct tls_user_context_t *) w->data;
-	ev_io_stop(context->loop, w);
+	user_session_t *c_session = get_client_datas_by_socket(w->fd);
+
+	if (g_mutex_trylock(c_session->rw_lock)) {
+		ev_io_stop(context->loop, w);
+		g_mutex_unlock(c_session->rw_lock);
+	}
 
 	if (revents & EV_ERROR) {
 		log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
@@ -524,7 +529,7 @@ static void client_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 		return;
 	}
 	if (revents & EV_READ) {
-		tls_user_check_activity(context, w->fd);
+		g_async_queue_push(c_session->workunits_queue, GINT_TO_POINTER(0x1));
 	}
 }
 
@@ -542,10 +547,10 @@ static void __client_writer_cb(struct ev_loop *loop, struct tls_user_context_t *
 			ev_io_stop(session->srv_context->loop,
 					&session->client_watcher);
 			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
-					  "sending session to user_writers (%d)",
+					  "sending session to user_workers (%d)",
 					  i);
 			g_mutex_unlock(session->rw_lock);
-			thread_pool_push(nuauthdatas->user_writers, session, NULL);
+			thread_pool_push(nuauthdatas->user_workers, session, NULL);
 		}
 #if DEBUG_ENABLE
 		i++;

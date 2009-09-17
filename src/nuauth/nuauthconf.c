@@ -203,7 +203,7 @@ void free_nuauth_params(struct nuauth_params *conf)
 void apply_new_config(struct nuauth_params *conf)
 {
 	/* checking nuauth tuning parameters */
-	g_thread_pool_set_max_threads(nuauthdatas->user_checkers,
+	g_thread_pool_set_max_threads(nuauthdatas->user_workers,
 			conf->nbuser_check, NULL);
 	g_thread_pool_set_max_threads(nuauthdatas->acl_checkers,
 			conf->nbacl_check, NULL);

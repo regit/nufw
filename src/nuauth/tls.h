@@ -204,7 +204,7 @@ typedef struct {
 
 extern struct tls_user_context_t tls_user_context;
 
-void user_writer(gpointer workunit, gpointer data);
+void user_worker(gpointer workunit, gpointer data);
 
 void tls_user_remove_client(int sock);
 void tls_user_start_servers(GSList *servers);
