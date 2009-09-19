@@ -436,12 +436,12 @@ nu_error_t tls_user_check_activity(user_session_t *c_session)
 			  "user activity on socket %d", c_session->socket);
 
 	if (nuauthconf->session_duration && c_session->expire < time(NULL)) {
-		delete_client_by_socket(c_session->socket);
 		return NU_EXIT_ERROR;
 	}
 
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
-			  "Pushing packet to user_checker");
+			  "user_checker starting");
+	
 	return user_check_and_decide(c_session);
 }
 
@@ -458,9 +458,25 @@ void user_worker(gpointer psession, gpointer data)
 				debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 						"reading message from \"%s\"",
 						usersession->user_name);
-				if (tls_user_check_activity(usersession) != NU_EXIT_OK) {
-					g_mutex_unlock(usersession->rw_lock);
-					return;
+				ret = tls_user_check_activity(usersession);
+				switch (ret) {
+					case NU_EXIT_OK:
+						break;
+					case NU_EXIT_ERROR:
+						debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+								"problem reading message from \"%s\"",
+								usersession->user_name);
+						g_mutex_unlock(usersession->rw_lock);
+						delete_client_by_socket(usersession->socket);
+						return;
+					case NU_EXIT_CONTINUE:
+						/* send socket back to user select no message are waiting */
+						g_async_queue_push(mx_queue, usersession);
+						ev_async_send(usersession->srv_context->loop,
+								&usersession->srv_context->client_injector_signal);
+
+						g_mutex_unlock(usersession->rw_lock);
+						return;
 				}
 			} else {
 				debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,

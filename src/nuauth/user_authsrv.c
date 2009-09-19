@@ -52,22 +52,18 @@ nu_error_t user_check_and_decide(user_session_t *usersession)
 	if (u_request == NU_EXIT_OK) {
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 				  "client disconnect");
-		/* clean client structure */
-		delete_client_by_socket(usersession->socket);
 		return NU_EXIT_ERROR;
 	} else if (u_request != NU_EXIT_CONTINUE) {
 #ifdef DEBUG_ENABLE
 		log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 			    "treat_user_request() failure");
 #endif
-		/* better to disconnect: cleaning client structure */
-		delete_client_by_socket(usersession->socket);
 		return NU_EXIT_ERROR;
 	}
 
 
 	if (userdata == NULL) {
-		return NU_EXIT_ERROR;
+		return NU_EXIT_CONTINUE;
 	}
 
 	/* reload condition */
@@ -79,7 +75,7 @@ nu_error_t user_check_and_decide(user_session_t *usersession)
 					"User packet decoding failed");
 		}
 		free_buffer_read(userdata);
-		return NU_EXIT_ERROR;
+		return NU_EXIT_CONTINUE;
 	}
 
 	/* if OK search and fill */
@@ -124,6 +120,7 @@ nu_error_t user_check_and_decide(user_session_t *usersession)
 				 DEBUG_AREA_PACKET)) {
 			print_connection(conn_elt, "User Packet");
 		}
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER, "user packet to connection queue");
 		g_async_queue_push(nuauthdatas->connections_queue,
 				conn_elt);
 	}
