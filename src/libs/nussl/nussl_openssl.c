@@ -1445,8 +1445,8 @@ static void ssl_timeout_cb(struct ev_loop *loop, ev_timer *w, int revents)
 
 	NUSSL_DEBUG(NUSSL_DBG_SOCKET,
 			"ssl: timeout in ssl handshake\n");
-	ev_unloop(loop, EVUNLOOP_ONE);
 	ev_io_stop(loop, w->data);
+	ev_unloop(loop, EVUNLOOP_ONE);
 	w->data = NULL;
 }
 
