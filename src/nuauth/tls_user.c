@@ -533,6 +533,10 @@ static void client_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 	struct tls_user_context_t *context = (struct tls_user_context_t *) w->data;
 	user_session_t *c_session = get_client_datas_by_socket(w->fd);
 
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+				"User activity for \"%s\" (in cb)",
+				c_session->user_name);
+
 	if (g_mutex_trylock(c_session->rw_lock)) {
 		ev_io_stop(context->loop, w);
 		g_mutex_unlock(c_session->rw_lock);
@@ -545,7 +549,11 @@ static void client_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 		return;
 	}
 	if (revents & EV_READ) {
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+				"Reading needed for user \"%s\"(in cb)",
+				c_session->user_name);
 		g_async_queue_push(c_session->workunits_queue, GINT_TO_POINTER(0x1));
+		thread_pool_push(nuauthdatas->user_workers, c_session, NULL);
 	}
 }
 
