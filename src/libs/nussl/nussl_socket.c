@@ -122,6 +122,8 @@
 #include <fcntl.h>
 #endif
 
+#include <ev.h>
+
 #ifdef HAVE_SOCKS_H
 #include <socks.h>
 #endif
@@ -401,43 +403,75 @@ void nussl_sock_exit(void)
 	}
 }
 
+static void sock_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
+{
+
+	if (revents & EV_ERROR) {
+		NUSSL_DEBUG(NUSSL_DBG_SOCKET,
+				"ssl: error in raw poll\n");
+		ev_io_stop(loop, w);
+		ev_unloop(loop, EVUNLOOP_ONE);
+		return;
+	}
+	if (NUSSL_ISINTR(nussl_errno)) {
+		return;
+	}
+	if (revents & (EV_READ|EV_WRITE)) {
+		ev_io_stop(loop, w);
+		ev_unloop(loop, EVUNLOOP_ONE);
+	}
+}
+
+static void sock_timeout_cb(struct ev_loop *loop, ev_timer *w, int revents)
+{
+
+	NUSSL_DEBUG(NUSSL_DBG_SOCKET,
+			"ssl: timeout in ssl waiting\n");
+	ev_io_stop(loop, w->data);
+	ev_unloop(loop, EVUNLOOP_ONE);
+	w->data = NULL;
+}
+
+
+
+
 /* Await readability (rdwr = 0) or writability (rdwr != 0) for socket
  * fd for secs seconds.  Returns <0 on error, zero on timeout, >0 if
  * data is available. */
 static int raw_poll(int fdno, int rdwr, int secs)
 {
 	int ret;
-#ifdef NUSSL_USE_POLL
-	struct pollfd fds;
-	int timeout = secs >= 0 ? secs * 1000 : -1;
+	struct ev_loop *loop;
+	ev_io sock_watcher;
+	ev_timer timer;
+	int timeout;
 
-	fds.fd = fdno;
-	fds.events = rdwr == 0 ? POLLIN : POLLOUT;
-	fds.revents = 0;
-
-	do {
-		ret = poll(&fds, 1, timeout);
-	} while (ret < 0 && NUSSL_ISINTR(nussl_errno));
-#else
-	fd_set rdfds, wrfds;
-	struct timeval timeout, *tvp = (secs >= 0 ? &timeout : NULL);
-
-	/* Init the fd set */
-	FD_ZERO(&rdfds);
-	FD_ZERO(&wrfds);
-	if (rdwr == 0)
-		FD_SET(fdno, &rdfds);
-	else
-		FD_SET(fdno, &wrfds);
-
-	if (tvp) {
-		tvp->tv_sec = secs;
-		tvp->tv_usec = 0;
+	if (secs == 0) {
+		timeout = 1; /* reset to 1 second */
+	} else {
+		timeout = secs;
 	}
-	do {
-		ret = select(fdno + 1, &rdfds, &wrfds, NULL, tvp);
-	} while (ret < 0 && NUSSL_ISINTR(nussl_errno));
-#endif
+
+	ret = -1;
+
+	loop = ev_loop_new(0);
+	ev_io_init(&sock_watcher, sock_activity_cb, fdno , EV_READ|EV_WRITE);
+	sock_watcher.data = (void *)(long)fdno;
+	ev_io_start(loop, &sock_watcher);
+	ev_timer_init (&timer, sock_timeout_cb, 1.0 * timeout, 0);
+	timer.data = &sock_watcher;
+	ev_timer_start(loop, &timer);
+
+	ev_loop(loop, 0);
+
+	ev_loop_destroy(loop);
+
+	if (timer.data == NULL) {
+		ret = 0;
+	} else {
+		ret = 1;
+	}
+
 	return ret;
 }
 
@@ -643,14 +677,26 @@ static int error_ossl(nussl_socket * sock, int sret)
 static ssize_t read_ossl(nussl_socket * sock, char *buffer, size_t len)
 {
 	int ret;
+	int sslerr = 0;
+	int i = 0;
 
 	ret = readable_ossl(sock, sock->rdtimeout);
 	if (ret)
 		return ret;
 
-	ret = SSL_read(sock->ssl, buffer, CAST2INT(len));
-	if (ret <= 0)
+	do {
+		if (i > 0) {
+			usleep(10000);
+		}
+		ret = SSL_read(sock->ssl, buffer, CAST2INT(len));
+		if (ret < 0) {
+			sslerr = SSL_get_error(sock->ssl, ret);
+		}
+	} while ((ret < 0) && (sslerr == 2));
+
+	if (ret <= 0) {
 		ret = error_ossl(sock, ret);
+	}
 
 	return ret;
 }
