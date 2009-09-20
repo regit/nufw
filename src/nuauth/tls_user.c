@@ -441,7 +441,7 @@ nu_error_t tls_user_check_activity(user_session_t *c_session)
 
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
 			  "user_checker starting");
-	
+
 	return user_check_and_decide(c_session);
 }
 

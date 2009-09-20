@@ -389,7 +389,9 @@ static int parse_user_os(user_session_t * c_session, char *buf, int buf_size)
 	/* check buffer underflow */
 	if (buf_size < (int) sizeof(struct nu_authfield)) {
 		format_ipv6(&c_session->addr, address, INET6_ADDRSTRLEN, NULL);
-		g_message("%s sent a too small osfield", address);
+		g_message("%s sent a too small osfield (%d)",
+			  address,
+			  buf_size);
 		return SASL_FAIL;
 	}
 
@@ -560,6 +562,12 @@ static int finish_nego(user_session_t * c_session)
 				  "OS version asked");
 
 	buf_size = nussl_read(c_session->nussl, buf, sizeof buf);
+	if (buf_size < 0) {
+		log_message(WARNING, DEBUG_AREA_USER,
+			    "nussl_read() failure at %s:%d",
+			    __FILE__, __LINE__);
+		return SASL_FAIL;
+	}
 	ret = parse_user_os(c_session, buf, buf_size);
 	if (ret != SASL_OK)
 		return ret;
