@@ -244,8 +244,14 @@ static PGconn *pgsql_conn_init(struct log_pgsql_params *params)
 
 static char *quote_pgsql_string(char *text)
 {
-	unsigned int length = strlen(text);
-	char *quoted = (char *) malloc(length * 2 + 1);
+	unsigned int length = 0;
+	char *quoted = NULL;
+
+	if (text == NULL) {
+		return NULL;
+	}
+	length = strlen(text);
+	quoted = g_new0(char, length * 2 + 1);
 	if (PQescapeString(quoted, text, length) == 0) {
 		g_free(quoted);
 		return NULL;
