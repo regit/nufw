@@ -2,8 +2,6 @@
  ** Copyright(C) 2005-2009 INL
  ** Written by Eric Leblond <regit@inl.fr>
  **
- ** $Id$
- **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
  ** the Free Software Foundation, version 3 of the License.
@@ -51,6 +49,7 @@
 
 #include <auth_srv.h>
 #include <sasl/saslutil.h>
+#include <ev.h>
 #include "security.h"
 
 #include <nubase.h>
@@ -236,6 +235,100 @@ static unsigned samp_recv(nussl_session* nussl, char *buf, int bufsize)
 	return len;
 }
 
+static void sock_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
+{
+	user_session_t * c_session = w->data;
+	if (revents & EV_ERROR) {
+		log_message(INFO, DEBUG_AREA_AUTH,
+				"Error received when waiting protocol");
+		ev_io_stop(loop, w);
+		ev_unloop(loop, EVUNLOOP_ONE);
+		c_session->proto_version = PROTO_VERSION_NONE;
+		return;
+	}
+#if 0
+	if (NUSSL_ISINTR(nussl_errno)) {
+		log_message(CRITICAL, DEBUG_AREA_MAIN | DEBUG_AREA_AUTH,
+				"Warning: tls user select() failed: signal was catched.");
+		return;
+	}
+#endif
+	if (revents & (EV_READ|EV_WRITE)) {
+		char buffer[20];
+		int ret;
+		ev_io_stop(loop, w);
+		ev_unloop(loop, EVUNLOOP_ONE);
+		memset(buffer, 0, sizeof(buffer));
+
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
+				"Getting protocol information");
+		ret = nussl_read(c_session->nussl,
+				buffer,
+				sizeof(buffer) - 1);
+
+		if (ret <= 0) {
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
+					"nussl_read() failed: %s", nussl_get_error(c_session->nussl));
+			c_session->proto_version = PROTO_VERSION_NONE;
+			return;
+		}
+		if (((int) strlen(PROTO_STRING) + 2) <= ret
+				&& strncmp(buffer, PROTO_STRING,
+					strlen(PROTO_STRING)) ==
+				0) {
+			buffer[ret] = 0;
+			c_session->proto_version =
+				atoi((char *) buffer +
+						strlen(PROTO_STRING));
+
+			debug_log_message(VERBOSE_DEBUG,
+					DEBUG_AREA_AUTH,
+					"Protocol information: %d",
+					c_session->
+					proto_version);
+			/* sanity check on know protocol */
+			switch (c_session->proto_version) {
+				case PROTO_VERSION_V22:
+				case PROTO_VERSION_V22_1:
+				case PROTO_VERSION_V24:
+					break;
+				default:
+					debug_log_message(INFO,
+							DEBUG_AREA_AUTH,
+							"Bad protocol, announced %d",
+							c_session->proto_version
+							);
+					c_session->proto_version = PROTO_VERSION_NONE;
+					return;
+			}
+			return;
+		} else {
+			log_message(INFO, DEBUG_AREA_AUTH,
+					"Error bad proto string");
+			c_session->proto_version = PROTO_VERSION_NONE;
+			return;
+		}
+	}
+}
+
+static void sock_timeout_cb(struct ev_loop *loop, ev_timer *w, int revents)
+{
+	user_session_t *c_session = w->data;
+
+	if (c_session->proto_version != PROTO_VERSION_NONE) {
+		return;
+	}
+	log_message(DEBUG, DEBUG_AREA_AUTH,
+			"Timeout when waiting protocol announce");
+	ev_io_stop(loop, w->data);
+	ev_unloop(loop, EVUNLOOP_ONE);
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
+					  "Falling back to v3 protocol");
+	c_session->proto_version = PROTO_VERSION_V20;
+}
+
+
+
 /**
  *  fetch protocol version (or guess)
  *
@@ -246,97 +339,31 @@ static unsigned samp_recv(nussl_session* nussl, char *buf, int bufsize)
  * \return a ::nu_error_t set to NU_EXIT_OK if there is no problem
  */
 
-#define MAX_WAIT_ITER 5
 nu_error_t get_proto_info(user_session_t * c_session)
 {
-	int ret;
-	fd_set wk_set;		/* working set */
-	struct timeval tv;
+	struct ev_loop *loop;
+	ev_io sock_watcher;
+	ev_timer timer;
 
-	/* wait new events during 1 second */
-	FD_ZERO(&wk_set);
-	FD_SET(c_session->socket, &wk_set);
-	tv.tv_sec = nuauthconf->proto_wait_delay;
-	tv.tv_usec = 0;
-	ret = select(c_session->socket + 1, &wk_set, NULL, NULL, &tv);
-	/* catch select() error */
-	switch (ret) {
-	case -1:
-		{
-			if (errno == EINTR) {
-				log_message(CRITICAL, DEBUG_AREA_MAIN | DEBUG_AREA_AUTH,
-					    "Warning: tls user select() failed: signal was catched.");
-				break;
-			} else {
-				return NU_EXIT_ERROR;
-			}
-		}
-	case 0:
-		{
-			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
-					  "Falling back to v3 protocol");
-			c_session->proto_version = PROTO_VERSION_V20;
-		}
-		break;
-	default:
-		{
-			if (FD_ISSET(c_session->socket, &wk_set)) {
-				char buffer[20];
-				memset(buffer, 0, sizeof(buffer));
+	c_session->proto_version = PROTO_VERSION_NONE;
+	loop = ev_loop_new(0);
+	ev_io_init(&sock_watcher, sock_activity_cb, c_session->socket , EV_READ|EV_WRITE);
+	sock_watcher.data = c_session;
+	ev_io_start(loop, &sock_watcher);
+	ev_timer_init (&timer, sock_timeout_cb, 1.0 * nuauthconf->proto_wait_delay, 0);
+	timer.data = c_session;
+	ev_timer_start(loop, &timer);
 
-				debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
-						  "Getting protocol information");
-				ret = nussl_read(c_session->nussl,
-						       buffer,
-						       sizeof(buffer) - 1);
+	ev_loop(loop, EVLOOP_NONBLOCK);
 
-				if (ret <= 0) {
-					debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
-							  "nussl_read() failed: %s", nussl_get_error(c_session->nussl));
-					return NU_EXIT_ERROR;
-				}
-				if (((int) strlen(PROTO_STRING) + 2) <= ret
-				    && strncmp(buffer, PROTO_STRING,
-					       strlen(PROTO_STRING)) ==
-				    0) {
-					buffer[ret] = 0;
-					c_session->proto_version =
-					    atoi((char *) buffer +
-						 strlen(PROTO_STRING));
+	ev_loop_destroy(loop);
 
-					debug_log_message(VERBOSE_DEBUG,
-							  DEBUG_AREA_AUTH,
-							  "Protocol information: %d",
-							  c_session->
-							  proto_version);
-					/* sanity check on know protocol */
-					switch (c_session->proto_version) {
-						case PROTO_VERSION_V22:
-						case PROTO_VERSION_V22_1:
-						case PROTO_VERSION_V24:
-							break;
-						default:
-							debug_log_message(INFO,
-									  DEBUG_AREA_AUTH,
-									  "Bad protocol, announced %d",
-									  c_session->proto_version
-									  );
-							return NU_EXIT_ERROR;
-					}
-					return NU_EXIT_OK;
-				} else {
-					log_message(INFO, DEBUG_AREA_AUTH,
-						    "Error bad proto string");
-					return NU_EXIT_ERROR;
-				}
-			}
-		}
+	if (c_session->proto_version == PROTO_VERSION_NONE) {
+		return NU_EXIT_ERROR;
 	}
 	return NU_EXIT_OK;
 }
 
-#undef MAX_WAIT_ITER
-#undef PROTO_WAIT_DELAY
 
 /**
  * do the sasl negotiation.
