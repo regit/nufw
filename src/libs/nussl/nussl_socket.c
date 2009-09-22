@@ -2,6 +2,7 @@
  ** Copyright (C) 2007-2009 INL
  ** Written by S.Tricaud <stricaud@inl.fr>
  **            L.Defert <ldefert@inl.fr>
+ **	       Eric Leblond <eleblond@inl.fr>
  ** INL http://www.inl.fr/
  **
  ** NuSSL: OpenSSL / GnuTLS layer based on libneon
@@ -462,7 +463,7 @@ static int raw_poll(int fdno, int rdwr, int secs)
 	timer.data = &sock_watcher;
 	ev_timer_start(loop, &timer);
 
-	ev_loop(loop, 0);
+	ev_loop(loop, EVLOOP_NONBLOCK);
 
 	ev_loop_destroy(loop);
 
