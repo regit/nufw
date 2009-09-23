@@ -54,17 +54,6 @@
 /* These are global */
 extern struct nuauth_tls_t nuauth_tls;
 
-struct tls_nufw_context_t {
-	char *addr;
-	char *port;
-	int mx;
-	int sck_inet;
-	fd_set tls_rx_set;	/* read set */
-	GMutex *mutex;
-
-	nussl_session *server;
-};
-
 void tls_common_init(void)
 {
 

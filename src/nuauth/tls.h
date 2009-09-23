@@ -100,6 +100,17 @@ struct tls_buffer_read {
 	int auth_quality;	/*!< Quality of client authentication */
 };
 
+
+struct tls_nufw_context_t {
+	char *addr;
+	char *port;
+	int sck_inet;
+	int sck_unix;
+	GMutex *mutex;
+	nussl_session *server;
+	struct ev_loop *loop;
+};
+
 /**
  * This structure stores all information relative to a connection
  * from a nufw server.
@@ -108,11 +119,13 @@ typedef struct {
 	/* nussl_session_server is in tls_nufw_context_t */
 	nussl_session *nufw_client;
 
-	/**
-	 * This lock has to be used before any call to gnutls_record function
-	 * on TLS session pointed by the ::nufw_session_t
-	 */
-	GMutex *tls_lock;
+	struct ev_loop *loop;
+	ev_async writer_signal;
+	ev_io nufw_watcher;
+
+	/** write queue */
+	GAsyncQueue *queue;
+	struct tls_nufw_context_t *context;
 
 	struct in6_addr peername;
 	unsigned char proto_version;

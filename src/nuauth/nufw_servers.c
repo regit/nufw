@@ -84,7 +84,6 @@ void clean_nufw_session(nufw_session_t * c_session)
 {
 	nussl_session_destroy(c_session->nufw_client);
 
-	g_mutex_free(c_session->tls_lock);
 	g_free(c_session);
 
 	nufw_servers_connected--;
@@ -205,23 +204,24 @@ void release_nufw_session(nufw_session_t * session)
 nu_error_t nufw_session_send(nufw_session_t * session, char * buffer, int length)
 {
 	int ret;
+	struct nufw_message_t *nmsg;
 
 	if (session->alive == FALSE)
 		return NU_EXIT_ERROR;
 
-	g_mutex_lock(session->tls_lock);
+	nmsg= g_new0(struct nufw_message_t, 1);
+	nmsg->length = length;
+	nmsg->msg = g_memdup(buffer, length);
 
-	// XXX: make me non-blockant
-	ret = nussl_write(session->nufw_client, buffer, length);
+	g_async_queue_push(session->queue, nmsg);
+	ev_async_send(session->loop, &session->writer_signal);
 
 	if (ret < 0) {
 		log_message(DEBUG, DEBUG_AREA_GW,
 			"nufw_servers: send failure (%s)",
 			nussl_get_error(session->nufw_client));
-		g_mutex_unlock(session->tls_lock);
 		return NU_EXIT_ERROR;
 	}
-	g_mutex_unlock(session->tls_lock);
 	return NU_EXIT_OK;
 }
 

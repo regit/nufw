@@ -4,8 +4,6 @@
  **             Vincent Deffontaines <gryzor@inl.fr>
  **             Pierre Chifflier <chifflier@inl.fr>
  **
- ** $Id$
- **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
  ** the Free Software Foundation, version 3 of the License.
@@ -28,6 +26,8 @@
 
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <fcntl.h>
+#include <ev.h>
 
 #include "nuauthconf.h"
 
@@ -48,18 +48,6 @@ int nufw_servers_connected = 0;
 
 extern struct nuauth_tls_t nuauth_tls;
 
-
-struct tls_nufw_context_t {
-	char *addr;
-	char *port;
-	int mx;
-	int sck_inet;
-	int sck_unix;
-	fd_set tls_rx_set;	/* read set */
-	GMutex *mutex;
-
-	nussl_session *server;
-};
 
 /**
  * Get RX paquet from a TLS client connection and send it to user
@@ -83,9 +71,7 @@ static int treat_nufw_request(nufw_session_t * c_session)
 		return NU_EXIT_OK;
 
 	/* read data from nufw */
-/*	g_mutex_lock(c_session->tls_lock); */
 	dgram_size = nussl_read(c_session->nufw_client, (char *)dgram, CLASSIC_NUFW_PACKET_SIZE);
-/*	g_mutex_unlock(c_session->tls_lock);*/
 	if (dgram_size < 0) {
 		log_message(INFO, DEBUG_AREA_GW,
 			    "nufw failure at %s:%d (%s)", __FILE__,
@@ -98,6 +84,7 @@ static int treat_nufw_request(nufw_session_t * c_session)
 			    __LINE__);
 		return NU_EXIT_ERROR;
 	}
+
 	/* Bad luck, this is first packet, we have to test nufw proto version */
 	if (c_session->proto_version == PROTO_UNKNOWN) {
 		c_session->proto_version =
@@ -193,6 +180,231 @@ static int get_reverse_dns_info(struct sockaddr_storage *addr, char *buffer, siz
 	return ret;
 }
 
+static void nufw_srv_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
+{
+	nufw_session_t *c_session = w->data;
+
+
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
+				"nufw session activity");
+
+	ev_io_stop(loop, w);
+	if (revents & EV_ERROR) {
+		log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
+				"nufw server error");
+		ev_unloop(loop, EVUNLOOP_ONE);
+	}
+
+	if (revents & EV_READ) {
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
+				"nufw read activity");
+		increase_nufw_session_usage(c_session);
+		if (treat_nufw_request(c_session) == NU_EXIT_ERROR) {
+			/* get session link with c */
+			debug_log_message(DEBUG, DEBUG_AREA_GW,
+					"nufw server disconnect");
+			ev_unloop(loop, EVUNLOOP_ONE);
+			return;
+		} else {
+			release_nufw_session(c_session);
+		}
+	}
+
+	if (revents & EV_WRITE) {
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
+				"nufw write activity");
+	}
+	ev_io_start(loop, w);
+
+}
+static void nufw_writer_cb(struct ev_loop *loop, ev_async *w, int revents)
+{
+	nufw_session_t *nu_session = w->data;
+	struct nufw_message_t *msg;
+	int ret;
+
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
+				"nufw write activity");
+	ev_io_stop(loop, &nu_session->nufw_watcher);
+	while ((msg = (struct nufw_message_t *) g_async_queue_try_pop(nu_session->queue))) {
+		ret = nussl_write(nu_session->nufw_client, msg->msg, msg->length);
+		g_free(msg->msg);
+		g_free(msg);
+		if (ret < 0) {
+			log_message(DEBUG, DEBUG_AREA_GW,
+					"nufw_servers: send failure (%s)",
+					nussl_get_error(nu_session->nufw_client));
+			return;
+		}
+	}
+	ev_io_start(loop, &nu_session->nufw_watcher);
+}
+
+
+static int tls_nufw_init_worker(nufw_session_t *nu_session)
+{
+	int ret;
+	char cipher[256];
+	char address[INET6_ADDRSTRLEN];
+	char peername[256];
+	struct sockaddr_storage sockaddr;
+	struct sockaddr_in *sockaddr4 = (struct sockaddr_in *) &sockaddr;
+	struct sockaddr_in6 *sockaddr6 = (struct sockaddr_in6 *) &sockaddr;
+	int port, conn_fd;
+	socklen_t len_inet = sizeof(sockaddr);
+
+	if (nussl_session_getpeer(nu_session->nufw_client, (struct sockaddr *) &sockaddr, &len_inet) != NUSSL_OK)
+	{
+		log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_WARNING,
+				"Unable to get peername of NuFW dameon : %s",
+				nussl_get_error(nu_session->nufw_client));
+		nussl_session_destroy(nu_session->nufw_client);
+		g_free(nu_session);
+		return 1;
+	}
+
+	/* Extract client address (convert it to IPv6 if it's IPv4) */
+	if (sockaddr6->sin6_family == AF_INET) {
+		ipv4_to_ipv6(sockaddr4->sin_addr, &nu_session->peername);
+		port = ntohs(sockaddr4->sin_port);
+	} else {
+		nu_session->peername = sockaddr6->sin6_addr;
+		port = ntohs(sockaddr6->sin6_port);
+	}
+
+	format_ipv6(&nu_session->peername, address, sizeof(address), NULL);
+	log_message(DEBUG, DEBUG_AREA_MAIN,
+			"nufw connection attempt from %s",
+			address);
+
+	/* get canonical (first) name and set it in ssl session, so that
+	 * we can verify if peer name matches certificate CN entry
+	 */
+	ret = get_reverse_dns_info(&sockaddr, peername, sizeof(peername));
+	nussl_set_hostinfo(nu_session->nufw_client, peername, port);
+
+	/* copy verification flag from server session */
+	nussl_set_session_flag(nu_session->nufw_client,
+		NUSSL_SESSFLAG_IGNORE_ID_MISMATCH,
+		nussl_get_session_flag(nu_session->context->server,
+				       NUSSL_SESSFLAG_IGNORE_ID_MISMATCH)
+		);
+
+	// XXX default value is 30s, should be a configuration value
+	nussl_set_connect_timeout(nu_session->nufw_client, 30);
+
+	ret = nussl_session_handshake(nu_session->nufw_client,
+				      nu_session->context->server);
+	if ( ret ) {
+		log_message(WARNING, DEBUG_AREA_MAIN,
+				"Error during TLS handshake with nufw server %s : %s",
+				address,
+				nussl_get_error(nu_session->context->server));
+		nussl_session_destroy(nu_session->nufw_client);
+		g_free(nu_session);
+		return 1;
+	}
+
+	cipher[0] = '\0';
+	nussl_session_get_cipher(nu_session->nufw_client, cipher, sizeof(cipher));
+	log_message(INFO, DEBUG_AREA_MAIN | DEBUG_AREA_GW,
+		    "TLS handshake with nufw server %s succeeded, cipher is %s",
+		    address, cipher);
+	/* Check certificate hook */
+	ret = modules_check_certificate(nu_session->nufw_client);
+	if ( ret ) {
+		log_message(WARNING, DEBUG_AREA_MAIN,
+				"New client connection from %s failed during modules_check_certificate()",
+				address);
+		nussl_session_destroy(nu_session->nufw_client);
+		g_free(nu_session);
+		return 1;
+	}
+
+	nufw_servers_connected++;
+
+	conn_fd = nussl_session_get_fd(nu_session->nufw_client);
+
+	add_nufw_server(conn_fd, nu_session);
+	log_message(INFO, DEBUG_AREA_GW,
+		    "[+] NuFW: new NuFW server (%s) connected on socket %d",
+		    address, conn_fd);
+
+	return 0;
+}
+
+void *tls_nufw_worker(struct nuauth_thread_t *thread)
+{
+	nufw_session_t *nu_session = thread->data;
+	int fdno;
+
+	if (tls_nufw_init_worker(nu_session)) {
+		return NULL;
+	}
+
+	nu_session->queue = g_async_queue_new();
+	nu_session->loop = ev_loop_new(0);
+
+	/* register writer cb */
+	ev_async_init(&nu_session->writer_signal, nufw_writer_cb);
+	ev_async_start(nu_session->loop, &nu_session->writer_signal);
+	nu_session->writer_signal.data = nu_session;
+	/* register accept cb */
+	fdno = nussl_session_get_fd(nu_session->nufw_client);
+//	fcntl(fdno ,F_SETFL,(fcntl(fdno, F_GETFL)|O_SYNC));
+	ev_io_init(&nu_session->nufw_watcher, nufw_srv_activity_cb,
+		   fdno,
+		   EV_READ);
+	ev_io_start(nu_session->loop, &nu_session->nufw_watcher);
+	nu_session->nufw_watcher.data = nu_session;
+
+	debug_log_message(INFO, DEBUG_AREA_GW, "nufw loop starting (socket %d)",
+			  nussl_session_get_fd(nu_session->nufw_client));
+	ev_loop(nu_session->loop, 0);
+	ev_loop_destroy(nu_session->loop);
+
+	declare_dead_nufw_session(nu_session);
+
+	/* FIXME : more explicit format */
+	log_message(INFO, DEBUG_AREA_GW, "nufw disconnection");
+	nufw_servers_connected--;
+
+	return NULL;
+}
+
+void *tls_nufw_unix_worker(struct nuauth_thread_t *thread)
+{
+	nufw_session_t *nu_session = thread->data;
+	int fdno;
+
+	nu_session->queue = g_async_queue_new();
+	nu_session->loop = ev_loop_new(0);
+
+	/* register writer cb */
+	ev_async_init(&nu_session->writer_signal, nufw_writer_cb);
+	ev_async_start(nu_session->loop, &nu_session->writer_signal);
+	nu_session->writer_signal.data = nu_session;
+
+	fdno = nussl_session_get_fd(nu_session->nufw_client);
+	ev_io_init(&nu_session->nufw_watcher, nufw_srv_activity_cb,
+		   fdno,
+		   EV_READ);
+	ev_io_start(nu_session->loop, &nu_session->nufw_watcher);
+	nu_session->nufw_watcher.data = nu_session;
+
+	debug_log_message(INFO, DEBUG_AREA_GW, "nufw loop starting (socket %d) (unix)",
+			  fdno);
+
+	ev_loop(nu_session->loop, 0);
+	ev_loop_destroy(nu_session->loop);
+
+	declare_dead_nufw_session(nu_session);
+
+	/* FIXME : more explicit format */
+	log_message(INFO, DEBUG_AREA_GW, "nufw disconnection");
+	return NULL;
+}
+
 
 /**
  * Function called on new NuFW connection: create a new TLS session using
@@ -202,18 +414,8 @@ static int get_reverse_dns_info(struct sockaddr_storage *addr, char *buffer, siz
  */
 int tls_nufw_accept(struct tls_nufw_context_t *context)
 {
-	int conn_fd;
-	struct sockaddr_storage sockaddr;
-	struct sockaddr_in *sockaddr4 = (struct sockaddr_in *) &sockaddr;
-	struct sockaddr_in6 *sockaddr6 = (struct sockaddr_in6 *) &sockaddr;
-	char address[INET6_ADDRSTRLEN];
-	int ret;
-	char peername[256];
-	int port;
-	socklen_t len_inet = sizeof(sockaddr);
-	char cipher[256];
-
 	nufw_session_t *nu_session;
+	struct nuauth_thread_t *nufw_worker_p = g_new0(struct nuauth_thread_t, 1);
 
 	/* initialize TLS */
 	nu_session = g_new0(nufw_session_t, 1);
@@ -221,6 +423,7 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 	nu_session->connect_timestamp = time(NULL);
 	nu_session->usage = 0;
 	nu_session->alive = TRUE;
+	nu_session->context = context;
 
 	/* We have to wait the first packet */
 	nu_session->proto_version = PROTO_UNKNOWN;
@@ -244,84 +447,8 @@ int tls_nufw_accept(struct tls_nufw_context_t *context)
 		return 1;
 	}
 
-	if (nussl_session_getpeer(nu_session->nufw_client, (struct sockaddr *) &sockaddr, &len_inet) != NUSSL_OK)
-	{
-		log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_WARNING,
-				"Unable to get peername of NuFW dameon : %s",
-				nussl_get_error(nu_session->nufw_client));
-		nussl_session_destroy(nu_session->nufw_client);
-		g_free(nu_session);
-		return 1;
-	}
-
-	/* Extract client address (convert it to IPv6 if it's IPv4) */
-	if (sockaddr6->sin6_family == AF_INET) {
-		ipv4_to_ipv6(sockaddr4->sin_addr, &nu_session->peername);
-		port = ntohs(sockaddr4->sin_port);
-	} else {
-		nu_session->peername = sockaddr6->sin6_addr;
-		port = ntohs(sockaddr6->sin6_port);
-	}
-
-	format_ipv6(&nu_session->peername, address, sizeof(address), NULL);
-	log_message(DEBUG, DEBUG_AREA_MAIN,
-			"nuauth: nufw connection attempt from %s\n",
-			address);
-
-	/* get canonical (first) name and set it in ssl session, so that
-	 * we can verify if peer name matches certificate CN entry
-	 */
-	ret = get_reverse_dns_info(&sockaddr, peername, sizeof(peername));
-	nussl_set_hostinfo(nu_session->nufw_client, peername, port);
-
-	/* copy verification flag from server session */
-	nussl_set_session_flag(nu_session->nufw_client,
-		NUSSL_SESSFLAG_IGNORE_ID_MISMATCH,
-		nussl_get_session_flag(context->server, NUSSL_SESSFLAG_IGNORE_ID_MISMATCH)
-		);
-
-	// XXX default value is 30s, should be a configuration value
-	nussl_set_connect_timeout(nu_session->nufw_client, 30);
-
-	ret = nussl_session_handshake(nu_session->nufw_client, context->server);
-	if ( ret ) {
-		log_message(WARNING, DEBUG_AREA_MAIN,
-				"Error during TLS handshake with nufw server %s : %s",
-				address,
-				nussl_get_error(context->server));
-		nussl_session_destroy(nu_session->nufw_client);
-		g_free(nu_session);
-		return 1;
-	}
-
-	cipher[0] = '\0';
-	nussl_session_get_cipher(nu_session->nufw_client, cipher, sizeof(cipher));
-	log_message(INFO, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
-		    "TLS handshake with nufw server %s succeeded, cipher is %s",
-		    address, cipher);
-
-	/* Check certificate hook */
-	ret = modules_check_certificate(nu_session->nufw_client);
-	if ( ret ) {
-		log_message(WARNING, DEBUG_AREA_MAIN,
-				"New client connection from %s failed during modules_check_certificate()",
-				address);
-		nussl_session_destroy(nu_session->nufw_client);
-		g_free(nu_session);
-		return 1;
-	}
-
-	nufw_servers_connected++;
-
-	conn_fd = nussl_session_get_fd(nu_session->nufw_client);
-
-	nu_session->tls_lock = g_mutex_new();
-	add_nufw_server(conn_fd, nu_session);
-	FD_SET(conn_fd, &context->tls_rx_set);
-	if (conn_fd + 1 > context->mx)
-		context->mx = conn_fd + 1;
-	g_message("[+] NuFW: new NuFW server (%s) connected on socket %d",
-		  address, conn_fd);
+	/* create nufw server thread */
+	thread_new_wdata(nufw_worker_p, "nufw worker", nu_session, tls_nufw_worker);
 
 	return 0;
 }
@@ -331,6 +458,7 @@ int tls_nufw_accept_unix(struct tls_nufw_context_t *context)
 	int conn_fd;
 	struct sockaddr_un sockaddr;
 	socklen_t len_unix = sizeof(sockaddr);
+	struct nuauth_thread_t *nufw_worker_p = g_new0(struct nuauth_thread_t, 1);
 
 	nufw_session_t *nu_session;
 
@@ -377,17 +505,55 @@ int tls_nufw_accept_unix(struct tls_nufw_context_t *context)
 
 	nufw_servers_connected++;
 
-	nu_session->tls_lock = g_mutex_new();
 	add_nufw_server(conn_fd, nu_session);
-	FD_SET(conn_fd, &context->tls_rx_set);
-	if (conn_fd + 1 > context->mx)
-		context->mx = conn_fd + 1;
+	/* create nufw server thread */
+	thread_new_wdata(nufw_worker_p, "nufw worker", nu_session, tls_nufw_unix_worker);
+
 	g_message("[+] NuFW: new NuFW server connected on unix socket %d",
 		  conn_fd);
 
 	return 0;
 }
 
+static void nufw_accept_cb(struct ev_loop *loop, ev_io *w, int revents)
+{
+	struct tls_nufw_context_t *context = (struct tls_nufw_context_t *) w->data;
+#ifdef DEBUG_ENABLE
+	int i = 0;
+#endif
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
+				"Going to accept new nufw session");
+	while(tls_nufw_accept(context) == 0) {
+#ifdef DEBUG_ENABLE
+		log_message(INFO, DEBUG_AREA_GW,
+				"New nufw connection. (%d)",
+				i);
+		i++;
+#endif
+		continue;
+	}
+
+}
+
+static void nufw_accept_unix_cb(struct ev_loop *loop, ev_io *w, int revents)
+{
+	struct tls_nufw_context_t *context = (struct tls_nufw_context_t *) w->data;
+#ifdef DEBUG_ENABLE
+	int i = 0;
+#endif
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
+				"Going to accept new nufw session [unix]");
+	while(tls_nufw_accept_unix(context) == 0) {
+#ifdef DEBUG_ENABLE
+		log_message(INFO, DEBUG_AREA_GW,
+				"New nufw connection. (%d) [unix]",
+				i);
+		i++;
+#endif
+		continue;
+	}
+
+}
 /**
  * NuFW TLS thread main loop:
  *   - Wait events (message/new connection) using select() with a timeout
@@ -397,117 +563,40 @@ int tls_nufw_accept_unix(struct tls_nufw_context_t *context)
  */
 void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex * mutex)
 {
-	int n, c, z;
-	fd_set wk_set;		/* working set */
-	struct timeval tv;
 	char *unix_path;
+	ev_io nufw_watcher;
+	ev_io nufw_watcher_unix;
 
 	unix_path = nuauth_config_table_get("nuauth_client_listen_socket");
 	log_message(INFO, DEBUG_AREA_GW,
 		    "[+] NuAuth is waiting for NuFW connections.");
-	while (g_mutex_trylock(mutex)) {
-		g_mutex_unlock(mutex);
 
-		/* copy rx set to working set */
-		FD_ZERO(&wk_set);
-		for (z = 0; z < context->mx; ++z) {
-			if (FD_ISSET(z, &context->tls_rx_set))
-				FD_SET(z, &wk_set);
-		}
-
-		/* wait new events during 1 second */
-		tv.tv_sec = 1;
-		tv.tv_usec = 0;
-		n = select(context->mx, &wk_set, NULL, NULL, &tv);
-		if (n == -1) {
-			/* Signal was catched: just ignore it */
-			if (errno == EINTR) {
-				log_message(CRITICAL, DEBUG_AREA_GW,
-					    "Warning: tls nufw select() failed: signal was catched.");
-				continue;
-			}
-
-			if (errno == EBADF) {
-				int i;
-				/* A client disconnects between FD_SET and select.
-				 * Will try to find it */
-				for (i=0; i<context->mx; ++i){
-					struct stat s;
-					if (FD_ISSET(i, &context->tls_rx_set)){
-						if (fstat(i, &s)<0) {
-							log_message(CRITICAL, DEBUG_AREA_USER,
-									"Warning: %d is a bad file descriptor.", i);
-							FD_CLR(i, &context->tls_rx_set);
-						}
-					}
-				}
-				continue;
-			}
-
-			log_message(FATAL, DEBUG_AREA_MAIN | DEBUG_AREA_GW,
-				    "select() %s:%u failure: %s",
-				    __FILE__, __LINE__, g_strerror(errno));
-			nuauth_ask_exit();
-			break;
-		} else if (!n) {
-			continue;
-		}
-
-		/* Check if a connect has occured */
-		if (FD_ISSET(context->sck_inet, &wk_set)) {
-			if (tls_nufw_accept(context)) {
-				continue;
-			}
-		}
-
-		/* Check if a connect has occured */
-		if (context->sck_unix > 0 && FD_ISSET(context->sck_unix, &wk_set)) {
-			if (tls_nufw_accept_unix(context)) {
-				continue;
-			}
-		}
-
-		/* check for server activity */
-		for (c = 0; c < context->mx; ++c) {
-			if (c == context->sck_inet)
-				continue;
-			if (c == context->sck_unix)
-				continue;
-
-			if (FD_ISSET(c, &wk_set)) {
-				nufw_session_t *c_session;
-				debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
-						  "nufw activity on socket %d",
-						  c);
-
-				c_session = acquire_nufw_session_by_socket(c);
-				if (! c_session) {
-					FD_CLR(c, &context->tls_rx_set);
-					continue;
-				}
-				if (treat_nufw_request(c_session) == NU_EXIT_ERROR) {
-					/* get session link with c */
-					debug_log_message(DEBUG, DEBUG_AREA_GW,
-							  "nufw server disconnect on %d",
-							  c);
-					FD_CLR(c, &context->tls_rx_set);
-					declare_dead_nufw_session(c_session);
-				} else {
-					release_nufw_session(c_session);
-				}
-			}
-		}
-
-		for (c = context->mx - 1;
-		     c >= 0 && !FD_ISSET(c, &context->tls_rx_set);
-		     c = context->mx - 1) {
-			context->mx = c;
-		}
+	context->loop = ev_loop_new(0);
+	if (context->sck_inet > 0) {
+		/* register accept cb */
+		fcntl(context->sck_inet,F_SETFL,(fcntl(context->sck_inet,F_GETFL)|O_NONBLOCK));
+		ev_io_init(&nufw_watcher, nufw_accept_cb, context->sck_inet, EV_READ);
+		ev_io_start(context->loop, &nufw_watcher);
+		nufw_watcher.data = context;
 	}
+	if (context->sck_unix > 0) {
+		/* register accept cb */
+		fcntl(context->sck_unix,F_SETFL,(fcntl(context->sck_unix,F_GETFL)|O_NONBLOCK));
+		ev_io_init(&nufw_watcher_unix, nufw_accept_unix_cb, context->sck_unix, EV_READ);
+		ev_io_start(context->loop, &nufw_watcher_unix);
+		nufw_watcher_unix.data = context;
+	}
+
+	ev_loop(context->loop, 0);
+
+	ev_loop_destroy(context->loop);
+
 	close(context->sck_inet);
 	close(context->sck_unix);
-	if (unix_path)
+	if (unix_path) {
 		unlink(unix_path);
+	}
+	/* FIXME clean and free context ? */
 }
 
 /**
@@ -595,16 +684,6 @@ int tls_nufw_init(struct tls_nufw_context_t *context)
 		}
 	}
 
-
-	/* init fd_set */
-	context->mx = context->sck_inet + 1;
-	if (context->sck_unix > context->sck_inet)
-		context->mx = context->sck_unix + 1;
-
-	FD_ZERO(&context->tls_rx_set);
-	FD_SET(context->sck_inet, &context->tls_rx_set);
-	if (context->sck_unix >=0)
-		FD_SET(context->sck_unix, &context->tls_rx_set);
 
 	/* TODO: read values specific to nufw connection */
 	nuauth_tls_max_servers = nuauth_config_table_get_or_default_int("nuauth_tls_max_servers", NUAUTH_TLS_MAX_SERVERS);

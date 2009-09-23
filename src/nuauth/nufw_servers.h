@@ -22,6 +22,11 @@
 #ifndef NUFW_SERVERS_H
 #define NUFW_SERVERS_H
 
+struct nufw_message_t {
+	char *msg;
+	int length;
+};
+
 void init_nufw_servers();
 
 nu_error_t add_nufw_server(int conn_fd, nufw_session_t * nu_session);
