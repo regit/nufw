@@ -483,7 +483,7 @@ static void cleaning_timer_cb(struct ev_loop *loop, ev_timer *w, int revents)
 
 	log_area_printf(DEBUG_AREA_MAIN | DEBUG_AREA_PACKET,
 			DEBUG_LEVEL_DEBUG,
-			"Average: rx=%.2f, tx=%.2f\n",
+			"Average: rx=%.2f, tx=%.2f",
 			(1.0 * stat_rx) / CLEANING_DELAY,
 			(1.0 * stat_tx) / CLEANING_DELAY);
 #endif
