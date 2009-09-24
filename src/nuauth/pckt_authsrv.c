@@ -267,107 +267,13 @@ nu_error_t authpckt_new_connection(unsigned char *dgram,
 	return NU_EXIT_OK;
 }
 
-
-/**
- * Parse message content for message of type #AUTH_CONN_DESTROY
- * or #AUTH_CONN_UPDATE using structure ::nu_conntrack_message_t structure.
- *
- * Send a message FREE_MESSAGE or UPDATE_MESSAGE to limited_connections_queue
- * (member of ::nuauthdatas).
- *
- * \param dgram Pointer to packet datas
- * \param dgram_size Number of bytes in the packet
- * \return a ::nu_error_t containing success or failure
- */
-nu_error_t authpckt_conntrack(unsigned char *dgram, unsigned int dgram_size)
-{
-	struct nuv4_conntrack_message_t *conntrack;
-	struct accounted_connection *datas;
-	struct internal_message *message;
-	tcp_state_t pstate;
-
-	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_PACKET,
-			  "Auth conntrack: Working on new packet");
-
-	/* Check message content size */
-	if (dgram_size != sizeof(struct nuv4_conntrack_message_t)) {
-		log_message(CRITICAL, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
-				  "Auth conntrack: Improper length of packet (%d instead of %lu)",
-				  dgram_size,
-				  (unsigned long)sizeof(struct nuv4_conntrack_message_t));
-		return NU_EXIT_ERROR;
-	}
-
-	/* Create a message for limited_connexions_queue */
-	conntrack = (struct nuv4_conntrack_message_t *) dgram;
-	datas = g_new0(struct accounted_connection, 1);
-	message = g_new0(struct internal_message, 1);
-
-	datas->tracking.protocol = conntrack->ip_protocol;
-
-	datas->tracking.saddr.s6_addr32[0] =
-	    conntrack->ip_src.s6_addr32[0];
-	datas->tracking.saddr.s6_addr32[1] =
-	    conntrack->ip_src.s6_addr32[1];
-	datas->tracking.saddr.s6_addr32[2] =
-	    conntrack->ip_src.s6_addr32[2];
-	datas->tracking.saddr.s6_addr32[3] =
-	    conntrack->ip_src.s6_addr32[3];
-
-	datas->tracking.daddr.s6_addr32[0] =
-	    conntrack->ip_dst.s6_addr32[0];
-	datas->tracking.daddr.s6_addr32[1] =
-	    conntrack->ip_dst.s6_addr32[1];
-	datas->tracking.daddr.s6_addr32[2] =
-	    conntrack->ip_dst.s6_addr32[2];
-	datas->tracking.daddr.s6_addr32[3] =
-	    conntrack->ip_dst.s6_addr32[3];
-
-	if ((conntrack->ip_protocol == IPPROTO_ICMP)
-	    || (conntrack->ip_protocol == IPPROTO_ICMPV6)) {
-		datas->tracking.type = ntohs(conntrack->src_port);
-		datas->tracking.code = ntohs(conntrack->dest_port);
-	} else {
-		datas->tracking.source = ntohs(conntrack->src_port);
-		datas->tracking.dest = ntohs(conntrack->dest_port);
-	}
-
-	datas->packets_in = conntrack->packets_in;
-	datas->bytes_in = conntrack->bytes_in;
-	datas->packets_out = conntrack->packets_out;
-	datas->bytes_out = conntrack->bytes_out;
-
-	message->datas = datas;
-
-	if (conntrack->msg_type == AUTH_CONN_DESTROY) {
-		message->type = FREE_MESSAGE;
-		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_PACKET,
-				  "Auth conntrack: Sending free message");
-		pstate = TCP_STATE_CLOSE;
-	} else {
-		message->type = UPDATE_MESSAGE;
-		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_PACKET,
-				  "Auth conntrack: Sending Update message");
-		pstate = TCP_STATE_ESTABLISHED;
-	}
-
-	log_user_packet_from_accounted_connection(datas, pstate);
-	g_async_queue_push(nuauthdatas->limited_connections_queue,
-			   message);
-	return NU_EXIT_OK;
-}
-
 /**
  * Parse a datagram packet from NuFW using structure
  * ::nufw_to_nuauth_message_header_t. Create a connection
  * (type ::connection_t) for message of type #AUTH_REQUEST or #AUTH_CONTROL.
- * Update conntrack for message of type #AUTH_CONN_DESTROY
- * or #AUTH_CONN_UPDATE.
  *
  * Call:
  *   - authpckt_new_connection(): Message type #AUTH_REQUEST or #AUTH_CONTROL
- *   - authpckt_conntrack(): Message type #AUTH_CONN_DESTROY
- *     or #AUTH_CONN_UPDATE
  *
  * \param pdgram Pointer to datagram
  * \param pdgram_size Pointer to size of the datagram (in bytes)
@@ -409,22 +315,6 @@ nu_error_t authpckt_decode(unsigned char **pdgram,
 			return ret;
 
 			break;
-		case AUTH_CONN_DESTROY:
-		case AUTH_CONN_UPDATE:
-			ret = authpckt_conntrack(dgram, dgram_size);
-			*conn = NULL;
-			if (ret == NU_EXIT_ERROR) {
-				return ret;
-			}
-			if (ntohs(header->msg_length) < dgram_size) {
-				*pdgram_size =
-				    dgram_size - ntohs(header->msg_length);
-				*pdgram =
-				    dgram + ntohs(header->msg_length);
-			} else {
-				*pdgram_size = 0;
-			}
-			return NU_EXIT_NO_RETURN;
 		default:
 			log_message(CRITICAL, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
 				    "NuFW packet type is unknown");
@@ -451,22 +341,6 @@ nu_error_t authpckt_decode(unsigned char **pdgram,
 			return ret;
 
 			break;
-		case AUTH_CONN_DESTROY:
-		case AUTH_CONN_UPDATE:
-			ret = authpckt_conntrack_v3(dgram, dgram_size);
-			*conn = NULL;
-			if (ret == NU_EXIT_ERROR) {
-				return ret;
-			}
-			if (ntohs(header->msg_length) < dgram_size) {
-				*pdgram_size =
-				    dgram_size - ntohs(header->msg_length);
-				*pdgram =
-				    dgram + ntohs(header->msg_length);
-			} else {
-				*pdgram_size = 0;
-			}
-			return NU_EXIT_NO_RETURN;
 		default:
 			log_message(CRITICAL, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
 				    "NuFW packet type is unknown");

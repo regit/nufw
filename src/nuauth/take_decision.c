@@ -274,30 +274,6 @@ nu_error_t take_decision(connection_t * element, packet_place_t place)
 	/* Call modules to do final tuning of packet (setting mark, expire modification ...) */
 	modules_finalize_packet(element);
 
-	/* we must put element in expire list if needed before decision is taken */
-	if (element->expire > 0) {
-		if (nuauthconf->nufw_has_conntrack) {
-			struct limited_connection *datas =
-			    g_new0(struct limited_connection, 1);
-			struct internal_message *message =
-			    g_new0(struct internal_message, 1);
-
-			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
-					  "Sending connection with fixed timeout to thread");
-			memcpy(&(datas->tracking), &(element->tracking),
-			       sizeof(tracking_t));
-			datas->expire = expire;
-
-			datas->gwaddr = element->tls->peername;
-
-			message->datas = datas;
-			message->type = INSERT_MESSAGE;
-			g_async_queue_push(nuauthdatas->
-					   limited_connections_queue,
-					   message);
-		}
-	}
-
 	if (nuauthconf->log_users_sync) {
 		/* copy current element */
 		if (place == PACKET_IN_HASH) {

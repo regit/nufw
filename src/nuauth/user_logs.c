@@ -96,33 +96,6 @@ nu_error_t log_user_packet(connection_t * element, tcp_state_t state)
 }
 
 /**
- * \brief log user packet from a single ::accounted_connection
- *
- * This is always asynchronous and we directly push the ::accounted_connection to the
- * user_loggers pool.
- */
-void log_user_packet_from_accounted_connection(struct accounted_connection
-					       *datas, tcp_state_t state)
-{
-	struct conn_state *conn_state_copy;
-	conn_state_copy = g_new0(struct conn_state, 1);
-	conn_state_copy->conn = g_memdup(datas, sizeof(*datas));
-	if (!conn_state_copy->conn) {
-		g_free(conn_state_copy);
-		log_message(MESSAGE, DEBUG_AREA_MAIN,
-			    "Unable to duplicate connection");
-		return;
-	}
-	conn_state_copy->state = state;
-
-	thread_pool_push(nuauthdatas->user_loggers,
-			   conn_state_copy, NULL);
-
-}
-
-
-
-/**
  * \brief Interface to logging module function for thread pool worker.
  *
  * This function is used in nuauthdatas->user_loggers thread pool.

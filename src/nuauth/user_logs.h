@@ -43,9 +43,6 @@ void log_user_packet_from_tracking_t(tracking_t * datas,
 
 void real_log_user_packet(gpointer userdata, gpointer data);
 
-void log_user_packet_from_accounted_connection(struct accounted_connection
-					       *datas, tcp_state_t state);
-
 void log_user_session(user_session_t * element, session_state_t state);
 void log_user_session_thread(gpointer element, gpointer state);
 

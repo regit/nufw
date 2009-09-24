@@ -227,19 +227,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	params->mysql_request_timeout = nuauth_config_table_get_or_default_int("mysql_request_timeout", MYSQL_REQUEST_TIMEOUT);
 	params->mysql_use_ssl = nuauth_config_table_get_or_default_int("mysql_use_ssl", MYSQL_USE_SSL);
 	params->mysql_use_ipv4_schema = nuauth_config_table_get_or_default_int("mysql_use_ipv4_schema", MYSQL_USE_IPV4_SCHEMA);
-	params->mysql_admin_bofh = nuauth_config_table_get_or_default_int("mysql_admin_bofh", 0);
 	params->mysql_prefix_version = nuauth_config_table_get_or_default_int("mysql_prefix_version", PREFIX_VERSION_NULOG2); /* XXX: Was previously initialized as PREFIX_VERSION_ORIG*/
-	params->mysql_bofh_victim_group = nuauth_config_table_get_or_default_int("mysql_bofh_victim_group", 0);
-
-	if (params->mysql_admin_bofh) {
-		if (nuauthconf->single_user_client_limit !=  1 ) {
-			log_message(WARNING, DEBUG_AREA_MAIN,
-			    "Resetting mysql_admin_bofh to 0 because multiple logins are allowed");
-			params->mysql_admin_bofh = 0;
-		}
-		log_message(WARNING, DEBUG_AREA_MAIN,
-			    "mysql_admin_bofh will not work properly if you have multiple nufw");
-	}
 
 	/* init thread private stuff */
 	params->mysql_priv = g_private_new(NULL);
@@ -620,146 +608,6 @@ static inline int log_state_open(MYSQL * ld, connection_t * element,
 	return 0;
 }
 
-static inline int log_state_established(MYSQL * ld,
-					struct accounted_connection
-					*element,
-					struct log_mysql_params *params)
-{
-	char request[LONG_REQUEST_SIZE];
-	char src_ascii[IPV6_SQL_STRLEN];
-	char dst_ascii[IPV6_SQL_STRLEN];
-	int Result;
-	int update_status = 0;
-	gboolean ok;
-
-	if (ipv6_to_sql
-	    (params, &element->tracking.saddr, src_ascii, sizeof(src_ascii), 1) != 0)
-		return -1;
-	if (ipv6_to_sql
-	    (params, &element->tracking.daddr, dst_ascii, sizeof(dst_ascii), 1) != 0)
-		return -1;
-
-	while (update_status < 2) {
-		update_status++;
-
-		ok = secure_snprintf(request, sizeof(request),
-				     "UPDATE %s SET state=%hu, start_timestamp=FROM_UNIXTIME(%lu) "
-				     "WHERE (ip_daddr=%s AND ip_saddr=%s "
-				     "AND tcp_dport='%hu' AND tcp_sport='%hu' AND state='%hu')",
-				     params->mysql_table_name,
-				     TCP_STATE_ESTABLISHED,
-				     element->timestamp,
-				     src_ascii,
-				     dst_ascii,
-				     (element->tracking).source,
-				     (element->tracking).dest,
-				     TCP_STATE_OPEN);
-		if (!ok) {
-			log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
-				    "Building mysql update query, the SHORT_REQUEST_SIZE limit was reached!");
-			return -1;
-		}
-		Result = mysql_real_query(ld, request, strlen(request));
-		if (Result != 0) {
-			log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
-				    "Can not update Data: %s",
-				    mysql_error(ld));
-			mysql_close_current(params);
-			return -1;
-		}
-		if (mysql_affected_rows(ld) >= 1) {
-			return 0;
-		} else {
-			if (update_status < 2) {
-				/* Sleep for 1/3 sec */
-				struct timespec sleep;
-				sleep.tv_sec = 0;
-				sleep.tv_nsec = 333333333;
-				nanosleep(&sleep, NULL);
-			} else {
-				debug_log_message(DEBUG, DEBUG_AREA_MAIN,
-						  "Tried to update MYSQL entry twice, looks like data to update wasn't inserted");
-			}
-		}
-	}
-	return 0;
-}
-
-static inline int log_state_close(MYSQL * ld,
-				  struct accounted_connection *element,
-				  struct log_mysql_params *params)
-{
-	char request[LONG_REQUEST_SIZE];
-	int Result;
-	int update_status = 0;
-	gboolean ok;
-
-
-	while (update_status < 2) {
-		char src_ascii[IPV6_SQL_STRLEN];
-		char dst_ascii[IPV6_SQL_STRLEN];
-
-		update_status++;
-
-		if (ipv6_to_sql
-				(params, &element->tracking.saddr, src_ascii,
-				 sizeof(src_ascii), 1) != 0)
-			return -1;
-		if (ipv6_to_sql
-				(params, &element->tracking.daddr, dst_ascii,
-				 sizeof(dst_ascii), 1) != 0)
-			return -1;
-		ok = secure_snprintf(request, sizeof(request),
-				"UPDATE %s SET end_timestamp=FROM_UNIXTIME(%lu), state=%hu,"
-				" packets_in=%" PRIu64 ", packets_out=%" PRIu64 ","
-				" bytes_in=%" PRIu64 ", bytes_out=%" PRIu64 " "
-				"WHERE (ip_saddr=%s AND ip_daddr=%s "
-				"AND tcp_sport='%hu' AND tcp_dport='%hu' AND (state='%hu' OR state='%hu'))",
-				params->mysql_table_name,
-				element->timestamp,
-				TCP_STATE_CLOSE,
-				element->packets_in,
-				element->packets_out,
-				element->bytes_in,
-				element->bytes_out,
-				src_ascii,
-				dst_ascii,
-				(element->tracking).source,
-				(element->tracking).dest,
-				TCP_STATE_ESTABLISHED,
-				TCP_STATE_OPEN);
-		if (!ok) {
-			log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
-				    "Building mysql update query, the SHORT_REQUEST_SIZE limit was reached!");
-			return -1;
-		}
-	}
-
-	Result = mysql_real_query(ld, request, strlen(request));
-	if (Result != 0) {
-		log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
-			    "Can not update Data: %s", mysql_error(ld));
-		mysql_close_current(params);
-		return -1;
-	}
-	if (mysql_affected_rows(ld) >= 1) {
-		return 0;
-	} else {
-		if (update_status < 2) {
-			/* Sleep for 2/3 sec */
-			struct timespec sleep;
-			sleep.tv_sec = 0;
-			sleep.tv_nsec = 666666666;
-			nanosleep(&sleep, NULL);
-		} else {
-			debug_log_message(WARNING, DEBUG_AREA_MAIN,
-					  "Tried to update MYSQL entry twice, "
-					  "looks like data to update wasn't inserted");
-		}
-	}
-	return 0;
-}
-
 static int log_state_drop(MYSQL * ld, connection_t * element,
 			  struct log_mysql_params *params)
 {
@@ -835,28 +683,6 @@ G_MODULE_EXPORT gint user_packet_logs(void *element, tcp_state_t state,
 	case TCP_STATE_OPEN:
 		return log_state_open(ld, (connection_t *) element,
 				      params);
-
-	case TCP_STATE_ESTABLISHED:
-		if ((((struct accounted_connection *) element)->tracking).
-		    protocol == IPPROTO_TCP) {
-			return log_state_established(ld,
-						     (struct
-						      accounted_connection
-						      *) element, params);
-		} else {
-			return 0;
-		}
-
-	case TCP_STATE_CLOSE:
-		if ((((struct accounted_connection *) element)->tracking).
-		    protocol == IPPROTO_TCP) {
-			return log_state_close(ld,
-					       (struct accounted_connection
-						*) element, params);
-		} else {
-			return 0;
-		}
-
 	case TCP_STATE_DROP:
 		return log_state_drop(ld, (connection_t *) element,
 				      params);
@@ -865,139 +691,6 @@ G_MODULE_EXPORT gint user_packet_logs(void *element, tcp_state_t state,
 		/* Ignore other states */
 		return 0;
 	}
-}
-
-#define CONN_SELECT_FIELDS "ip_protocol,ip_saddr,ip_daddr,tcp_sport,tcp_dport,udp_sport,udp_dport,icmp_type,icmp_code"
-
-static nu_error_t build_conntrack_msg_from_mysql(MYSQL_ROW row,
-						 struct
-						 limited_connection
-						 *msgdatas,
-						 struct log_mysql_params
-						 *params)
-{
-	/* clear tracking */
-	memset(&(msgdatas->tracking), 0, sizeof(tracking_t));
-	/* fill msgdatas.tracking with datas */
-	if (params->mysql_use_ipv4_schema) {
-		uint32_to_ipv6(atol(row[1]), &msgdatas->tracking.saddr);
-		uint32_to_ipv6(atol(row[2]), &msgdatas->tracking.daddr);
-	} else {
-		memcpy(&(msgdatas->tracking.saddr),
-				row[1],
-				sizeof(msgdatas->tracking.saddr));
-		memcpy(&(msgdatas->tracking.daddr),
-				row[2],
-				sizeof(msgdatas->tracking.daddr));
-	}
-	msgdatas->tracking.protocol = atoi(row[0]);
-	switch (msgdatas->tracking.protocol) {
-		case IPPROTO_TCP:
-			msgdatas->tracking.source = atoi(row[3]);
-			msgdatas->tracking.dest = atoi(row[4]);
-			break;
-		case IPPROTO_UDP:
-			msgdatas->tracking.source = atoi(row[5]);
-			msgdatas->tracking.dest = atoi(row[6]);
-			break;
-		case IPPROTO_ICMP:
-			msgdatas->tracking.source = atoi(row[7]);
-			msgdatas->tracking.dest = atoi(row[8]);
-			break;
-		default:
-			return NU_EXIT_ERROR;
-	}
-	if (DEBUG_OR_NOT(DEBUG_LEVEL_VERBOSE_DEBUG, DEBUG_AREA_MAIN)) {
-		if (print_tracking_t(&(msgdatas->tracking))
-				==
-				NU_EXIT_ERROR)
-			return NU_EXIT_ERROR;
-	}
-	return NU_EXIT_OK;
-}
-
-
-
-/**
- * Destroy all users connections when session terminate
- */
-
-nu_error_t destroy_user_connections(user_session_t * c_session,
-				      session_state_t state,
-				      gpointer params_p)
-{
-	struct log_mysql_params *params =
-		(struct log_mysql_params *) params_p;
-	char request[LONG_REQUEST_SIZE];
-	char ip_ascii[IPV6_SQL_STRLEN];
-	MYSQL *ld;
-	gboolean ok;
-	struct limited_connection msgdatas;
-	nufw_session_t* nufw_session;
-	MYSQL_ROW row;
-
-	if (ipv6_to_sql(params, &c_session->addr, ip_ascii, sizeof(ip_ascii), 1) != 0)
-		return NU_EXIT_ERROR;
-
-
-	ld = get_mysql_handler(params);
-	if (ld == NULL) {
-		return NU_EXIT_ERROR;
-	}
-
-	/* select existing user connection */
-	ok = secure_snprintf(request, sizeof(request),
-			"SELECT " CONN_SELECT_FIELDS
-			" FROM  %s "
-			"WHERE ip_saddr=%s AND username='%s'"
-			" AND (state = 1 OR state =2)",
-			params->mysql_table_name,
-			ip_ascii,
-			c_session->user_name);
-
-	if (!ok) {
-		return NU_EXIT_ERROR;
-	}
-
-	nufw_session = get_nufw_session();
-	if (nufw_session == NULL)
-		return NU_EXIT_ERROR;
-	memcpy(&(msgdatas.gwaddr), &(nufw_session->peername),
-	       sizeof(struct in6_addr));
-	/* execute query */
-	ok = mysql_real_query(ld, request, strlen(request));
-	if (ok != 0) {
-		log_message(SERIOUS_WARNING, DEBUG_AREA_MAIN,
-				"[MySQL] Cannot execute request: %s",
-				mysql_error(ld));
-		mysql_close_current(params);
-		return NU_EXIT_ERROR;
-	} else {
-		 /*
-		 * For each answer:
-		 *  - generate conntrack message
-		 *  - send destroy message to nufw
-		 */
-		MYSQL_RES *result = mysql_store_result(ld);
-		while ((row = mysql_fetch_row(result))) {
-			if (build_conntrack_msg_from_mysql(row,
-							  &msgdatas,
-							  params)
-					!= NU_EXIT_OK) {
-				mysql_free_result(result);
-				return NU_EXIT_ERROR;
-			}
-			if (send_conntrack_message
-					(&msgdatas,
-					 AUTH_CONN_DESTROY)
-					!= NU_EXIT_OK) {
-				mysql_free_result(result);
-				return NU_EXIT_ERROR;
-			}
-		}
-		mysql_free_result(result);
-	}
-	return NU_EXIT_OK;
 }
 
 /**
@@ -1084,19 +777,6 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 		return -1;
 	}
 
-	if (params->mysql_admin_bofh && (state == SESSION_CLOSE)) {
-		if (params->mysql_bofh_victim_group) {
-			if (! g_slist_find(
-				c_session->groups,
-				GINT_TO_POINTER(
-					params->mysql_bofh_victim_group))
-				)
-				return 1;
-		if (destroy_user_connections(c_session, state, params_p)
-				== NU_EXIT_ERROR)
-			return -1;
-					}
-	}
 	return 1;
 }
 

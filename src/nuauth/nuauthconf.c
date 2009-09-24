@@ -71,10 +71,6 @@ int build_prenuauthconf(struct nuauth_params *prenuauthconf,
 		    generate_inaddr_list(gwsrv_addr);
 	}
 
-	if (prenuauthconf->nufw_has_fixed_timeout) {
-		prenuauthconf->nufw_has_conntrack = 1;
-	}
-
 	if ((!prenuauthconf->single_user_client_limit) &&
 			(!prenuauthconf->single_ip_client_limit) &&
 			(connect_policy != POLICY_MULTIPLE_LOGIN)) {
@@ -155,10 +151,6 @@ int init_nuauthconf(struct nuauth_params **result)
 	debug_areas = conf->debug_areas;
 	conf->debug_level = nuauth_config_table_get_or_default_int("nuauth_debug_level", DEFAULT_DEBUG_LEVEL);
 	debug_level = conf->debug_level;
-	conf->nufw_has_conntrack =
-	    nuauth_config_table_get_or_default_int("nufw_has_conntrack", 1);
-	conf->nufw_has_fixed_timeout =
-	    nuauth_config_table_get_or_default_int("nufw_has_fixed_timeout", 1);
 	conf->nuauth_uses_fake_sasl =
 	    nuauth_config_table_get_or_default_int("nuauth_uses_fake_sasl", 1);
 #ifdef BUILD_NUAUTH_COMMAND
@@ -349,12 +341,6 @@ static gboolean compare_nuauthparams(
 	if (strcmp(current->client_srv, new->client_srv) != 0) {
 		g_warning
 		    ("client listening ip has changed, please restart");
-		restart = TRUE;
-	}
-
-	if (current->nufw_has_conntrack != new->nufw_has_conntrack) {
-		g_warning
-		    ("nufw conntrack mode has changed, please restart");
 		restart = TRUE;
 	}
 

@@ -943,12 +943,6 @@ void init_nuauthdata()
 	/* create thread for client request sender */
 	thread_new(&nuauthdatas->tls_pusher, "tls pusher", push_worker);
 
-	if (nuauthconf->nufw_has_conntrack) {
-		thread_new(&nuauthdatas->limited_connections_handler,
-			      "limited connections",
-			      limited_connection_handler);
-	}
-
 	/* create TLS authentication server threads (auth + nufw) */
 	tls_common_init();
 
@@ -1020,13 +1014,6 @@ void main_cleanup()
 				   int_message);
 	}
 
-	if (nuauthconf->nufw_has_conntrack) {
-		/* refresh limited_connections_queue queue */
-		int_message = g_new0(struct internal_message, 1);
-		int_message->type = REFRESH_MESSAGE;
-		g_async_queue_push(nuauthdatas->limited_connections_queue,
-				   int_message);
-	}
 }
 
 /**

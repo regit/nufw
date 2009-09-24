@@ -119,46 +119,6 @@ G_MODULE_EXPORT gint user_packet_logs(void *element, tcp_state_t state,
 			     connection->tracking.protocol);
 
 		}
-	} else {
-		struct accounted_connection *connection = element;
-
-		/* convert IP source and destination addresses to string */
-		format_ipv6(&connection->tracking.saddr, source_addr, INET6_ADDRSTRLEN, NULL);
-		format_ipv6(&connection->tracking.daddr, dest_addr, INET6_ADDRSTRLEN, NULL);
-
-		saddr = dest_addr;
-		daddr = source_addr;
-		if (((connection->tracking).
-		     protocol == IPPROTO_TCP)
-		    ||
-		    ((connection->tracking).
-		     protocol == IPPROTO_UDP)) {
-
-			sport =
-			    connection->
-			    tracking.dest;
-			dport =
-			    connection->
-			    tracking.source;
-			g_message
-			    ("%s%s %ld : SRC=%s DST=%s PROTO=%d SPT=%u DPT=%u (in: %" PRIu64 " pckts/%" PRIu64 " bytes, out: %" PRIu64 " pckts/%" PRIu64 " bytes)",
-			     prefix, str_state,
-			     connection->timestamp, saddr, daddr,
-			     connection->tracking.protocol, sport, dport,
-			     connection->packets_in,
-			     connection->bytes_in,
-			     connection->packets_out,
-			     connection->bytes_out);
-		} else {
-			g_message
-			    ("%s%s %ld : SRC=%s DST=%s PROTO=%d (in: %" PRIu64 " pckts/%" PRIu64 " bytes, out: %" PRIu64 " pckts/%" PRIu64 " bytes)",
-			     prefix, str_state,
-			     connection->timestamp, source_addr, dest_addr,
-			     connection->tracking.protocol,
-			     connection->packets_in, connection->bytes_in,
-			     connection->packets_out, connection->bytes_out);
-
-		}
 	}
 	return 0;
 }

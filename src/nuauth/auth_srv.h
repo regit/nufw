@@ -84,7 +84,6 @@
 #include "tls.h"
 #include "nufw_servers.h"
 #include "connections.h"
-#include "conntrack.h"
 #include "auth_common.h"
 #include "take_decision.h"
 #include "period.h"
