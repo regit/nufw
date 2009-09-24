@@ -11,13 +11,9 @@ EXTRA_DIST = valgrind.sh
 noinst_nufw_SOURCES = iface.h nufw.h structure.h nufwconf.h
 
 nufw_SOURCES = authsrv.c  common.c  main.c  packetsrv.c \
-		tls.c audit.c conntrack.c iface.c \
+		tls.c audit.c iface.c \
 		nufwconf.c \
 		${noinst_nufw_SOURCES}
-
-if HAVE_NFQUEUE_CONNTRACK
-nufw_LDADD = -lnfnetlink -lnetfilter_queue -lnetfilter_conntrack -ldl ../libs/nussl/libnussl.la ../libs/nuconfparser/libnuconfparser.la ../libs/nubase/libnubase.la
-endif
 
 if HAVE_NFQUEUE_ONLY
 nufw_LDADD = -lnfnetlink -lnetfilter_queue ../libs/nussl/libnussl.la ../libs/nuconfparser/libnuconfparser.la ../libs/nubase/libnubase.la

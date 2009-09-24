@@ -80,15 +80,6 @@ struct nfq_handle *h;
 /** Netfilter queue max length */
 uint32_t queue_maxlen;
 
-/* conntrack things */
-#ifdef HAVE_LIBCONNTRACK
-#  include <libnetfilter_conntrack/libnetfilter_conntrack.h>
-struct nfct_handle *cth;
-unsigned char handle_conntrack_event;
-unsigned char nufw_conntrack_uses_mark;
-void *conntrack_event_handler(void *data);
-#endif
-
 #include <sys/socket.h>
 #include <netdb.h>
 #include <ev.h>
@@ -108,9 +99,6 @@ struct nuauth_conn {
 	nussl_session *session;
 	unsigned char auth_server_running;
 	ev_io ev_io;
-#ifdef HAVE_LIBCONNTRACK
-	pthread_t conntrack_event_handler;
-#endif
 };
 
 struct queued_pckt {

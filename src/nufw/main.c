@@ -74,11 +74,6 @@ void nufw_prepare_quit()
 	/* close tls session */
 	close_tls_session();
 
-	/* destroy conntrack handle */
-#ifdef HAVE_LIBCONNTRACK
-	nfct_close(cth);
-#endif
-
 	/* free memory */
 	free(key_file);
 	free(cert_file);
@@ -367,9 +362,6 @@ static struct option long_options[] = {
 void display_usage(void)
 {
 	fprintf(stdout, "%s [-hVc"
-#ifdef HAVE_LIBCONNTRACK
-		"CM"
-#endif
 		"v[v[v[v[v[v[v[v[v[v]]]]]]]]]] [-d remote_addr] [-p remote_port]  [-t packet_timeout] [-T track_size]"
 #ifdef USE_NFQUEUE
 				" [-q queue_num]"
@@ -395,10 +387,6 @@ void display_usage(void)
 \t-A (--debug-area ): debug areas (see man page for details)\n\
 \t-4 (--ipv4       ): use this flag if your system does not have IPv6 support for nfnetlink\n\
 \t-m (--mark       ): mark packet with nuauth provided mark\n"
-#ifdef HAVE_LIBCONNTRACK
-"\t-C (--conntrack  ): listen to conntrack events (needed for connection expiration)\n\
-\t-M (--marked-only): only report event on marked connections to nuauth (implies -C and -m)\n"
-#endif
 "\t-d (--destination): remote address we send auth requests to (address of the nuauth server) (default: 127.0.0.1)\n\
 \t-p (--port       ): remote port we send auth requests to (TCP port nuauth server listens on) (default: 4128)\n"
 #if USE_NFQUEUE
@@ -447,9 +435,6 @@ int main(int argc, char *argv[])
 	    "L:"
 #endif
 	    "c:k:a:n:r:d:p:t:T:A:"
-#ifdef HAVE_LIBCONNTRACK
-	    "CM"
-#endif
 	    ;
 #else
 	char *options_list = "4sSNDf:hVvmc:k:a:n:r:d:p:t:T:A:";
@@ -474,10 +459,6 @@ int main(int argc, char *argv[])
 	debug_areas = DEFAULT_DEBUG_AREAS;
 #if USE_NFQUEUE
 	nfqueue_num = DEFAULT_NFQUEUE;
-#ifdef HAVE_LIBCONNTRACK
-	handle_conntrack_event = CONNTRACK_HANDLE_DEFAULT;
-	nufw_conntrack_uses_mark = 0;
-#endif
 #ifdef HAVE_NFQ_SET_QUEUE_MAXLEN
 
 	queue_maxlen = QUEUE_MAXLEN;
@@ -593,18 +574,6 @@ int main(int argc, char *argv[])
 		case 'q':
 			sscanf(optarg, "%hu", &nfqueue_num);
 			break;
-		case 'C':
-#if HAVE_LIBCONNTRACK
-			handle_conntrack_event = 1;
-			break;
-		case 'M':
-			nufw_conntrack_uses_mark = 1;
-			/* this implies -C */
-			handle_conntrack_event = 1;
-			/* and -m */
-			nufw_set_mark = 1;
-			break;
-#endif				/* HAVE_LIBCONNTRACK */
 #ifdef HAVE_NFQ_SET_QUEUE_MAXLEN
 		case 'L':
 			sscanf(optarg, "%u", &queue_maxlen);
@@ -681,10 +650,6 @@ int main(int argc, char *argv[])
 				"Unable to initialize NuSSL library.");
 
 	}
-
-#ifdef HAVE_LIBCONNTRACK
-	cth = nfct_open(CONNTRACK, 0);
-#endif
 
 	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_INFO,
 			"[+] NuFW server starting");

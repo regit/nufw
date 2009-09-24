@@ -120,144 +120,6 @@ int auth_process_answer(char *dgram, int dgram_size)
 	return sizeof(nuv4_nuauth_decision_response_t) + payload_len;
 }
 
-#ifdef HAVE_LIBCONNTRACK
-
-int build_nfct_tuple_from_message(struct nfct_tuple *orig,
-				  struct nuv4_conntrack_message_t
-				  *packet_hdr)
-{
-	orig->protonum = packet_hdr->ip_protocol;
-	if (is_ipv4(&packet_hdr->ip_src) && is_ipv4(&packet_hdr->ip_dst)) {
-		orig->l3protonum = AF_INET;
-		orig->src.v4 = packet_hdr->ip_src.s6_addr32[3];
-		orig->dst.v4 = packet_hdr->ip_dst.s6_addr32[3];
-	} else {
-		orig->l3protonum = AF_INET6;
-		memcpy(&orig->src.v6, &packet_hdr->ip_src,
-		       sizeof(orig->src.v6));
-		memcpy(&orig->dst.v6, &packet_hdr->ip_dst,
-		       sizeof(orig->dst.v6));
-	}
-
-	switch (packet_hdr->ip_protocol) {
-	case IPPROTO_TCP:
-		orig->l4src.tcp.port = packet_hdr->src_port;
-		orig->l4dst.tcp.port = packet_hdr->dest_port;
-		break;
-	case IPPROTO_UDP:
-		orig->l4src.udp.port = packet_hdr->src_port;
-		orig->l4dst.udp.port = packet_hdr->dest_port;
-		break;
-	default:
-		return 0;
-	}
-	return 1;
-
-}
-
-/**
- * Process NuAuth message of type #AUTH_CONN_DESTROY
- */
-int auth_process_conn_destroy(char *dgram, int dgram_size)
-{
-	struct nuv4_conntrack_message_t *packet_hdr;
-	struct nfct_tuple orig;
-	int id = 0;
-
-	/* check packet size */
-	if (dgram_size < (int) sizeof(struct nuv4_conntrack_message_t)) {
-		return -1;
-	}
-
-	packet_hdr = (struct nuv4_conntrack_message_t *) dgram;
-
-	if (ntohs(packet_hdr->msg_length) != sizeof(struct nuv4_conntrack_message_t)) {
-		return -1;
-	}
-
-	if (build_nfct_tuple_from_message(&orig, packet_hdr)) {
-		debug_log_printf(DEBUG_AREA_GW | DEBUG_AREA_PACKET,
-				 DEBUG_LEVEL_VERBOSE_DEBUG,
-				 "Deleting entry from conntrack after NuAuth request");
-		(void) nfct_delete_conntrack(cth, &orig, NFCT_DIR_ORIGINAL,
-					     id);
-	}
-	return ntohs(packet_hdr->msg_length);
-}
-
-/**
- * Process NuAuth message of type #AUTH_CONN_UPDATE
- */
-int auth_process_conn_update(char *dgram, int dgram_size)
-{
-	struct nuv4_conntrack_message_t *packet_hdr;
-	struct nfct_conntrack *ct;
-	struct nfct_tuple orig;
-	struct nfct_tuple reply;
-	union nfct_protoinfo proto;
-
-
-	/* check packet size */
-	if (dgram_size < (int) sizeof(struct nuv4_conntrack_message_t)) {
-		debug_log_printf(DEBUG_AREA_GW, DEBUG_LEVEL_DEBUG,
-				 "NuAuth sent too small message");
-		return -1;
-	}
-	packet_hdr = (struct nuv4_conntrack_message_t *) dgram;
-
-	if (ntohs(packet_hdr->msg_length) != sizeof(struct nuv4_conntrack_message_t)) {
-		return -1;
-	}
-
-	if (build_nfct_tuple_from_message(&orig, packet_hdr)) {
-		/* generate reply : this is stupid but done by conntrack tool */
-		memset(&reply, 0, sizeof(reply));
-		reply.l3protonum = orig.l3protonum;
-#if 0
-		/* we set it to 0 to avoid problem  with NAT */
-		memset(&reply.src, 0, sizeof(reply.src));
-		memset(&reply.dst, 0, sizeof(reply.dst));
-
-		memset(&reply.l4src, 0, sizeof(reply.l4src));
-		memset(&reply.l4dst, 0, sizeof(reply.l4dst));
-#endif
-
-
-		proto.tcp.state = 3;
-
-#ifdef  HAVE_LIBCONNTRACK_FIXEDTIMEOUT
-		ct = nfct_conntrack_alloc(&orig, &reply, 0,
-					  &proto,
-					  IPS_ASSURED | IPS_SEEN_REPLY |
-					  IPS_FIXED_TIMEOUT, 0, 0, NULL);
-#else
-		ct = nfct_conntrack_alloc(&orig, &reply, 0,
-					  &proto,
-					  IPS_ASSURED | IPS_SEEN_REPLY, 0,
-					  0, NULL);
-#endif
-#ifdef HAVE_LIBCONNTRACK_FIXEDTIMEOUT
-		if (packet_hdr->timeout) {
-			debug_log_printf(DEBUG_AREA_GW,
-					 DEBUG_LEVEL_VERBOSE_DEBUG,
-					 "Setting timeout to %d after NuAuth request",
-					 ntohl(packet_hdr->timeout));
-			ct->timeout = ntohl(packet_hdr->timeout);
-		}
-#endif				/* HAVE_LIBCONNTRACK_FIXEDTIMEOUT */
-
-		if (nfct_update_conntrack(cth, ct) != 0) {
-			log_area_printf(DEBUG_AREA_MAIN,
-					DEBUG_LEVEL_WARNING,
-					"Conntrack update was impossible");
-
-		}
-		nfct_conntrack_free(ct);
-	}
-	return ntohs(packet_hdr->msg_length);
-}
-#endif				/* HAVE_LIBCONNTRACK */
-
 /**
  * Process authentication server (NuAuth) packet answer. Different answers
  * can be:
@@ -285,12 +147,6 @@ static int auth_packet_to_decision(char *dgram, int dgram_size)
 	switch (dgram[1]) {
 	case AUTH_ANSWER:
 		return auth_process_answer(dgram, dgram_size);
-#ifdef HAVE_LIBCONNTRACK
-	case AUTH_CONN_DESTROY:
-		return auth_process_conn_destroy(dgram, dgram_size);
-	case AUTH_CONN_UPDATE:
-		return auth_process_conn_update(dgram, dgram_size);
-#else
 	case AUTH_CONN_DESTROY:
 		log_area_printf(DEBUG_AREA_MAIN | DEBUG_AREA_GW,
 				DEBUG_LEVEL_WARNING,
@@ -301,7 +157,6 @@ static int auth_packet_to_decision(char *dgram, int dgram_size)
 				DEBUG_LEVEL_WARNING,
 				"Connection update message not supported");
 		break;
-#endif
 	default:
 		log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_DEBUG,
 				"NuAuth message type %d not for me",

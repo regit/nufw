@@ -156,8 +156,6 @@ AC_ARG_WITH(ldap,   [AC_HELP_STRING(--with-ldap,  Support LDAP directory for acl
 
 
 AC_ARG_WITH(nfqueue,   [AC_HELP_STRING(--without-nfqueue, Compile for QUEUE instead of NFQUEUE)],use_nfqueue=$withval, use_nfqueue="yes")
-AC_ARG_WITH(nfconntrack,   [AC_HELP_STRING(--without-nfconntrack, Disable netfilter_conntrack support)],use_nfconntrack=$withval, use_nfconntrack="yes")
-
 
 AC_ARG_WITH(utf8,   [AC_HELP_STRING(--with-utf8, Use UTF8 exchange between client and server)], AC_DEFINE_UNQUOTED([USE_UTF8],[1],[Will use UTF8 exchange]))
 AC_ARG_WITH(fixedtimeout,   [AC_HELP_STRING(--with-fixedtimeout, Assume libconntrack has fixed timeout extension )],have_conntrack_fixedtimeout=$withval )
@@ -295,23 +293,6 @@ if test "${build_nufw}" = "yes"; then
     fi
 fi
 
-if test "${use_nfconntrack}" = "yes"; then
-	AC_CHECK_LIB([netfilter_conntrack], [nfct_dump_conntrack_table], have_conntrack="yes", have_conntrack="",[-ldl -lnfnetlink])
-else
-	have_conntrack=""
-fi
-
-if test "${have_conntrack}" = "yes"; then
-        AC_DEFINE_UNQUOTED([HAVE_LIBCONNTRACK],[1],[libconntrack has been found])
-	AC_CHECK_LIB([netfilter_conntrack], [nfct_callback_register], have_new_conntrack_api="yes", have_new_conntrack_api="", [-ldl -lnfnetlink])
-	if test "${have_conntrack_fixedtimeout}" = "yes"; then
-        	AC_DEFINE_UNQUOTED([HAVE_LIBCONNTRACK_FIXEDTIMEOUT],[1],[libconntrack with fixed timeout extension has been choosen])
-	fi
-        if test "${have_new_conntrack_api}" = "yes"; then
-                AC_DEFINE_UNQUOTED([HAVE_NEW_NFCT_API],[1],[libconntrack new API has been found])
-        fi
-fi
-
 if test "${build_pam_nufw}" = "yes"; then
     #AC_CHECK_LIB([pam], [pam_sm_authenticate],AC_DEFINE([HAVE_LIBRARY_PAM],[1],[Pam lib flag]), check_pam=no)
     AC_CHECK_LIB([pam],[pam_start],AC_DEFINE([HAVE_LIBRARY_PAM],[1],[pam lib flag]), check_pam=no)
@@ -341,8 +322,6 @@ AM_CONDITIONAL(BUILD_NUAUTH_COMMAND, test x${build_nuauth_command} = xyes)
 
 AM_CONDITIONAL(USE_USER_MARK, test x$enable_user_mark = xyes)
 AM_CONDITIONAL(HAVE_NFQUEUE_ONLY, test x$have_nfqueue = xyes && test x$have_conntrack = x  )
-AM_CONDITIONAL(HAVE_NFQUEUE_CONNTRACK,test x$have_conntrack = xyes && test x$have_nfqueue = xyes )
-AM_CONDITIONAL(HAVE_CONNTRACK_ONLY, test x$have_nfqueue = x && test x$have_conntrack = xyes  )
 
 AM_CONDITIONAL(USE_OPENSSL, test x$build_openssl != xno)
 AM_CONDITIONAL(USE_GNUTLS, test x$build_openssl = xno)
@@ -554,16 +533,9 @@ fi
 
 if test "${build_nufw}" = "yes"; then
         AC_MSG_RESULT([* Compiling NuFW])
-        if test "${have_conntrack}" = "yes"; then
-        	AC_MSG_RESULT([  - NuFW: libnetfilter_conntrack support])
-        fi
         if test "${have_nfqueue}" = "yes"; then
         	AC_MSG_RESULT([  - NuFW: libnetfilter_queue support])
         fi
-else
-    if test "${use_nfconntrack}" = "yes"; then
-        AC_MSG_RESULT([!!! WARNING !!! NuFW daemon WON'T be compiled: libnetfilter_queue not present])
-    fi
 fi
 
 if test "${build_libnuclient}" = "yes"; then
