@@ -84,7 +84,5 @@ void process_usr2(int signum)
 void process_hup(int signum)
 {
 	log_printf(DEBUG_LEVEL_FATAL, "HUP: restarting TLS connection");
-	pthread_mutex_lock(&tls.mutex);
 	shutdown_tls();
-	pthread_mutex_unlock(&tls.mutex);
 }

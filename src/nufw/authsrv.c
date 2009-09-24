@@ -329,44 +329,29 @@ void *authsrv(void *data)
 	char *dgram = cdgram;
 
 	log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_VERBOSE_DEBUG,
-			"[+] Start auth server thread");
+			"[+] In auth server thread");
 
-	while (pthread_mutex_trylock(&tls.auth_server_mutex) == 0) {
-		pthread_mutex_unlock(&tls.auth_server_mutex);
-
-		/* memset(dgram, 0, sizeof dgram); */
-		pthread_mutex_lock(&tls.mutex);
-		if (tls.session)
-			ret = nussl_read(tls.session, dgram, sizeof cdgram);
-		else
-			ret = 0;
-		pthread_mutex_unlock(&tls.mutex);
-		if (ret == NUSSL_SOCK_TIMEOUT)
-		{
-			usleep(10000); /* Without that, the other thread can't get the lock to tls.mutex */
-			continue;
-		}
-		if (ret <= 0) {
-			log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_VERBOSE_DEBUG,
-					"Error during nussl_read: %s", nussl_get_error(tls.session));
-			break;
-		} else {
-			do {
-				read_size = auth_packet_to_decision(dgram, ret);
-				ret -= read_size;
-				dgram = dgram + read_size;
-			} while (ret > 0 && (read_size != -1));
-		}
-
-		dgram = cdgram;
+	/* memset(dgram, 0, sizeof dgram); */
+	if (tls.session)
+		ret = nussl_read(tls.session, dgram, sizeof cdgram);
+	else
+		ret = 0;
+	if (ret == NUSSL_SOCK_TIMEOUT) {
+		return NULL;
+	}
+	if (ret <= 0) {
+		log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_VERBOSE_DEBUG,
+				"Error during nussl_read: %s", nussl_get_error(tls.session));
+		close_tls_session();
+		return NULL;
+	} else {
+		do {
+			read_size = auth_packet_to_decision(dgram, ret);
+			ret -= read_size;
+			dgram = dgram + read_size;
+		} while (ret > 0 && (read_size != -1));
 	}
 
-	log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_VERBOSE_DEBUG,
-			"[+] Leave auth server thread");
-
-	pthread_mutex_lock(&tls.mutex);
-	/* warn sender thread that it will need to reconnect at next access */
-	tls.auth_server_running = 0;
-	pthread_mutex_unlock(&tls.mutex);
-	pthread_exit(NULL);
+	dgram = cdgram;
+	return NULL;
 }

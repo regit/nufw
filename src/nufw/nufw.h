@@ -106,7 +106,7 @@ void *conntrack_event_handler(void *data);
 
 #include <sys/socket.h>
 #include <netdb.h>
-
+#include <ev.h>
 
 /** If equals to 1, compile with x509 certificate support */
 #define USE_X509 1
@@ -121,10 +121,8 @@ void *conntrack_event_handler(void *data);
 
 struct nuauth_conn {
 	nussl_session *session;
-	pthread_mutex_t mutex;
 	unsigned char auth_server_running;
-	pthread_t auth_server;
-	pthread_mutex_t auth_server_mutex;
+	ev_io ev_io;
 #ifdef HAVE_LIBCONNTRACK
 	pthread_t conntrack_event_handler;
 #endif

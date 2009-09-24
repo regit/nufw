@@ -1,5 +1,5 @@
 /*
- ** Copyright (C) 2002-2008 INL
+ ** Copyright (C) 2002-2009 INL
  ** Written by Eric Leblond <eric@regit.org>
  **            Vincent Deffontaines <vincent@gryzor.com>
  ** INL http://www.inl.fr/
@@ -23,6 +23,8 @@
 #include "nufw.h"
 
 #include <nubase.h>
+
+#define CLEANING_DELAY 5
 
 #ifdef HAVE_NFQ_INDEV_NAME
 #  include "iface.h"
@@ -360,6 +362,137 @@ void packetsrv_ipq_process(unsigned char *buffer)
 }
 #endif				/* USE_NFQUEUE */
 
+static void iface_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
+{
+	struct nlif_handle *nlif_handle = w->data;
+	ev_io_stop(loop, w);
+	if (revents & EV_ERROR) {
+		int if_fd;
+		iface_table_close(nlif_handle);
+
+		nlif_handle = iface_table_open();
+		if (!nlif_handle)
+			exit(EXIT_FAILURE);
+
+		if_fd = nlif_fd(nlif_handle);
+		if (if_fd < 0) {
+			exit(EXIT_FAILURE);
+		}
+		ev_io_set(w, if_fd, EV_READ);
+	}
+	if (revents & EV_READ) {
+		iface_treat_message(nlif_handle);
+	}
+	ev_io_start(loop, w);
+}
+
+static void packetsrv_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
+{
+	if (revents & EV_READ) {
+		unsigned char buffer[BUFSIZ];
+		int rv;
+		int fd = nfq_fd(h);
+		/* read one packet */
+		rv = recv(fd, buffer, sizeof(buffer), 0);
+		if (rv < 0) {
+			struct nlif_handle *nlif_handle = (struct nlif_handle *) w->data;
+			log_area_printf(DEBUG_AREA_MAIN,
+					DEBUG_LEVEL_WARNING,
+					"[!] Error of read on netfilter queue socket (code %i)!",
+					rv);
+			log_area_printf(DEBUG_AREA_MAIN,
+					DEBUG_LEVEL_SERIOUS_MESSAGE,
+					"Reopen netlink connection.");
+			packetsrv_close(0);
+#ifdef HAVE_NFQ_INDEV_NAME
+			fd = packetsrv_open(nlif_handle);
+#else
+			fd = packetsrv_open(NULL);
+#endif
+			if (fd < 0) {
+				log_area_printf(DEBUG_AREA_MAIN,
+						DEBUG_LEVEL_CRITICAL,
+						"[!] FATAL ERROR: Fail to reopen netlink connection!");
+				exit(EXIT_FAILURE);
+			}
+			ev_io_set(w, fd, EV_READ);
+			ev_io_start(loop, w);
+			return;
+		}
+
+		ev_io_stop(loop, &tls.ev_io);
+		/* process the packet */
+		nfq_handle_packet(h, (char *) buffer, rv);
+		pckt_rx++;
+		ev_io_start(loop, &tls.ev_io);
+	}
+
+	if (revents & EV_ERROR) {
+		struct nlif_handle *nlif_handle = (struct nlif_handle *) w->data;
+		int fd;
+		packetsrv_close(0);
+		ev_io_stop(loop, w);
+#ifdef HAVE_NFQ_INDEV_NAME
+		fd = packetsrv_open(nlif_handle);
+#else
+		fd = packetsrv_open(NULL);
+#endif
+		ev_io_set(w, fd, EV_READ);
+		ev_io_start(loop, w);
+	}
+}
+
+static void tls_activity_cb(struct ev_loop *loop, ev_io *w, int revents) {
+	ev_io *nfq_watcher = (ev_io *) w->data;
+	if (revents & EV_READ) {
+		ev_io_stop(loop, w);
+		ev_io_stop(loop, nfq_watcher);
+		/* FIXME correct function type here */
+		authsrv(NULL);
+		ev_io_start(loop, nfq_watcher);
+		if (tls.session) {
+			ev_io_start(loop, w);
+		}
+	}
+
+	if (revents & EV_ERROR) {
+		tls.auth_server_running = 0;
+	}
+}
+
+int p_pckt_rx;
+int p_pckt_tx;
+
+static void cleaning_timer_cb(struct ev_loop *loop, ev_timer *w, int revents)
+{
+	int stat_rx, stat_tx;
+
+	ev_io *nfq_watcher = (ev_io *) w->data;
+	ev_io_stop(loop, &tls.ev_io);
+	ev_io_stop(loop, nfq_watcher);
+	clean_old_packets();
+	ev_io_start(loop, nfq_watcher);
+	ev_io_start(loop, &tls.ev_io);
+#ifdef DEBUG_ENABLE
+	/* display stats */
+	/* FIXME : modify this function */
+	/*
+	process_poll(0);
+	*/
+	stat_rx = pckt_rx - p_pckt_rx;
+	p_pckt_rx = pckt_rx;
+
+	stat_tx = pckt_rx - p_pckt_rx;
+	p_pckt_rx = pckt_rx;
+
+	log_area_printf(DEBUG_AREA_MAIN | DEBUG_AREA_PACKET,
+			DEBUG_LEVEL_DEBUG,
+			"Average: rx=%.2f, tx=%.2f\n",
+			(1.0 * stat_rx) / CLEANING_DELAY,
+			(1.0 * stat_tx) / CLEANING_DELAY);
+#endif
+}
+
 /**
  * \brief Packet server thread function.
  *
@@ -375,20 +508,18 @@ void packetsrv_ipq_process(unsigned char *buffer)
 void *packetsrv(void *void_arg)
 {
 	struct nufw_threadargument *thread_arg = void_arg;
-	struct nufw_threadtype *this = thread_arg->thread;
+	//struct nufw_threadtype *this = thread_arg->thread;
 	int fatal_error = 0;
+	ev_io iface_watcher;
+	ev_io nfq_watcher;
+	ev_timer timer;
+	struct ev_loop *loop;
 #ifdef USE_NFQUEUE
-	unsigned char buffer[BUFSIZ];
-	struct timeval tv;
 	int fd;
 #ifdef HAVE_NFQ_INDEV_NAME
 	struct nlif_handle *nlif_handle;
 	int if_fd;
 #endif
-	int rv;
-	int select_result;
-	int max_fd;
-	fd_set wk_set;
 
 #ifdef HAVE_NFQ_INDEV_NAME
 	nlif_handle = iface_table_open();
@@ -413,111 +544,33 @@ void *packetsrv(void *void_arg)
 	log_area_printf(DEBUG_AREA_MAIN | DEBUG_AREA_PACKET, DEBUG_LEVEL_DEBUG,
 			"[+] Packet server started");
 
-	/* loop until main process ask to stop */
-	while (pthread_mutex_trylock(&this->mutex) == 0) {
-		pthread_mutex_unlock(&this->mutex);
-
-		/* Set timeout: one second */
-		tv.tv_sec = 1;
-		tv.tv_usec = 0;
-
-		/* wait new event on socket */
-		FD_ZERO(&wk_set);
-		FD_SET(fd, &wk_set);
+	loop = ev_loop_new(0);
+	/* add io for nfq */
+	ev_io_init(&nfq_watcher , packetsrv_activity_cb, fd, EV_READ);
+	nfq_watcher.data = nlif_handle;
+	ev_io_start(loop, &nfq_watcher);
 #ifdef HAVE_NFQ_INDEV_NAME
-		FD_SET(if_fd, &wk_set);
-
-		if (fd >= if_fd) {
-			max_fd = fd + 1;
-		} else {
-			max_fd = if_fd + 1;
-		}
-#else
-		max_fd = fd + 1;
+	/* add io for iface */
+	ev_io_init(&iface_watcher , iface_activity_cb, if_fd, EV_READ);
+	iface_watcher.data = nlif_handle;
+	ev_io_start(loop, &iface_watcher);
 #endif
+	ev_io_init(&tls.ev_io, tls_activity_cb,
+		   nussl_session_get_fd(tls.session), EV_READ);
+	tls.ev_io.data = &nfq_watcher;
+	ev_io_start(loop, &tls.ev_io);
 
-		select_result = select(max_fd, &wk_set, NULL, NULL, &tv);
-		if (select_result == -1) {
-			int err = errno;
-			if (err == EINTR) {
-				continue;
-			}
+	p_pckt_rx = 0;
+	p_pckt_tx = 0;
+	ev_timer_init(&timer, cleaning_timer_cb, 0, 1.0 * CLEANING_DELAY);
+	timer.data = &nfq_watcher;
+	ev_timer_start(loop, &timer);
 
-			if (err == EBADF) {
-				struct stat s;
-#ifdef HAVE_NFQ_INDEV_NAME
-				if ((fstat(if_fd, &s)<0)) {
-					iface_table_close(nlif_handle);
+	/* start loop */
+	ev_loop(loop, 0);
 
-					nlif_handle = iface_table_open();
-					if (!nlif_handle)
-						exit(EXIT_FAILURE);
+	ev_loop_destroy(loop);
 
-					if_fd = nlif_fd(nlif_handle);
-					if (if_fd < 0) {
-						exit(EXIT_FAILURE);
-					}
-				}
-#endif
-				if ((fstat(fd, &s)<0)) {
-					packetsrv_close(0);
-#ifdef HAVE_NFQ_INDEV_NAME
-					fd = packetsrv_open(nlif_handle);
-#else
-					fd = packetsrv_open(NULL);
-#endif
-				}
-				continue;
-			}
-			log_area_printf(DEBUG_AREA_MAIN,
-					DEBUG_LEVEL_CRITICAL,
-					"[!] FATAL ERROR: Error of select() in netfilter queue thread (code %i)!",
-					err);
-			fatal_error = 1;
-			break;
-		}
-
-		/* catch timeout */
-		if (select_result == 0) {
-			/* timeout! */
-			continue;
-		}
-#ifdef HAVE_NFQ_INDEV_NAME
-		if (FD_ISSET(if_fd, &wk_set)) {
-			iface_treat_message(nlif_handle);
-			continue;
-		}
-#endif
-		/* read one packet */
-		rv = recv(fd, buffer, sizeof(buffer), 0);
-		if (rv < 0) {
-			log_area_printf(DEBUG_AREA_MAIN,
-					DEBUG_LEVEL_WARNING,
-					"[!] Error of read on netfilter queue socket (code %i)!",
-					rv);
-			log_area_printf(DEBUG_AREA_MAIN,
-					DEBUG_LEVEL_SERIOUS_MESSAGE,
-					"Reopen netlink connection.");
-			packetsrv_close(0);
-#ifdef HAVE_NFQ_INDEV_NAME
-			fd = packetsrv_open(nlif_handle);
-#else
-			fd = packetsrv_open(NULL);
-#endif
-			if (fd < 0) {
-				log_area_printf(DEBUG_AREA_MAIN,
-						DEBUG_LEVEL_CRITICAL,
-						"[!] FATAL ERROR: Fail to reopen netlink connection!");
-				fatal_error = 1;
-				break;
-			}
-			continue;
-		}
-
-		/* process the packet */
-		nfq_handle_packet(h, (char *) buffer, rv);
-		pckt_rx++;
-	}
 
 #ifdef HAVE_NFQ_INDEV_NAME
 	iface_table_close(nlif_handle);
@@ -613,8 +666,6 @@ void shutdown_tls()
 	log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_CRITICAL,
 			"tls send failure when sending request");
 
-	pthread_cancel(tls.auth_server);
-
 	close_tls_session();
 
 	/* put auth_server_running to 0 because this is this thread which has
@@ -690,14 +741,6 @@ int auth_request_send(uint8_t type, struct queued_pckt *pckt_data)
 	log_area_printf(DEBUG_AREA_PACKET, DEBUG_LEVEL_DEBUG,
 			"Sending request for %lu", (long)pckt_data->packet_id);
 
-	/* cleaning up current session : auth_server has detected a problem */
-	pthread_mutex_lock(&tls.mutex);
-	if ((tls.auth_server_running == 0) && tls.session != NULL) {
-		close_tls_session();
-	}
-
-	pthread_mutex_unlock(&tls.mutex);
-
 	/* negotiate TLS connection if needed */
 	if (!tls.session) {
 		log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_INFO,
@@ -723,20 +766,15 @@ int auth_request_send(uint8_t type, struct queued_pckt *pckt_data)
 		}
 	}
 
-	/* send packet */
-	pthread_mutex_lock(&tls.mutex);
-
 	if (nussl_write(tls.session, (char*)data, msg_length) < 0) {
 		debug_log_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
 				 "Error during nussl_write (auth_request_send).");
 		shutdown_tls();
-		pthread_mutex_unlock(&tls.mutex);
 		log_area_printf(DEBUG_AREA_GW,
 				DEBUG_LEVEL_WARNING,
 				"[!] TLS send failure");
 		return 0;
 	}
-	pthread_mutex_unlock(&tls.mutex);
 	return 1;
 }
 

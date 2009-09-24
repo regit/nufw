@@ -160,24 +160,6 @@ int init_x509_filenames()
  * Create auth server thread
  */
 
-void create_authserver()
-{
-	pthread_attr_t attr;
-	pthread_attr_init(&attr);
-	pthread_attr_setdetachstate(&attr,
-			PTHREAD_CREATE_JOINABLE);
-
-	/* create joinable thread for auth server */
-	pthread_mutex_init(&tls.auth_server_mutex, NULL);
-	if (pthread_create
-			(&tls.auth_server, &attr, authsrv,
-			 NULL) == EAGAIN) {
-		exit(EXIT_FAILURE);
-	}
-	tls.auth_server_running = 1;
-
-}
-
 void tls_connect_unix()
 {
 	struct sockaddr_un remote;
@@ -213,7 +195,6 @@ void tls_connect_unix()
 	nussl_set_read_timeout(sess, 0);
 
 	tls.session = sess;
-	create_authserver();
 }
 
 /**
@@ -321,5 +302,4 @@ void tls_connect()
 #endif
 
 	tls.session = sess;
-	create_authserver();
 }

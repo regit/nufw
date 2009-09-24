@@ -69,16 +69,11 @@ char * nufw_config_file = DEFAULT_NUFW_CONF_FILE;
 void nufw_stop_thread()
 {
 	/* ask threads to stop */
-	pthread_mutex_lock(&tls.auth_server_mutex);
 	pthread_mutex_lock(&thread.mutex);
 
 	/* wait for thread end */
 	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_MESSAGE,
 			"Wait threads end");
-	if (tls.auth_server_running) {
-		pthread_join(tls.auth_server, NULL);
-	}
-	pthread_mutex_unlock(&tls.auth_server_mutex);
 	pthread_join(thread.thread, NULL);
 	pthread_mutex_unlock(&thread.mutex);
 }
@@ -95,7 +90,6 @@ void nufw_prepare_quit()
 
 	/* close tls session */
 	close_tls_session();
-	pthread_mutex_destroy(&tls.mutex);
 
 	/* destroy conntrack handle */
 #ifdef HAVE_LIBCONNTRACK
@@ -163,45 +157,6 @@ void nufw_cleanup(int signal)
 	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
 			"[+] Exit NuFW");
 	exit(EXIT_SUCCESS);
-}
-
-/**
- * Create packet server thread: init mutex and create thread
- * with packetsrv() function. Send pointer to ::thread to
- * the function.
- */
-void create_thread()
-{
-	/* should be static because thread may read data after this function exits */
-	static struct nufw_threadargument arg;
-	arg.thread = &thread;
-	arg.parent_pid = getpid();
-
-	/* set attribute to "joinable thread" */
-	pthread_attr_t attr;
-	pthread_attr_init(&attr);
-	pthread_attr_setdetachstate(&attr, PTHREAD_CREATE_JOINABLE);
-
-	/* create mutex */
-	pthread_mutex_init(&thread.mutex, NULL);
-
-	/* try to create the thread */
-	if (pthread_create(&thread.thread, &attr, packetsrv, &arg) != 0) {
-		pthread_mutex_destroy(&thread.mutex);
-		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
-				"Fail to create thread!");
-		exit(EXIT_FAILURE);
-	}
-#ifdef HAVE_LIBCONNTRACK
-	if (handle_conntrack_event) {
-		if (pthread_create
-		    (&(tls.conntrack_event_handler), NULL,
-		     conntrack_event_handler, NULL) == EAGAIN) {
-			exit(EXIT_FAILURE);
-		}
-	}
-#endif
-
 }
 
 /**
@@ -738,7 +693,6 @@ int main(int argc, char *argv[])
 	/* init. tls */
 	tls.session = NULL;
 	tls.auth_server_running = 0;
-	pthread_mutex_init(&tls.mutex, NULL);
 
 	/* start GNU TLS library */
 	if (nussl_init() != NUSSL_OK) {
@@ -773,9 +727,6 @@ int main(int argc, char *argv[])
 				authreq_addr, authreq_port);
 	}
 
-	/* create packet server thread */
-	create_thread();
-
 	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
 			"[+] NuFW " VERSION " started");
 
@@ -787,26 +738,10 @@ int main(int argc, char *argv[])
 
 	/* control stuff */
 	pckt_tx = pckt_rx = 0;
-	while (1 == 1) {
-		int stat = pckt_tx;
-		const int seconds = 5;
 
-		sleep(seconds);
+	/* create packet server */
+	packetsrv(NULL);
 
-		stat = pckt_tx - stat;
-
-		/* clean old packets */
-		pthread_mutex_lock(&packets_list.mutex);
-		clean_old_packets();
-		pthread_mutex_unlock(&packets_list.mutex);
-#ifdef DEBUG_ENABLE
-		/* display stats */
-		process_poll(0);
-		printf("Average: %u\n", stat / seconds);
-#endif
-	}
-
-	nufw_stop_thread();
 	nufw_prepare_quit();
 	return EXIT_SUCCESS;
 }

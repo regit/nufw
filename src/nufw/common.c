@@ -81,7 +81,6 @@ void close_tls_session()
 	if (tls.session == NULL)
 		return;
 
-	pthread_mutex_destroy(&tls.auth_server_mutex);
 	nussl_session_destroy(tls.session);
 	tls.session = NULL;
 }
