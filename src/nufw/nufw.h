@@ -147,10 +147,6 @@ struct nuauth_conn tls;
 
 int init_x509_filenames();
 void tls_connect();
-pthread_cond_t *session_destroyed_cond;
-pthread_cond_t *session_active_cond;
-pthread_mutex_t *session_destroyed_mutex;
-pthread_mutex_t *session_active_mutex;
 
 /**
  * Address informations of NuAuth server: hostname ::authreq_addr,

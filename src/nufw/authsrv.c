@@ -68,9 +68,7 @@ int auth_process_answer(char *dgram, int dgram_size)
 	packet_id = ntohl(answer->packet_id);
 
 	/* search and destroy packet by packet_id */
-	pthread_mutex_lock(&packets_list.mutex);
 	sandf = psearch_and_destroy(packet_id, &nfmark);
-	pthread_mutex_unlock(&packets_list.mutex);
 	if (!sandf) {
 		log_area_printf(DEBUG_AREA_GW | DEBUG_AREA_GW,
 				DEBUG_LEVEL_WARNING,

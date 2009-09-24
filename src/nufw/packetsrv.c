@@ -168,10 +168,8 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 	}
 
 	/* Try to add the packet to the list */
-	pthread_mutex_lock(&packets_list.mutex);
 	ret = padd(current);
 	q_pckt.packet_id = current->id;
-	pthread_mutex_unlock(&packets_list.mutex);
 
 	if (ret == 0) {
 		/* send an auth request packet */
@@ -180,11 +178,9 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
 			/* send failure dropping packet */
 			IPQ_SET_VERDICT(q_pckt.packet_id, NF_DROP);
 			/* we fail to send the packet so we free packet related to current */
-			pthread_mutex_lock(&packets_list.mutex);
 			/* search and destroy packet by packet_id */
 			sandf = psearch_and_destroy(q_pckt.packet_id,
 						&(q_pckt.mark));
-			pthread_mutex_unlock(&packets_list.mutex);
 
 			if (!sandf) {
 				log_area_printf(DEBUG_AREA_MAIN,
@@ -507,14 +503,11 @@ static void cleaning_timer_cb(struct ev_loop *loop, ev_timer *w, int revents)
  */
 void *packetsrv(void *void_arg)
 {
-	struct nufw_threadargument *thread_arg = void_arg;
-	//struct nufw_threadtype *this = thread_arg->thread;
 	int fatal_error = 0;
 	ev_io iface_watcher;
 	ev_io nfq_watcher;
 	ev_timer timer;
 	struct ev_loop *loop;
-#ifdef USE_NFQUEUE
 	int fd;
 #ifdef HAVE_NFQ_INDEV_NAME
 	struct nlif_handle *nlif_handle;
@@ -576,83 +569,12 @@ void *packetsrv(void *void_arg)
 	iface_table_close(nlif_handle);
 #endif
 
-
 	packetsrv_close(!fatal_error);
-#else				/* USE_NFQUEUE */
-	unsigned char buffer[BUFSIZ];
-	int size;
 
-	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_MESSAGE,
-			"Try to connect to netlink (IPQ)");
-	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_SERIOUS_WARNING,
-			"Don't forget to load Linux kernel module ip_queue (using modprobe command)");
-
-	/* init netlink connection */
-	hndl = ipq_create_handle(0, PF_INET);
-	if (!hndl) {
-		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
-				"[!] FATAL ERROR: Could not create ipq handle!");
-		kill(thread_arg->parent_pid, SIGTERM);
-		pthread_exit(NULL);
-	}
-
-	ipq_set_mode(hndl, IPQ_COPY_PACKET, BUFSIZ);
-
-	log_area_printf(DEBUG_AREA_MAIN | DEBUG_AREA_PACKET, DEBUG_LEVEL_FATAL,
-			"[+] Packet server started");
-
-	/* loop until main process ask this thread to stop using its mutex */
-	while (pthread_mutex_trylock(&this->mutex) != EBUSY) {
-		pthread_mutex_unlock(&this->mutex);
-
-		/* wait netfilter event with a timeout of one second */
-		size = ipq_read(hndl, buffer, sizeof(buffer), 1000000);
-
-		/* is timeout recheaded */
-		if (size == 0) {
-			continue;
-		}
-
-		/* Check buffer size */
-		if (size == -1) {
-			log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
-					"BUFSIZ too small (size == %d)",
-					size);
-			continue;
-		}
-		if (BUFSIZ <= size) {
-			log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
-					"BUFSIZ too small (size == %d)",
-					size);
-			continue;
-		}
-
-		/* skip message different than packets */
-		if (ipq_message_type(buffer) != IPQM_PACKET) {
-			/* if it's an error, display it and stop NuFW !!! */
-			if (ipq_message_type(buffer) == NLMSG_ERROR) {
-				log_area_printf(DEBUG_AREA_MAIN,
-						DEBUG_LEVEL_CRITICAL,
-						"[!] FATAL ERROR: libipq error (code %d)!",
-						ipq_get_msgerr(buffer));
-				fatal_error = 1;
-				break;
-			}
-			continue;
-		}
-
-		/* process packet */
-		packetsrv_ipq_process(buffer);
-	}
-	ipq_destroy_handle(hndl);
-#endif
 	log_area_printf(DEBUG_AREA_MAIN | DEBUG_AREA_PACKET,
 			DEBUG_LEVEL_WARNING,
 			"[+] Leave packet server thread");
-	if (fatal_error) {
-		kill(thread_arg->parent_pid, SIGTERM);
-	}
-	pthread_exit(NULL);
+	return NULL;
 }
 
 /**

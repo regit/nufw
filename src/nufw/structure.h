@@ -136,7 +136,6 @@ struct packets_list_t {
 	packet_idl *start;	/*!< Begin of the list (NULL if the list is empty) */
 	packet_idl *end;	/*!< End of the list (NULL if the list is empty) */
 	int length;		/*!< Length of the list */
-	pthread_mutex_t mutex;
 } packets_list;
 
 /**

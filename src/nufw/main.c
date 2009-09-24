@@ -37,7 +37,6 @@
 
 #include <linux/netfilter.h>
 #include <unistd.h>
-#include <pthread.h>
 #include <netdb.h>
 #include <signal.h>
 #include <syslog.h>
@@ -64,21 +63,6 @@ struct nufw_signals signals;
 char * nufw_config_file = DEFAULT_NUFW_CONF_FILE;
 
 /**
- * Stop threads and then wait until threads exit.
- */
-void nufw_stop_thread()
-{
-	/* ask threads to stop */
-	pthread_mutex_lock(&thread.mutex);
-
-	/* wait for thread end */
-	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_MESSAGE,
-			"Wait threads end");
-	pthread_join(thread.thread, NULL);
-	pthread_mutex_unlock(&thread.mutex);
-}
-
-/**
  * Clean mutex, memory, etc. before exiting NuFW
  */
 void nufw_prepare_quit()
@@ -86,7 +70,6 @@ void nufw_prepare_quit()
 	/* clear packet list: use trylock() instead of lock() because the
 	 * mutex may already be locked */
 	clear_packet_list();
-	pthread_mutex_destroy(&packets_list.mutex);
 
 	/* close tls session */
 	close_tls_session();
@@ -152,7 +135,6 @@ void nufw_cleanup(int signal)
 
 	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
 			"[+] Stop NuFW (catch signal)");
-	nufw_stop_thread();
 	nufw_prepare_quit();
 	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
 			"[+] Exit NuFW");
@@ -688,7 +670,6 @@ int main(int argc, char *argv[])
 	packets_list.start = NULL;
 	packets_list.end = NULL;
 	packets_list.length = 0;
-	pthread_mutex_init(&packets_list.mutex, NULL);
 
 	/* init. tls */
 	tls.session = NULL;
