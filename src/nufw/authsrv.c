@@ -84,7 +84,6 @@ int auth_process_answer(char *dgram, int dgram_size)
 				 DEBUG_LEVEL_VERBOSE_DEBUG,
 				 "(*) Accepting packet with id=%u",
 				 packet_id);
-#if HAVE_LIBIPQ_MARK || USE_NFQUEUE
 		if (nufw_set_mark) {
 			debug_log_printf(DEBUG_AREA_PACKET,
 					 DEBUG_LEVEL_VERBOSE_DEBUG,
@@ -95,9 +94,6 @@ int auth_process_answer(char *dgram, int dgram_size)
 		} else {
 			IPQ_SET_VERDICT(packet_id, NF_ACCEPT);
 		}
-#else
-		IPQ_SET_VERDICT(packet_id, NF_ACCEPT);
-#endif				/* HAVE_LIBIPQ_MARK || USE_NFQUEUE */
 		pckt_tx++;
 		break;
 

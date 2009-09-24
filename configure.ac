@@ -291,20 +291,7 @@ if test "${build_nufw}" = "yes"; then
 				AC_MSG_WARN("Support of interface resolution in nfnetlink but not in netfilter_queue"),
 				[-lnfnetlink])
 		    )
-        AC_DEFINE_UNQUOTED([USE_NFQUEUE],[1],[Will use netlink queue support instead of libipq])
-    else
-        AC_CHECK_HEADERS([libipq/libipq.h libipq.h])
-        # if we don't have we can't build nufw
-        AC_CHECK_LIB([ipq], [ipq_message_type], have_ipq="yes", build_nufw="")
-
-        if test "$have_ipq" = "yes"; then
-        # check if we have a version of libipq supporting mark
-                AC_ARG_WITH(user-mark, [AC_HELP_STRING(--with-user-mark,  Support user mark on NuFW firewall (useless if using nfqueue))], enable_user_mark="yes", enable_user_mark="")
-
-                if test "$enable_user_mark" = "yes"; then
-                        AC_CHECK_LIB([ipq], [ipq_set_vwmark],AC_DEFINE_UNQUOTED([HAVE_LIBIPQ_MARK],[1],[libipq has support for mark]),AC_MSG_RESULT([libipq has no support for mark]))
-                fi
-        fi
+        AC_DEFINE_UNQUOTED([USE_NFQUEUE],[1],[Will use netlink queue])
     fi
 fi
 
@@ -352,7 +339,6 @@ AM_CONDITIONAL(BUILD_LIBNUCLIENT, test x${build_libnuclient} = xyes)
 AM_CONDITIONAL(BUILD_PAM_NUFW, test x${build_pam_nufw} = xyes)
 AM_CONDITIONAL(BUILD_NUAUTH_COMMAND, test x${build_nuauth_command} = xyes)
 
-AM_CONDITIONAL(HAVE_IPQ,test x$have_ipq = xyes && test x$have_conntrack = x )
 AM_CONDITIONAL(USE_USER_MARK, test x$enable_user_mark = xyes)
 AM_CONDITIONAL(HAVE_NFQUEUE_ONLY, test x$have_nfqueue = xyes && test x$have_conntrack = x  )
 AM_CONDITIONAL(HAVE_NFQUEUE_CONNTRACK,test x$have_conntrack = xyes && test x$have_nfqueue = xyes )
@@ -573,19 +559,10 @@ if test "${build_nufw}" = "yes"; then
         fi
         if test "${have_nfqueue}" = "yes"; then
         	AC_MSG_RESULT([  - NuFW: libnetfilter_queue support])
-        else
-                if test "${have_ipq}" = "yes"; then
-                        AC_MSG_RESULT([  - NuFW: libipq support])
-        	        if test "$enable_user_mark" = "yes"; then
-                                AC_MSG_RESULT([  - NuFW: User mark support])
-	                fi
-                fi
         fi
 else
     if test "${use_nfconntrack}" = "yes"; then
         AC_MSG_RESULT([!!! WARNING !!! NuFW daemon WON'T be compiled: libnetfilter_queue not present])
-    else
-        AC_MSG_RESULT([!!! WARNING !!! NuFW daemon WON'T be compiled: libipq not present])
     fi
 fi
 

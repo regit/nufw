@@ -59,7 +59,6 @@
 #include "security.h"
 #include "structure.h"
 
-#if USE_NFQUEUE
 #include <linux/netfilter.h>	/* for NF_ACCEPT */
 #include <libnetfilter_queue/libnetfilter_queue.h>
 
@@ -80,20 +79,6 @@ uint16_t nfqueue_num;
 struct nfq_handle *h;
 /** Netfilter queue max length */
 uint32_t queue_maxlen;
-
-#else
-
-/* redhat like hack */
-#   ifdef HAVE_LIBIPQ_LIBIPQ_H
-#       include <libipq/libipq.h>
-#   else
-#       ifdef HAVE_LIBIPQ_H
-#           include <libipq.h>
-#       else
-#           error "libipq needed for NuFW compilation"
-#       endif			/* ifdef HAVE_LIBIPQ_H */
-#   endif			/* ifdef HAVE_LIBIPQ_LIBIPQ_H  */
-#endif				/* if USE_NFQUEUE */
 
 /* conntrack things */
 #ifdef HAVE_LIBCONNTRACK

@@ -15,19 +15,12 @@ nufw_SOURCES = authsrv.c  common.c  main.c  packetsrv.c \
 		nufwconf.c \
 		${noinst_nufw_SOURCES}
 
-if HAVE_IPQ
-nufw_LDADD = -lipq ../libs/nussl/libnussl.la ../libs/nuconfparser/libnuconfparser.la ../libs/nubase/libnubase.la
-endif
 if HAVE_NFQUEUE_CONNTRACK
 nufw_LDADD = -lnfnetlink -lnetfilter_queue -lnetfilter_conntrack -ldl ../libs/nussl/libnussl.la ../libs/nuconfparser/libnuconfparser.la ../libs/nubase/libnubase.la
 endif
 
 if HAVE_NFQUEUE_ONLY
 nufw_LDADD = -lnfnetlink -lnetfilter_queue ../libs/nussl/libnussl.la ../libs/nuconfparser/libnuconfparser.la ../libs/nubase/libnubase.la
-endif
-
-if HAVE_CONNTRACK_ONLY
-nufw_LDADD = -lnfnetlink -lipq -lnetfilter_conntrack -ldl ../libs/nussl/libnussl.la ../libs/nuconfparser/libnuconfparser.la ../libs/nubase/libnubase.la
 endif
 
 nufw$(EXEEXT): $(nufw_OBJECTS) $(nufw_DEPENDENCIES)

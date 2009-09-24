@@ -115,10 +115,8 @@ typedef struct Packet_Ids {
 	struct timeval arrival_time;
 #endif
 
-#if (HAVE_LIBIPQ_MARK || USE_NFQUEUE)
 	/*! Packet mark, comes from nfq_get_nfmark() */
 	unsigned long nfmark;
-#endif
 
 	/*! Pointer to next packet entry in ::packets_list,
 	 * set by padd() and psuppress() */
@@ -182,7 +180,6 @@ extern pthread_mutex_t ipq_mutex;
  * nfq_set_verdict_mark() or ipq_set_vwmark().
  */
 
-#if USE_NFQUEUE
 #define IPQ_SET_VERDICT(PACKETID, DECISION) \
 	do { \
 		pthread_mutex_lock(&ipq_mutex); \
@@ -196,21 +193,6 @@ extern pthread_mutex_t ipq_mutex;
 		nfq_set_verdict_mark(hndl, PACKETID, DECISION, NFMARK, 0, NULL); \
 		pthread_mutex_unlock(&ipq_mutex); \
 	} while(0)
-#else
-#define	IPQ_SET_VERDICT(PACKETID, DECISION) \
-	do { \
-		pthread_mutex_lock(&ipq_mutex); \
-		ipq_set_verdict(hndl, PACKETID, DECISION,0,NULL); \
-		pthread_mutex_unlock(&ipq_mutex); \
-	} while(0)
-
-#define	IPQ_SET_VWMARK(PACKETID, DECISION, NFMARK) \
-	do { \
-		pthread_mutex_lock(&ipq_mutex); \
-		ipq_set_vwmark(hndl, PACKETID, DECISION, NFMARK,0,NULL); \
-		pthread_mutex_unlock(&ipq_mutex); \
-	} while(0)
-#endif
 
 int pckt_tx;			/*!< Number of transmitted packets since NuFW is running */
 int pckt_rx;			/*!< Number of received packets since NuFW is running */
