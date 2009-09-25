@@ -72,7 +72,6 @@ int look_for_tcp_flags(unsigned char *dgram, unsigned int datalen)
 	return 0;
 }
 
-#ifdef USE_NFQUEUE
 /**
  * \brief Callback called by NetFilter when a packet with target QUEUE is matched.
  *
@@ -281,82 +280,6 @@ void packetsrv_close(int smart)
 		nfq_destroy_queue(hndl);
 	nfq_close(h);
 }
-
-#else				/* USE_NFQUEUE */
-
-/**
- * Process an IP message received from IPQ
- * \return Returns 1 if it's ok, 0 otherwise.
- */
-void packetsrv_ipq_process(unsigned char *buffer)
-{
-	ipq_packet_msg_t *msg_p = NULL;
-	packet_idl *current;
-	struct queued_pckt q_pckt;
-	uint32_t pcktid;
-	int ret;
-
-	pckt_rx++;
-	/* printf("Working on IP packet\n"); */
-	msg_p = ipq_get_packet(buffer);
-	q_pckt.packet_id = msg_p->packet_id;
-	q_pckt.payload = (char *) msg_p->payload;
-	q_pckt.payload_len = msg_p->data_len;
-	/* need to parse to see if it's an end connection packet */
-	if (look_for_tcp_flags(msg_p->payload, msg_p->data_len)) {
-		auth_request_send(AUTH_CONTROL, &q_pckt);
-		IPQ_SET_VERDICT(msg_p->packet_id, NF_ACCEPT);
-		RETURN_NO_LOG;
-	}
-
-	/* Create packet */
-	current = calloc(1, sizeof(packet_idl));
-	if (current == NULL) {
-		/* no more memory: drop packet and exit */
-		IPQ_SET_VERDICT(msg_p->packet_id, NF_DROP);
-		log_area_printf(DEBUG_AREA_MAIN | DEBUG_AREA_PACKET,
-				DEBUG_LEVEL_SERIOUS_WARNING,
-				"[+] Can not allocate packet_id (drop packet)");
-		return;
-	}
-	current->id = msg_p->packet_id;
-	current->timestamp = msg_p->timestamp_sec;
-#ifdef HAVE_LIBIPQ_MARK
-	current->nfmark = msg_p->mark;
-#endif
-
-	/* Adding packet to list */
-	pthread_mutex_lock(&packets_list.mutex);
-	ret = padd(current);
-	pcktid = current->id;
-	pthread_mutex_unlock(&packets_list.mutex);
-	if (ret != 0) {
-		log_area_printf(DEBUG_AREA_MAIN | DEBUG_AREA_PACKET,
-				DEBUG_LEVEL_VERBOSE_DEBUG,
-				"Can not add packet to packet list (so already dropped): exit");
-		return;
-	}
-
-	/* send an auth request packet */
-	if (!auth_request_send(AUTH_REQUEST, &q_pckt)) {
-		int sandf = 0;
-		/* we fail to send the packet so we free packet related to current */
-		pthread_mutex_lock(&packets_list.mutex);
-		/* search and destroy packet by packet_id */
-		sandf =
-		    psearch_and_destroy(msg_p->packet_id,
-					(uint32_t *) & msg_p->mark);
-		pthread_mutex_unlock(&packets_list.mutex);
-
-		if (!sandf) {
-			log_area_printf(DEBUG_AREA_MAIN,
-					DEBUG_LEVEL_WARNING,
-					"Packet could not be removed: %lu",
-					msg_p->packet_id);
-		}
-	}
-}
-#endif				/* USE_NFQUEUE */
 
 static void iface_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 {

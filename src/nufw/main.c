@@ -51,9 +51,6 @@ char *key_file = NULL;
 char *cert_file = NULL;
 
 /* packet server thread */
-struct nufw_threadtype thread;
-
-/* packet server thread */
 struct nufw_signals signals;
 
 /*! Name of pid file prefixed by LOCAL_STATE_DIR (variable defined

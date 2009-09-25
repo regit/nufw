@@ -22,9 +22,6 @@
 
 #include <nubase.h>
 
-/* Mutex used to lock acces to nfqueue or ipqueue (see strcture.h) */
-pthread_mutex_t ipq_mutex = PTHREAD_MUTEX_INITIALIZER;
-
 /** \file nufw/authsrv.c
  *  \brief Process NuAuth packets
  *

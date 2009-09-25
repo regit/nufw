@@ -25,15 +25,10 @@
 
 #ifdef HAVE_NFQ_INDEV_NAME
 
-/* mutex used to get around non thread-safeness of iface resolution
- * in libnfnetlink */
-pthread_mutex_t iface_mutex;
-
 int get_interface_information(struct nlif_handle *inst,
 			      struct queued_pckt *q_pckt,
 			      struct nfq_data *nfad)
 {
-	pthread_mutex_lock(&iface_mutex);
 	nfq_get_indev_name(inst, nfad, q_pckt->indev);
 	if (q_pckt->indev[0] == '*') {
 		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
@@ -65,7 +60,6 @@ int get_interface_information(struct nlif_handle *inst,
 				"Get physoutdev information: %s",
 				q_pckt->physoutdev);
 	}
-	pthread_mutex_unlock(&iface_mutex);
 	return 1;
 }
 
@@ -73,7 +67,6 @@ struct nlif_handle *iface_table_open()
 {
 	struct nlif_handle *inst;
 
-	pthread_mutex_init(&iface_mutex, NULL);
 	/* opening ifname resolution handle */
 	inst = nlif_open();
 	if (inst == NULL) {
@@ -92,9 +85,7 @@ int iface_treat_message(struct nlif_handle *inst)
 	debug_log_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
 			 "Network interface event");
 
-	pthread_mutex_lock(&iface_mutex);
 	ret = nlif_catch(inst);
-	pthread_mutex_unlock(&iface_mutex);
 	return ret;
 }
 
@@ -102,10 +93,7 @@ void iface_table_close(struct nlif_handle *inst)
 {
 	debug_log_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
 			 "Free iface resolution instance");
-	pthread_mutex_lock(&iface_mutex);
 	nlif_close(inst);
-	pthread_mutex_unlock(&iface_mutex);
-	pthread_mutex_destroy(&iface_mutex);
 }
 
 #endif				/* #ifdef HAVE_NFQ_INDEV_NAME */

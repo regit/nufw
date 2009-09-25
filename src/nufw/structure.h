@@ -38,7 +38,6 @@
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
-#include <pthread.h>
 #include <netinet/in.h>
 #include <netinet/ip.h>
 #include <netinet/tcp.h>
@@ -146,29 +145,7 @@ struct nufw_signals {
 
 #if USE_NFQUEUE
 struct nfq_q_handle *hndl;
-#else
-/* ipq handler */
-struct ipq_handle *hndl;
 #endif
-
-/**
- * All data of a thread (use for packetsrv())
- */
-struct nufw_threadtype {
-	pthread_t thread;
-	pthread_mutex_t mutex;
-};
-
-/**
- * Structure to send arguments to the thread.
- */
-struct nufw_threadargument {
-	struct nufw_threadtype *thread;
-	int parent_pid;
-};
-
-/* mutex */
-extern pthread_mutex_t ipq_mutex;
 
 /** \def IPQ_SET_VERDICT(PACKETID, DECISION)
  * Set decision (NF_ACCEPT or NF_DROP) of a packet. Call nfq_set_verdict()
@@ -182,24 +159,18 @@ extern pthread_mutex_t ipq_mutex;
 
 #define IPQ_SET_VERDICT(PACKETID, DECISION) \
 	do { \
-		pthread_mutex_lock(&ipq_mutex); \
 		nfq_set_verdict(hndl, PACKETID, DECISION, 0 , NULL); \
-		pthread_mutex_unlock(&ipq_mutex); \
 	} while(0)
 
 #define IPQ_SET_VWMARK(PACKETID, DECISION, NFMARK) \
 	do { \
-		pthread_mutex_lock(&ipq_mutex); \
 		nfq_set_verdict_mark(hndl, PACKETID, DECISION, NFMARK, 0, NULL); \
-		pthread_mutex_unlock(&ipq_mutex); \
 	} while(0)
 
 #define IPQ_SET_VWMARK_EXPTIME(PACKETID, DECISION, NFMARK, EXPTIME) \
 	do { \
-		pthread_mutex_lock(&ipq_mutex); \
 		nfq_set_verdict_mark_exptime(hndl, PACKETID, DECISION, NFMARK, \
 					     EXPTIME, 0, NULL); \
-		pthread_mutex_unlock(&ipq_mutex); \
 	} while(0)
 
 int pckt_tx;			/*!< Number of transmitted packets since NuFW is running */
