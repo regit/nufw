@@ -24,6 +24,7 @@ testCA:
 	echo '01' > ./testCA/serial
 	echo '01' > ./testCA/crlnumber
 	touch ./testCA/index.txt
+	echo 'unique_subject = no' > ./testCA/index.txt.attr
 
 CA.crt: CA.csr
 	openssl req -x509 -config openssl.cnf -extensions v3_ca -passin pass:$(CA_PASS) -passout pass:$(CA_PASS) -key CA.key -in CA.csr -out CA.crt -days $(CA_DAYS)
