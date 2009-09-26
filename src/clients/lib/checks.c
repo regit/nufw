@@ -261,10 +261,12 @@ int nu_client_real_check(nuauth_session_t * session, nuclient_error_t * err)
 	}
 
 	if (tcptable_init(&new) == 0) {
+		ask_session_end(session);
 		SET_ERROR(err, INTERNAL_ERROR, MEMORY_ERR);
 		return -1;
 	}
 	if (tcptable_read(session, new) == 0) {
+		ask_session_end(session);
 		tcptable_free(new);
 		SET_ERROR(err, INTERNAL_ERROR, TCPTABLE_ERR);
 		return -1;
