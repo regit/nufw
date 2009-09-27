@@ -81,6 +81,8 @@ void close_tls_session()
 	if (tls.session == NULL)
 		return;
 
+	ev_io_stop(nufw_loop, &tls.ev_io);
+
 	nussl_session_destroy(tls.session);
 	tls.session = NULL;
 }

@@ -42,6 +42,9 @@
  * in a IPv4 packet.
  */
 
+struct ev_loop *nufw_loop;
+static ev_io nufw_nfq_watcher;
+
 /**
  * Parse an packet and check if it's TCP in IPv4 packet with TCP flag
  * ACK, FIN or RST set.
@@ -238,6 +241,8 @@ int packetsrv_open(void *data)
 
 	/* binding this socket to queue number ::nfqueue_num
 	 * and install our packet handler */
+	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+			"[+] Binding to netfilter queue %d", nfqueue_num);
 	hndl = nfq_create_queue(h, nfqueue_num,
 			     (nfq_callback *) & treat_packet, data);
 	if (!hndl) {
@@ -428,9 +433,7 @@ void *packetsrv(void *void_arg)
 {
 	int fatal_error = 0;
 	ev_io iface_watcher;
-	ev_io nfq_watcher;
 	ev_timer timer;
-	struct ev_loop *loop;
 	int fd;
 #ifdef HAVE_NFQ_INDEV_NAME
 	struct nlif_handle *nlif_handle;
@@ -460,32 +463,35 @@ void *packetsrv(void *void_arg)
 	log_area_printf(DEBUG_AREA_MAIN | DEBUG_AREA_PACKET, DEBUG_LEVEL_DEBUG,
 			"[+] Packet server started");
 
-	loop = ev_loop_new(0);
+	nufw_loop = ev_loop_new(0);
 	/* add io for nfq */
-	ev_io_init(&nfq_watcher , packetsrv_activity_cb, fd, EV_READ);
-	nfq_watcher.data = nlif_handle;
-	ev_io_start(loop, &nfq_watcher);
+	ev_io_init(&nufw_nfq_watcher , packetsrv_activity_cb, fd, EV_READ);
+	nufw_nfq_watcher.data = nlif_handle;
+	ev_io_start(nufw_loop, &nufw_nfq_watcher);
 #ifdef HAVE_NFQ_INDEV_NAME
 	/* add io for iface */
 	ev_io_init(&iface_watcher , iface_activity_cb, if_fd, EV_READ);
 	iface_watcher.data = nlif_handle;
-	ev_io_start(loop, &iface_watcher);
+	ev_io_start(nufw_loop, &iface_watcher);
 #endif
-	ev_io_init(&tls.ev_io, tls_activity_cb,
-		   nussl_session_get_fd(tls.session), EV_READ);
-	tls.ev_io.data = &nfq_watcher;
-	ev_io_start(loop, &tls.ev_io);
+	fd = nussl_session_get_fd(tls.session);
+	if (fd >= 0) {
+		ev_io_init(&tls.ev_io, tls_activity_cb,
+				nussl_session_get_fd(tls.session), EV_READ);
+		tls.ev_io.data = &nufw_nfq_watcher;
+		ev_io_start(nufw_loop, &tls.ev_io);
+	}
 
 	p_pckt_rx = 0;
 	p_pckt_tx = 0;
 	ev_timer_init(&timer, cleaning_timer_cb, 0, 1.0 * CLEANING_DELAY);
-	timer.data = &nfq_watcher;
-	ev_timer_start(loop, &timer);
+	timer.data = &nufw_nfq_watcher;
+	ev_timer_start(nufw_loop, &timer);
 
 	/* start loop */
-	ev_loop(loop, 0);
+	ev_loop(nufw_loop, 0);
 
-	ev_loop_destroy(loop);
+	ev_loop_destroy(nufw_loop);
 
 
 #ifdef HAVE_NFQ_INDEV_NAME
@@ -593,6 +599,7 @@ int auth_request_send(uint8_t type, struct queued_pckt *pckt_data)
 		tls_connect();
 
 		if (tls.session) {
+			int fd;
 			char buf[256];
 			buf[0] = '\0';
 			nussl_session_get_cipher(tls.session, buf, sizeof(buf));
@@ -602,6 +609,13 @@ int auth_request_send(uint8_t type, struct queued_pckt *pckt_data)
 					authreq_addr, authreq_port,
 					(buf[0] != '\0') ? buf : "none" );
 
+			fd = nussl_session_get_fd(tls.session);
+			if (fd >= 0) {
+				ev_io_init(&tls.ev_io, tls_activity_cb,
+						nussl_session_get_fd(tls.session), EV_READ);
+				tls.ev_io.data = &nufw_nfq_watcher;
+				ev_io_start(nufw_loop, &tls.ev_io);
+			}
 		} else {
 			log_area_printf(DEBUG_AREA_GW,
 					DEBUG_LEVEL_WARNING,

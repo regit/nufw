@@ -118,6 +118,8 @@ struct queued_pckt {
 
 struct nuauth_conn tls;
 
+extern struct ev_loop *nufw_loop;
+
 int init_x509_filenames();
 void tls_connect();
 
