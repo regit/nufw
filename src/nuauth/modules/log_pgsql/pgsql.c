@@ -242,7 +242,7 @@ static PGconn *pgsql_conn_init(struct log_pgsql_params *params)
 	return ld;
 }
 
-static char *quote_pgsql_string(char *text)
+static char *quote_pgsql_string(PGconn *ld, char *text)
 {
 	unsigned int length = 0;
 	char *quoted = NULL;
@@ -252,14 +252,14 @@ static char *quote_pgsql_string(char *text)
 	}
 	length = strlen(text);
 	quoted = g_new0(char, length * 2 + 1);
-	if (PQescapeString(quoted, text, length) == 0) {
+	if (PQescapeStringConn(ld, quoted, text, length, NULL) == 0) {
 		g_free(quoted);
 		return NULL;
 	}
 	return quoted;
 }
 
-static gchar *generate_osname(gchar * Name, gchar * Version,
+static gchar *generate_osname(PGconn *ld, gchar * Name, gchar * Version,
 			      gchar * Release)
 {
 	char *all, *quoted;
@@ -269,7 +269,7 @@ static gchar *generate_osname(gchar * Name, gchar * Version,
 		return g_strdup("");
 	}
 	all = g_strjoin("-", Name, Version, Release, NULL);
-	quoted = quote_pgsql_string(all);
+	quoted = quote_pgsql_string(ld,  all);
 	g_free(all);
 	return quoted;
 }
@@ -325,8 +325,8 @@ static int pgsql_insert(PGconn * ld, connection_t * element,
 	if (element->username) {
 		/* Get OS and application names */
 		char *quoted_username =
-		    quote_pgsql_string(element->username);
-		char *quoted_osname = generate_osname(element->os_sysname,
+		    quote_pgsql_string(ld, element->username);
+		char *quoted_osname = generate_osname(ld, element->os_sysname,
 						      element->os_version,
 						      element->os_release);
 		char *quoted_appname;
@@ -334,7 +334,7 @@ static int pgsql_insert(PGconn * ld, connection_t * element,
 		if (element->app_name != NULL
 		    && strlen(element->app_name) < APPNAME_MAX_SIZE)
 			quoted_appname =
-			    quote_pgsql_string(element->app_name);
+			    quote_pgsql_string(ld, element->app_name);
 		else
 			quoted_appname = g_strdup("");
 
@@ -517,6 +517,11 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 	gboolean ok;
 	PGresult *Result;
 	PGconn *ld = get_pgsql_handler(params);
+	gchar *q_user_name;
+	gchar *q_sysname;
+	gchar *q_release;
+	gchar *q_version;
+
 	if (ld == NULL)
 		return -1;
 
@@ -529,20 +534,29 @@ G_MODULE_EXPORT int user_session_logs(user_session_t * c_session,
 	case SESSION_OPEN:
 		/* build list of user groups */
 		str_groups = str_print_group(c_session);
+		/* quote pgsql strings */
+		q_user_name = quote_pgsql_string(ld, c_session->user_name);
+		q_sysname = quote_pgsql_string(ld, c_session->sysname);
+		q_release = quote_pgsql_string(ld, c_session->release);
+		q_version = quote_pgsql_string(ld, c_session->version);
 		/* create new user session */
 		ok = secure_snprintf(request, sizeof(request),
 				     "INSERT INTO %s (user_id, username, user_groups, ip_saddr, "
 				     "os_sysname, os_release, os_version, socket, start_time) "
-				     "VALUES ('%lu', '%s', '%s', '%s', '%s', '%s', '%s', '%u', ABSTIME(%lu))",
+				     "VALUES ('%lu', E'%s', '%s', '%s', E'%s', E'%s', E'%s', '%u', ABSTIME(%lu))",
 				     params->pgsql_users_table_name,
 				     (unsigned long)c_session->user_id,
-				     c_session->user_name,
+				     q_user_name,
 				     str_groups,
 				     addr_ascii,
-				     c_session->sysname,
-				     c_session->release,
-				     c_session->version,
+				     q_sysname,
+				     q_release,
+				     q_version,
 				     c_session->socket, time(NULL));
+		g_free(q_user_name);
+		g_free(q_sysname);
+		g_free(q_release);
+		g_free(q_version);
 		g_free(str_groups);
 		break;
 
@@ -603,7 +617,7 @@ G_MODULE_EXPORT void auth_error_log(user_session_t * c_session,
 		return;
 	}
 
-	quoted_username = quote_pgsql_string(c_session->user_name);
+	quoted_username = quote_pgsql_string(ld, c_session->user_name);
 	/* create new user session */
 	ok = secure_snprintf(request_fields, sizeof(request_fields),
 			"INSERT INTO %s (username, ip_saddr, reason, time, "
@@ -648,9 +662,9 @@ G_MODULE_EXPORT void auth_error_log(user_session_t * c_session,
 	}
 
 	if (c_session->sysname) {
-		char * q_sysname = quote_pgsql_string(c_session->sysname);
-		char * q_release = quote_pgsql_string(c_session->release);
-		char * q_version = quote_pgsql_string(c_session->version);
+		char * q_sysname = quote_pgsql_string(ld, c_session->sysname);
+		char * q_release = quote_pgsql_string(ld, c_session->release);
+		char * q_version = quote_pgsql_string(ld, c_session->version);
 
 
 		g_strlcat(request_fields, "os_sysname, os_release, os_version)",
