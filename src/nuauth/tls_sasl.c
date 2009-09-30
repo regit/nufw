@@ -49,11 +49,13 @@ static void policy_refuse_user(user_session_t * c_session, int c,
 		log_message(INFO, DEBUG_AREA_USER,
 			    "Policy: Too many opened sessions for user \"%s\", closing socket",
 			    c_session->user_name);
+		modules_auth_error_log(c_session, AUTH_ERROR_INTERRUPTED, "Too many opened sessions for user");
 		break;
 	case PER_IP_TOO_MANY_LOGINS:
 		log_message(INFO, DEBUG_AREA_USER,
 			    "Policy: User \"%s\" trying to connect from already overused IP, closing socket",
 			    c_session->user_name);
+		modules_auth_error_log(c_session, AUTH_ERROR_INTERRUPTED, "Connection from already overused IP");
 		break;
 	default:
 		log_message(WARNING, DEBUG_AREA_USER,
