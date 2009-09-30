@@ -87,7 +87,7 @@ int auth_process_answer(char *dgram, int dgram_size)
 					 "(*) Marking packet with %d",
 					 ntohl(answer->tcmark));
 #if HAVE_NFQ_MARK_EXPTIME
-			if (nothl(answer->expiration) != -1) {
+			if (ntohl(answer->expiration) != -1) {
 				IPQ_SET_VWMARK_EXPTIME(packet_id, NF_ACCEPT,
 					       answer->tcmark,
 					       answer->expiration);
