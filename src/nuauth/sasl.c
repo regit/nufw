@@ -114,6 +114,7 @@ static int userdb_checkpass(sasl_conn_t * conn,
 			    unsigned passlen, struct propctx *propctx)
 {
 	char *dec_user = NULL;
+	int ret;
 
 	/*
 	 * call module to get password
@@ -147,7 +148,8 @@ static int userdb_checkpass(sasl_conn_t * conn,
 	}
 
 
-	if (modules_user_check(dec_user, pass, passlen, (user_session_t *)context) == SASL_OK) {
+	ret = modules_user_check(dec_user, pass, passlen, (user_session_t *)context);
+	if (ret == SASL_OK) {
 		/* we're done */
 		if (nuauthconf->uses_utf8)
 			g_free(dec_user);
@@ -159,8 +161,8 @@ static int userdb_checkpass(sasl_conn_t * conn,
 	log_message(INFO, DEBUG_AREA_AUTH, "Bad auth from user at %s:%d",
 		    __FILE__, __LINE__);
 
-	sasl_seterror(conn, 0, "Bad auth from user" );
-	return SASL_NOUSER;
+	sasl_seterror(conn, 0, "Bad auth from user");
+	return ret;
 }
 
 
@@ -382,7 +384,6 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 #if 0
 	gnutls_session session = *(c_session->tls);
 #endif
-	gboolean external_auth = FALSE;
 	ssize_t record_send;
 	unsigned len = tls_len;
 	int result, auth_result;
@@ -445,10 +446,24 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 				   data, len, &data, (unsigned *) &len);
 
 	if (auth_result != SASL_OK && auth_result != SASL_CONTINUE) {
-		g_message("Error starting SASL negotiation: %s (%d)",
+		char *tempname = NULL;
+		log_message(INFO, DEBUG_AREA_AUTH, "Error starting SASL negotiation: %s (%d)",
 			  sasl_errstring(auth_result, NULL, NULL),
 			  auth_result);
-		return SASL_FAIL;
+		result =
+		    sasl_getprop(conn, SASL_AUTHUSER,
+				 (const void **) &(tempname));
+		if (result != SASL_OK) {
+			g_warning("get user failed: %s", sasl_errstring(result, NULL, NULL));
+			return result;
+		}
+		if (tempname == NULL)
+		{
+			g_warning("sasl_getprop(SASL_AUTHUSER): username is NULL!");
+			return SASL_BADPARAM;
+		}
+		c_session->user_name = g_strdup(tempname);
+		return auth_result;
 	}
 
 	while (auth_result == SASL_CONTINUE) {
@@ -482,13 +497,12 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 	}
 
 	if (c_session->user_name) {
-		external_auth = TRUE;
 		if (auth_result != SASL_OK) {
 			return auth_result;
 		}
 	}
 
-	if (external_auth == FALSE) {
+	if (c_session->auth_type != AUTH_TYPE_EXTERNAL) {
 		char *tempname = NULL;
 		result =
 		    sasl_getprop(conn, SASL_AUTHUSER,
@@ -554,7 +568,6 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 #if 0
 	gnutls_session session = *(c_session->tls);
 #endif
-	gboolean external_auth = FALSE;
 	ssize_t record_send;
 
 	r = sasl_listmech(conn, NULL, "(", ",", ")", &data, &sasl_len,
@@ -709,6 +722,19 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 	if (r != SASL_OK) {
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 				  "proto v3: incorrect authentication");
+		/* try to get username */
+		if (c_session->user_name == NULL) {
+			char *tempname = NULL;
+			ret =
+				sasl_getprop(conn, SASL_AUTHUSER,
+						(const void **) &(tempname));
+			if (ret != SASL_OK) {
+				g_warning("proto v3: get user failed");
+				return ret;
+			} else {
+				c_session->user_name = g_strdup(tempname);
+			}
+		}
 		if (nussl_write(c_session->nussl, "N", 1) < 0)	/* send NO to client */
 			return SASL_FAIL;
 		return SASL_BADAUTH;
@@ -716,9 +742,9 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 
 
 	if (c_session->user_name)
-		external_auth = TRUE;
+		c_session->auth_type = AUTH_TYPE_EXTERNAL;
 
-	if (external_auth == FALSE) {
+	if (c_session->auth_type != AUTH_TYPE_EXTERNAL) {
 		char *tempname = NULL;
 		ret =
 		    sasl_getprop(conn, SASL_AUTHUSER,
@@ -766,7 +792,6 @@ int sasl_user_check(user_session_t * c_session)
 {
 	sasl_conn_t *conn = NULL;
 	sasl_security_properties_t secprops;
-	gboolean external_auth = FALSE;
 	char iplocalport[INET6_ADDRSTRLEN +20];
 	char ipremoteport[INET6_ADDRSTRLEN +20];
 	int len;
@@ -784,7 +809,6 @@ int sasl_user_check(user_session_t * c_session)
 	sasl_callback_t *callbacks;
 
 	if (c_session->user_name) {
-		external_auth = TRUE;
 		c_session->auth_type = AUTH_TYPE_EXTERNAL;
 		c_session->auth_quality = AUTHQ_SSL;
 		callbacks = external_callbacks;
@@ -837,7 +861,7 @@ int sasl_user_check(user_session_t * c_session)
 	secprops.maxbufsize = 65536;
 	sasl_setprop(conn, SASL_SEC_PROPS, &secprops);
 
-	if (external_auth) {
+	if (c_session->auth_type == AUTH_TYPE_EXTERNAL) {
 		sasl_ssf_t extssf = 0;
 
 #ifdef DEBUG_ENABLE
@@ -894,11 +918,11 @@ int sasl_user_check(user_session_t * c_session)
 		if (ret == SASL_BADAUTH || ret == SASL_NOUSER) {
 			err = AUTH_ERROR_CREDENTIALS;
 			message =
-			    "SASL error: invalid credentials (username or password)";
+			    "Invalid credentials (username or password)";
 		} else {
 			err = AUTH_ERROR_INTERRUPTED;
 			message =
-			    "SASL error: authentication process interrupted";
+			    "Authentication process interrupted";
 		}
 		modules_auth_error_log(c_session, err, message);
 		return ret;
