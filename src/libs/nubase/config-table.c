@@ -44,7 +44,9 @@ char *nubase_config_table_get(struct llist_head *config_table_list, const char *
 {
 	struct config_table_t *config_table;
 
-	llist_for_each_entry(config_table, config_table_list, list) {
+	struct llist_head *pos;
+	llist_for_each(pos, config_table_list) {
+		config_table = llist_entry(pos, struct config_table_t, list);
 		if (!strcmp(config_table->key, key)) {
 			return config_table->value;
 		}
@@ -145,10 +147,14 @@ struct config_table_t *nubase_config_table_set(struct llist_head *config_table_l
 		return nubase_config_table_append(config_table_list, key, value);
 	}
 
-	llist_for_each_entry(config_table, config_table_list, list) {
-		if (!strncmp(key, config_table->key, strlen(config_table->key))) {
-			llist_del(&config_table->list);
-			return nubase_config_table_append(config_table_list, key, value);
+	{
+		struct llist_head *pos;
+		llist_for_each(pos, config_table_list) {
+			config_table = llist_entry(pos, struct config_table_t, list);
+			if (!strncmp(key, config_table->key, strlen(config_table->key))) {
+				llist_del(&config_table->list);
+				return nubase_config_table_append(config_table_list, key, value);
+			}
 		}
 	}
 
@@ -173,7 +179,9 @@ void nubase_config_table_print(struct llist_head *config_table_list, void *userd
 	char *buffer;
 	size_t buffer_len;
 
-	llist_for_each_entry(config_table, config_table_list, list) {
+	struct llist_head *pos;
+	llist_for_each(pos, config_table_list) {
+		config_table = llist_entry(pos, struct config_table_t, list);
 		buffer_len = strlen((const char *)config_table->key) + 1 + strlen((const char *)config_table->value) + 1;
 		buffer = malloc(buffer_len);
 		secure_snprintf(buffer,  buffer_len,

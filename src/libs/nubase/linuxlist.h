@@ -4,7 +4,7 @@
 #include <stddef.h>
 
 #ifndef inline
-#define inline __inline__
+#define inline __inline
 #endif
 
 /** \cond LINUX_KERNEL */
@@ -19,9 +19,15 @@ static inline void prefetch(const void *x) {;}
  * @member:	the name of the member within the struct.
  *
  */
+// KM:
+#if WIN32
+#define container_of(ptr, type, member) \
+	(type *)( (char *)ptr - offsetof(type,member) );
+#else
 #define container_of(ptr, type, member) ({			\
 	const typeof( ((type *)0)->member ) *__mptr = (ptr);	\
 	(type *)( (char *)__mptr - offsetof(type,member) );})
+#endif
 
 
 /*
