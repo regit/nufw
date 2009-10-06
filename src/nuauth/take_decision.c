@@ -595,7 +595,7 @@ void send_auth_response(gpointer packet_id_ptr, gpointer userdata)
 	}
 
 	if (DEBUG_OR_NOT (DEBUG_LEVEL_DEBUG, DEBUG_AREA_PACKET)) {
-		print_connection(element, "Answ Packet");
+		print_connection_wid(element, "Answ Packet", TRUE, packet_id);
 	}
 	ret = nufw_session_send(element->tls, buffer, total_size);
 	if (ret != NU_EXIT_OK) {

@@ -185,6 +185,7 @@ int conn_cl_remove(gconstpointer conn);
 int conn_cl_delete(gconstpointer conn);
 nu_error_t print_tracking_t(tracking_t *tracking);
 gint print_connection(gpointer data, gpointer userdata);
+gint print_connection_wid(gpointer data, gpointer userdata, gboolean pid, uint32_t pckt_id);
 void free_connection_list(GSList * list);
 connection_t *duplicate_connection(connection_t * element);
 void free_connection(connection_t * conn);

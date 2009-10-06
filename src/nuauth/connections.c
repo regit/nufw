@@ -419,17 +419,7 @@ nu_error_t print_tracking_t(tracking_t *tracking)
 	return NU_EXIT_OK;
 }
 
-/**
- * Display connection parameters using g_message(): IP+TCP/UDP headers,
- * OS name, OS release and OS version, and application name.
- *
- * Only display the connection if ::debug_level is #DEBUG_LEVEL_VERBOSE_DEBUG
- * or greater.
- *
- * \return Returns -1 if an error occurs, 1 else.
- */
-
-gint print_connection(gpointer data, gpointer userdata)
+gint print_connection_wid(gpointer data, gpointer userdata, gboolean pid, uint32_t packet_id)
 {
 	connection_t *conn = (connection_t *) data;
 	char * prefix = userdata;
@@ -465,11 +455,15 @@ gint print_connection(gpointer data, gpointer userdata)
 		str_iface = g_strdup("");
 	}
 
-	if (conn->packet_id) {
-		str_id = g_strdup_printf(", packet_id=%d",
-				GPOINTER_TO_UINT(conn->packet_id->data));
+	if (pid != TRUE) {
+		if (conn->packet_id) {
+			str_id = g_strdup_printf(", packet_id=%d",
+					GPOINTER_TO_UINT(conn->packet_id->data));
+		} else {
+			str_id = g_strdup("");
+		}
 	} else {
-		str_id = g_strdup("");
+		str_id = g_strdup_printf(", packet_id=%d", packet_id);
 	}
 
 	str_mark = g_strdup_printf(", mark=%d", conn->mark);
@@ -514,6 +508,21 @@ gint print_connection(gpointer data, gpointer userdata)
 
 	g_free(message);
 	return 1;
+}
+
+/**
+ * Display connection parameters using g_message(): IP+TCP/UDP headers,
+ * OS name, OS release and OS version, and application name.
+ *
+ * Only display the connection if ::debug_level is #DEBUG_LEVEL_VERBOSE_DEBUG
+ * or greater.
+ *
+ * \return Returns -1 if an error occurs, 1 else.
+ */
+
+gint print_connection(gpointer data, gpointer userdata)
+{
+	return print_connection_wid(data, userdata, FALSE, 0);
 }
 
 /**
