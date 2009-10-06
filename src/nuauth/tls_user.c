@@ -466,8 +466,7 @@ void user_worker(gpointer psession, gpointer data)
 						debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 								"problem reading message from \"%s\"",
 								usersession->user_name);
-						g_mutex_unlock(usersession->rw_lock);
-						delete_client_by_socket(usersession->socket);
+						delete_rw_locked_client(usersession);
 						return;
 					case NU_EXIT_CONTINUE:
 						/* send socket back to user select no message are waiting */
@@ -493,8 +492,7 @@ void user_worker(gpointer psession, gpointer data)
 					debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 							"client disconnect");
 					/* clean client structure, session is outside event loop */
-					delete_client_by_socket(usersession->socket);
-					g_mutex_unlock(usersession->rw_lock);
+					delete_rw_locked_client(usersession);
 					return;
 				}
 			}
@@ -531,11 +529,22 @@ static void client_accept_cb(struct ev_loop *loop, ev_io *w, int revents)
 static void client_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 {
 	struct tls_user_context_t *context = (struct tls_user_context_t *) w->data;
+	/* get_client_datas_by_socket acquire client datas lock if session is found */
 	user_session_t *c_session = get_client_datas_by_socket(w->fd);
+
+	if (! c_session) {
+		log_message(WARNING, DEBUG_AREA_USER,
+				"Unable to find session for %d", w->fd);
+		return;
+	}
 
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 				"User activity for \"%s\" (in cb)",
 				c_session->user_name);
+
+	if (c_session->activated) {
+		c_session->activated = FALSE;
+	}
 
 	if (g_mutex_trylock(c_session->rw_lock)) {
 		ev_io_stop(context->loop, w);
@@ -543,9 +552,10 @@ static void client_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 	}
 
 	if (revents & EV_ERROR) {
-		log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+		log_message(INFO, DEBUG_AREA_USER,
 				"Error on socket %d", w->fd);
-		delete_client_by_socket(w->fd);
+		delete_locked_client_by_socket(w->fd);
+		unlock_client_datas();
 		return;
 	}
 	if (revents & EV_READ) {
@@ -555,6 +565,7 @@ static void client_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 		g_async_queue_push(c_session->workunits_queue, GINT_TO_POINTER(0x1));
 		thread_pool_push(nuauthdatas->user_workers, c_session, NULL);
 	}
+	unlock_client_datas();
 }
 
 
@@ -565,7 +576,7 @@ static void __client_writer_cb(struct ev_loop *loop, struct tls_user_context_t *
 #if DEBUG_ENABLE
 	int i = 0;
 #endif
-
+	lock_client_datas();
 	while ((session = g_async_queue_try_pop(writer_queue))) {
 		if (g_mutex_trylock(session->rw_lock)) {
 			ev_io_stop(session->srv_context->loop,
@@ -580,6 +591,7 @@ static void __client_writer_cb(struct ev_loop *loop, struct tls_user_context_t *
 		i++;
 #endif
 	}
+	unlock_client_datas();
 }
 
 static void client_writer_cb(struct ev_loop *loop, ev_async *w, int revents)
@@ -596,10 +608,8 @@ static void __client_injector_cb(struct ev_loop *loop, struct tls_user_context_t
 #if DEBUG_ENABLE
 	int i = 0;
 #endif
-	/*
-	 * Try to get new file descriptor to update set. Messages come from
-	 * tls_sasl_connect_ok() and are send when a new user is connected.
-	 */
+
+	lock_client_datas();
 	while ((session = (user_session_t *) g_async_queue_try_pop(mx_queue))) {
 		if (session == NULL)
 			continue;
@@ -613,6 +623,7 @@ static void __client_injector_cb(struct ev_loop *loop, struct tls_user_context_t
 		i++;
 #endif
 	}
+	unlock_client_datas();
 
 }
 static void client_injector_cb(struct ev_loop *loop, ev_async *w, int revents)

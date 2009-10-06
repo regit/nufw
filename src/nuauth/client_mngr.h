@@ -31,6 +31,10 @@ void init_client_struct();
 void add_client(int socket, gpointer datas);
 
 nu_error_t delete_client_by_socket(int c);
+nu_error_t delete_locked_client_by_socket(int socket);
+nu_error_t delete_rw_locked_client(user_session_t *c_session);
+void unlock_client_datas();
+void lock_client_datas();
 
 user_session_t *get_client_datas_by_socket(int c);
 

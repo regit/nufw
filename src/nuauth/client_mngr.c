@@ -79,7 +79,9 @@ void clean_session(user_session_t * c_session)
 		g_free(c_session->version);
 
 	g_mutex_free(c_session->tls_lock);
-	g_mutex_free(c_session->rw_lock);
+	if (c_session->rw_lock) {
+		g_mutex_free(c_session->rw_lock);
+	}
 	if (c_session->workunits_queue)
 		g_async_queue_unref(c_session->workunits_queue);
 
@@ -255,6 +257,26 @@ nu_error_t delete_client_by_socket(int socket)
 	return delete_client_by_socket_ext(socket, 1);
 }
 
+nu_error_t delete_locked_client_by_socket(int socket)
+{
+	return delete_client_by_socket_ext(socket, 0);
+}
+
+nu_error_t delete_rw_locked_client(user_session_t *c_session)
+{
+	GMutex *session_rw;
+	int ret = NU_EXIT_OK;
+
+	g_mutex_lock(client_mutex);
+	session_rw = c_session->rw_lock;
+	c_session->rw_lock = NULL;
+	ret = delete_client_by_socket_ext(c_session->socket, 0);
+	g_mutex_unlock(client_mutex);
+	g_mutex_unlock(session_rw);
+
+	return ret;
+}
+
 user_session_t *get_client_datas_by_socket(int socket)
 {
 	void *ret;
@@ -262,8 +284,20 @@ user_session_t *get_client_datas_by_socket(int socket)
 	g_mutex_lock(client_mutex);
 	ret =
 	    g_hash_table_lookup(client_conn_hash, GINT_TO_POINTER(socket));
-	g_mutex_unlock(client_mutex);
+	if (! ret) {
+		g_mutex_unlock(client_mutex);
+	}
 	return ret;
+}
+
+void lock_client_datas()
+{
+	g_mutex_lock(client_mutex);
+}
+
+void unlock_client_datas()
+{
+	g_mutex_unlock(client_mutex);
 }
 
 GSList *get_client_sockets_by_ip(struct in6_addr * ip)
