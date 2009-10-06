@@ -190,9 +190,10 @@ static void nufw_srv_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 
 	ev_io_stop(loop, w);
 	if (revents & EV_ERROR) {
-		log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
+		log_message(WARNING, DEBUG_AREA_GW,
 				"nufw server error");
 		ev_unloop(loop, EVUNLOOP_ONE);
+		return;
 	}
 
 	if (revents & EV_READ) {
@@ -201,7 +202,7 @@ static void nufw_srv_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 		increase_nufw_session_usage(c_session);
 		if (treat_nufw_request(c_session) == NU_EXIT_ERROR) {
 			/* get session link with c */
-			debug_log_message(DEBUG, DEBUG_AREA_GW,
+			log_message(WARNING, DEBUG_AREA_GW,
 					"nufw server disconnect");
 			ev_unloop(loop, EVUNLOOP_ONE);
 			return;
@@ -217,6 +218,7 @@ static void nufw_srv_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 	ev_io_start(loop, w);
 
 }
+
 static void nufw_writer_cb(struct ev_loop *loop, ev_async *w, int revents)
 {
 	nufw_session_t *nu_session = w->data;
