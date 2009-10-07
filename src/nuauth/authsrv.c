@@ -38,6 +38,7 @@
 #include "sasl.h"
 #include "security.h"
 #include <sys/resource.h>	/* setrlimit() */
+#include <fcntl.h>		/* O_RDWR */
 
 #include <nussl.h>
 #include <nubase.h>
@@ -475,10 +476,16 @@ void daemonize()
 
 	setsid();
 
-	/* Close stdin, stdout, stderr. */
-	(void) close(STDIN_FILENO);
-	(void) close(STDOUT_FILENO);
-	(void) close(STDERR_FILENO);
+	/* warning: do not close fd (0 1 2), or this will create problems when trying
+	 * to create child process with a pipe (dup2 fails with error EBADF)
+	 */
+	{
+		int fd = open("/dev/null",O_RDWR);
+		dup2(fd, STDIN_FILENO);
+		dup2(fd, STDOUT_FILENO);
+		dup2(fd, STDERR_FILENO);
+		close(fd);
+	}
 }
 
 static struct option long_options[] = {

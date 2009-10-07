@@ -5,8 +5,6 @@
  **            Pierre Chifflier <chifflier@inl.fr>
  ** INL http://www.inl.fr/
  **
- ** $Id$
- **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
  ** the Free Software Foundation, version 3 of the License.
@@ -42,6 +40,7 @@
 #include <syslog.h>
 #include <errno.h>
 #include <sys/types.h>
+#include <fcntl.h>	/* O_RDWR */
 
 #include <nubase.h>
 
@@ -261,10 +260,16 @@ void nufw_daemonize()
 	/* set log engine */
 	log_engine = LOG_TO_SYSLOG;
 
-	/* Close stdin, stdout, stderr. */
-	(void) close(0);
-	(void) close(1);
-	(void) close(2);
+	/* warning: do not close fd (0 1 2), or this will create problems when trying
+	 * to create child process with a pipe (dup2 fails with error EBADF)
+	 */
+	{
+		int fd = open("/dev/null",O_RDWR);
+		dup2(fd, STDIN_FILENO);
+		dup2(fd, STDOUT_FILENO);
+		dup2(fd, STDERR_FILENO);
+		close(fd);
+	}
 }
 
 /**
