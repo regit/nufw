@@ -64,7 +64,7 @@ static ssize_t _ulogd2_write(struct log_ulogd2_params *params, const void *data,
 			return -1;
 		}
 		log_message(DEBUG, DEBUG_AREA_MAIN,
-				"ulogd2: reconnection successful\n");
+				"ulogd2: reconnection successful");
 	}
 
 	do {
@@ -75,7 +75,7 @@ static ssize_t _ulogd2_write(struct log_ulogd2_params *params, const void *data,
 				ret = _connect_ulogd2_socket(params);
 				if (ret >= 0) {
 					log_message(DEBUG, DEBUG_AREA_MAIN,
-							"ulogd2: reconnection successful\n");
+							"ulogd2: reconnection successful");
 				}
 			} else
 				break;
@@ -84,7 +84,7 @@ static ssize_t _ulogd2_write(struct log_ulogd2_params *params, const void *data,
 
 	if (sz <= 0) {
 		log_message(DEBUG, DEBUG_AREA_MAIN,
-				"ulogd2: write() failed: %s (%d)\n",
+				"ulogd2: write() failed: %s (%d)",
 				strerror(errno), errno);
 		return -1;
 	}
@@ -137,7 +137,7 @@ G_MODULE_EXPORT gint user_packet_logs(void *element, tcp_state_t state,
 
 	if (connection->payload_len > sizeof(connection->payload)) {
 		log_message(WARNING, DEBUG_AREA_MAIN,
-				"ulogd2: invalid payload len %d, ignoring packet !\n",
+				"ulogd2: invalid payload len %d, ignoring packet !",
 				connection->payload_len);
 		return 0;
 	}
@@ -255,7 +255,7 @@ static int _connect_ulogd2_socket(struct log_ulogd2_params *params)
 	ret = connect(s, (struct sockaddr *)&server_sock, len);
 	if (ret < 0) {
 		log_message(WARNING, DEBUG_AREA_MAIN,
-				"ulogd2: could not connect to unix socket \'%s\'\n",
+				"ulogd2: could not connect to unix socket \'%s\'",
 				server_sock.sun_path);
 		close(s);
 		return -1;
