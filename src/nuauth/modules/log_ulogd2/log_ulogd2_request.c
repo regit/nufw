@@ -43,11 +43,11 @@ struct ulogd2_request * ulogd2_request_new(void)
 {
 	struct ulogd2_request *req;
 
-	req = malloc(sizeof(struct ulogd2_request));
+	req = g_new0(struct ulogd2_request, 1);
 	req->payload = NULL;
 	req->payload_len = 0;
 
-	req->options = malloc(sizeof(struct ulogd2_option));
+	req->options = g_new0(struct ulogd2_option, 1);
 
 	req->options->opt = -1;
 	req->options->value = NULL;
@@ -67,7 +67,7 @@ void ulogd2_request_add_option(struct ulogd2_request *req, unsigned int opt, voi
 {
 	struct ulogd2_option *option = NULL;
 
-	option = malloc(sizeof(struct ulogd2_option));
+	option = g_new0(struct ulogd2_option, 1);
 
 	option->opt = opt;
 	option->value = value;
@@ -119,15 +119,15 @@ void ulogd2_request_free(struct ulogd2_request *req)
 	if (req->options) {
 		struct ulogd2_option *opt, *optbkp;
 		llist_for_each_entry_safe(opt, optbkp, &req->options->list, list) {
-			free(opt);
+			g_free(opt);
 		}
 		//while (!llist_empty(&req->options->list)) {
 		//	opt = llist_entry(&req->options->list, struct ulogd2_option, list);
 		//	llist_del(&req->options->list);
 		//}
-		free(req->options);
+		g_free(req->options);
 	}
-	free(req);
+	g_free(req);
 }
 
 /** @} */
