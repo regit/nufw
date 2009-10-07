@@ -119,7 +119,6 @@ int emc_netmask_is_included(struct emc_netmask_t*netmask, const char *ip)
 		result = ( (ipv4 & netmask->mask.u4) == netmask->ip.u4);
 	}
 	else if ( res->ai_family == AF_INET6 ) {
-		int i;
 		peer6 = (struct sockaddr_in6 *)res->ai_addr;
 		//memcpy(&netmask->u.u16, peer6->sin6_addr.s6_addr, sizeof(netmask->u.u16));
 		//for (i=0; i<4; i++) {
