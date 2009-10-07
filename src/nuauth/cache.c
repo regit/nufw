@@ -38,10 +38,10 @@
  * An implementation of a generic cache system
  */
 void cache_entry_content_destroy(cache_entry_content_t * item,
-				 GFunc free_datas)
+				 GFunc free_data)
 {
 	if (item != NULL && item->datas != NULL) {
-		free_datas(item->datas, NULL);
+		free_data(item->datas, NULL);
 		item->datas = NULL;
 	}
 	g_free(item);
@@ -131,7 +131,7 @@ void cache_get(cache_class_t * this,
 	cache_entry_content_t *item;
 
 	if (entry->refreshing) {
-		/* don't answer now. wait till datas is put by working thread
+		/* don't answer now. wait till data is put by working thread
 		 * put message in local queue */
 		*local_queue = g_slist_append(*local_queue, message);
 		return;
@@ -159,9 +159,8 @@ void cache_get(cache_class_t * this,
 			/* delete item if needed */
 			item = iter->data;
 			if (item->datas != NULL) {
-				GFunc free_datas =
-				    (GFunc) this->delete_elt;
-				free_datas(item->datas, NULL);
+				GFunc free_data = (GFunc) this->delete_elt;
+				free_data(item->datas, NULL);
 			}
 			list = g_slist_remove(list, item);
 			g_free(item);
@@ -176,7 +175,7 @@ void cache_get(cache_class_t * this,
 		/* cache is clean, increase usage */
 		item->usage++;
 
-		/* and push datas to queue */
+		/* and push data to queue */
 		if (item->datas) {
 			g_async_queue_push(message->reply_queue,
 					   item->datas);
@@ -192,16 +191,16 @@ void cache_message_destroy(cache_class_t * this,
 			   struct cache_message *message)
 {
 	cache_entry_content_t *content;
-	GSList *cache_datas_list = entry->datas;
-	GSList *concerned_datas = g_slist_find_custom(cache_datas_list,
+	GSList *cache_data_list = entry->datas;
+	GSList *concerned_data = g_slist_find_custom(cache_data_list,
 						      message->datas,
 						      (GCompareFunc)
 						      cache_entry_content_compare);
-	if (concerned_datas == NULL) {
+	if (concerned_data == NULL) {
 		return;
 	}
 
-	content = concerned_datas->data;
+	content = concerned_data->data;
 
 	if (content->usage > 0) {
 		content->usage--;
@@ -212,7 +211,7 @@ void cache_message_destroy(cache_class_t * this,
 	}
 
 	/* it's the most recent element, we do anything but decrease usage */
-	if (concerned_datas == cache_datas_list) {
+	if (concerned_data == cache_data_list) {
 		content->usage = 0;
 		return;
 	}
@@ -220,7 +219,7 @@ void cache_message_destroy(cache_class_t * this,
 	/* free datas */
 	this->delete_elt(content->datas, NULL);
 	g_free(content);
-	entry->datas = g_slist_delete_link(entry->datas, concerned_datas);
+	entry->datas = g_slist_delete_link(entry->datas, concerned_data);
 }
 
 void cache_refresh(cache_class_t * this,
@@ -281,9 +280,8 @@ void cache_manager(cache_class_t * this)
 		}
 		switch (message->type) {
 		case GET_MESSAGE:
-			/* look for datas */
-			entry =
-			    g_hash_table_lookup(this->hash, message->key);
+			/* look for data */
+			entry = g_hash_table_lookup(this->hash, message->key);
 			if (entry == NULL) {
 				cache_insert(this, message);
 			} else {
@@ -293,23 +291,22 @@ void cache_manager(cache_class_t * this)
 			break;
 
 		case INSERT_MESSAGE:
-			/* look for datas */
-			entry =
-			    g_hash_table_lookup(this->hash, message->key);
+			/* look for data */
+			entry = g_hash_table_lookup(this->hash, message->key);
 			g_assert(entry != NULL);
 			if (entry->refreshing) {
 				cache_refresh(this, entry, message,
 					      &local_queue);
 			} else {
-				g_error("a thread lost its mind");
+				log_message(CRITICAL, DEBUG_AREA_MAIN,
+					"Error when trying to refresh cache entry (INSERT_MESSAGE)");
 			}
 			this->free_key(message->key);
 			g_free(message);
 			break;
 
 		case FREE_MESSAGE:
-			entry =
-			    g_hash_table_lookup(this->hash, message->key);
+			entry = g_hash_table_lookup(this->hash, message->key);
 			if (entry != NULL) {
 				cache_message_destroy(this, entry,
 						      message);
