@@ -77,33 +77,35 @@ void ulogd2_request_add_option(struct ulogd2_request *req, unsigned int opt, voi
 	llist_add(&option->list, &req->options->list);
 }
 
+#define  INC_RET(value) do { ret += value; if (ret >= bufsz) return -1; } while(0)
+
 ssize_t ulogd2_request_format(struct ulogd2_request *req, unsigned char*buf, unsigned int bufsz)
 {
 	struct ulogd2_option *opt, *optbkp;
 	ssize_t ret=0;
 
 	/* skip space to store total length (stored later) */
-	ret += sizeof(u_int16_t);
+	INC_RET(sizeof(u_int16_t));
 
 	/* payload length + payload */
 	*(u_int16_t*)(buf + ret) = htons(req->payload_len);
-	ret += sizeof(u_int16_t);
+	INC_RET(sizeof(u_int16_t));
 
 	memcpy(buf+ret, req->payload, req->payload_len);
-	ret += req->payload_len;
+	INC_RET(req->payload_len);
 
 	/* Options, in KLV (Key Length Value) format */
 	llist_for_each_entry_safe(opt, optbkp, &req->options->list, list) {
 		/* Key ID */
 		*(u_int16_t*)(buf + ret) = htons(opt->opt);
-		ret += sizeof(u_int16_t);
+		INC_RET(sizeof(u_int16_t));
 		/* Length */
 		/* always write a \0 after option data, hence the +1 */
 		*(u_int16_t*)(buf + ret) = htons(opt->length + 1);
-		ret += sizeof(u_int16_t);
+		INC_RET(sizeof(u_int16_t));
 		/* Value */
 		memcpy(buf+ret, opt->value, opt->length);
-		ret += opt->length;
+		INC_RET(opt->length);
 		buf[ret] = '\0';
 		ret++;
 	}

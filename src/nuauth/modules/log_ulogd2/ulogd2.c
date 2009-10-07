@@ -98,8 +98,10 @@ static ssize_t ulogd2_send_request(struct log_ulogd2_params *params, struct ulog
 	int ret;
 
 	ret = ulogd2_request_format(req, buf, sizeof(buf));
-	if (ret < 0)
+	if (ret < 0) {
+		log_message(WARNING, DEBUG_AREA_MAIN, "ulogd2: unable to format request");
 		return -1;
+	}
 
 	ret = _ulogd2_write(params, buf, ret);
 	return ret;
