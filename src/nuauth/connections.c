@@ -467,7 +467,7 @@ gint print_connection_wid(gpointer data, gpointer userdata, gboolean pid, uint32
 	}
 
 	str_mark = g_strdup_printf(", mark=%d", conn->mark);
-	
+
 	if (conn->username) {
 		str_user = g_strdup_printf(", user=%s", conn->username);
 	} else {
@@ -496,12 +496,12 @@ gint print_connection_wid(gpointer data, gpointer userdata, gboolean pid, uint32
 			      str_sig, NULL);
 	g_free(str_tracking);
 	g_free(str_state);
-	g_free(str_iface);	
-	g_free(str_id);	
-	g_free(str_mark);	
-	g_free(str_user);	
-	g_free(str_os);	
-	g_free(str_app);	
+	g_free(str_iface);
+	g_free(str_id);
+	g_free(str_mark);
+	g_free(str_user);
+	g_free(str_os);
+	g_free(str_app);
 	g_free(str_sig);
 
 	g_message("%s", message);
