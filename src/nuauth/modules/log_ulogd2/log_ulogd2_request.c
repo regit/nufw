@@ -2,8 +2,6 @@
  ** Copyright(C) 2008-2009 INL
  ** Written by  Pierre Chifflier <chifflier@inl.fr>
  **
- ** $Id$
- **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
  ** the Free Software Foundation, version 3 of the License.
@@ -29,8 +27,6 @@
 #include <sys/un.h>
 
 #include "log_ulogd2.h"
-
-#define UNIX_PATH_MAX	108
 
 #include "security.h"
 
@@ -84,6 +80,10 @@ ssize_t ulogd2_request_format(struct ulogd2_request *req, unsigned char*buf, uns
 	struct ulogd2_option *opt, *optbkp;
 	ssize_t ret=0;
 
+	/* write ulogd packet signature first */
+	*(u_int32_t*)(buf) = htonl(ULOGD_SOCKET_MARK);
+	INC_RET(sizeof(u_int32_t));
+
 	/* skip space to store total length (stored later) */
 	INC_RET(sizeof(u_int16_t));
 
@@ -111,7 +111,7 @@ ssize_t ulogd2_request_format(struct ulogd2_request *req, unsigned char*buf, uns
 	}
 
 	/* finally, set options length */
-	*(u_int16_t*)buf = htons(ret);
+	*(u_int16_t*)(buf + sizeof(u_int32_t)) = htons(ret);
 
 	return ret;
 }

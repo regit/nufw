@@ -1,8 +1,6 @@
 /*
- ** Copyright(C) 2008 INL
+ ** Copyright(C) 2008-2009 INL
  ** Written by  Pierre Chifflier <chifflier@inl.fr>
- **
- ** $Id$
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -48,6 +46,11 @@ struct ulogd2_option {
 	void * value;
 	unsigned int length;
 };
+
+/* Unique value used as a signature to ensure received data is really
+ * a packet
+ */
+#define ULOGD_SOCKET_MARK	0x41c90fd4
 
 struct ulogd2_request {
 /* fields to be sent to ulogd2 */
