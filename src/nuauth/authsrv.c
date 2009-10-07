@@ -429,8 +429,7 @@ void nuauth_cleanup(int recv_signal)
  *      and then exit
  *    - Set current directory to "/"
  *    - Call setsid()
- *    - Install log handler: call set_glib_loghandlers(),
- *      close stdin, stdout and stderr
+ *    - close stdin, stdout and stderr
  */
 void daemonize()
 {
@@ -475,8 +474,6 @@ void daemonize()
 	}
 
 	setsid();
-
-	set_glib_loghandlers();
 
 	/* Close stdin, stdout, stderr. */
 	(void) close(STDIN_FILENO);
@@ -825,16 +822,22 @@ void configure_app(int argc, char **argv)
 	g_free(params.authreq_port);
 	g_free(params.configfile);
 
+	debug_areas = DEFAULT_DEBUG_AREAS;
+	debug_level = nuauthconf->debug_level;
+
 	/* init gcrypt and gnutls */
 	if (params.daemonize == 1) {
 		daemonize();
+		set_glib_loghandlers(1 /* use only syslog */);
+
 	} else {
+		set_glib_loghandlers(0 /* use syslog and stdout */);
 		log_message(FATAL, DEBUG_AREA_MAIN,
 				"[+] NuAuth ($Revision$) with config %s",
 				nuauthconf->configfile);
 		log_message(FATAL, DEBUG_AREA_MAIN,
 		"Nuauth started in foreground (without -D option), "
-		"logging on stderr and stdout only (no syslog)");
+		"logging on stderr, stdout and syslog");
 	}
 
 	/* declare default capabilities */

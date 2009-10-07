@@ -77,7 +77,7 @@ int syslog_priority_map[MAX_DEBUG_LEVEL - MIN_DEBUG_LEVEL + 1] = {
  */
 void init_log_engine(const char* log_id)
 {
-	if (log_engine == LOG_TO_SYSLOG) {
+	if (log_engine & LOG_TO_SYSLOG) {
 		openlog(log_id, SYSLOG_OPTS, LOG_FACILITY);
 	}
 }
@@ -101,19 +101,27 @@ log_callback_t nubase_log_set_callback(log_callback_t cb)
  */
 void do_log_area_printf(int area, int priority, char *format, va_list args)
 {
+	va_list ap;
+
 	/* Don't display message if area is not enabled
 	 * or priority is smaller then debug level */
 	if (!(area & debug_areas) || (debug_level < priority))
 		return;
 
-	if (log_engine == LOG_TO_SYSLOG) {
+	if (log_engine & LOG_TO_SYSLOG) {
+		va_copy(ap, args);
 		assert(MIN_DEBUG_LEVEL <= priority
 		       && priority <= MAX_DEBUG_LEVEL);
 		priority = syslog_priority_map[priority - MIN_DEBUG_LEVEL];
-		vsyslog(priority, format, args);
-	} else if (log_engine == LOG_TO_CALLBACK) {
-		(_log_cb)(area, priority, format, args);
-	} else {
+		vsyslog(priority, format, ap);
+		va_end(ap);
+	}
+	if (log_engine & LOG_TO_CALLBACK) {
+		va_copy(ap, args);
+		(_log_cb)(area, priority, format, ap);
+		va_end(ap);
+	}
+	if (log_engine & LOG_TO_STD) {
 		time_t current_time;
 		struct tm *current_time_tm;
 		char time_str[10];
@@ -125,7 +133,9 @@ void do_log_area_printf(int area, int priority, char *format, va_list args)
 		    strftime(time_str, sizeof(time_str), "%H:%M:%S",
 			     current_time_tm))
 			printf("[%s] ", time_str);
-		vprintf(format, args);
+		va_copy(ap, args);
+		vprintf(format, ap);
+		va_end(ap);
 		printf("\n");
 		fflush(stdout);
 	}

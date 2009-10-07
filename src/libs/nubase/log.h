@@ -42,9 +42,9 @@
 
 enum log_type_t {
 	LOG_NONE = 0,
-	LOG_TO_STD,	/*!< Value of ::log_engine when using printf() */
-	LOG_TO_SYSLOG,	/*!< Value of ::log_engine when using syslog() */
-	LOG_TO_CALLBACK,	/*!< Value of ::log_engine when using a callback */
+	LOG_TO_STD      = 1 << 0,	/*!< Value of ::log_engine when using printf() */
+	LOG_TO_SYSLOG   = 1 << 1,	/*!< Value of ::log_engine when using syslog() */
+	LOG_TO_CALLBACK = 1 << 2,	/*!< Value of ::log_engine when using a callback */
 };
 
 /** \brief Callback prototype, for logs
