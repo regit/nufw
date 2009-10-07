@@ -49,7 +49,7 @@ enum log_type_t {
 
 /** \brief Callback prototype, for logs
  */
-typedef void (*log_callback_t)(debug_area_t area, debug_level_t priority, char *format, va_list args);
+typedef void (*log_callback_t)(debug_area_t area, debug_level_t priority, const char *format, va_list args);
 
 /**
  * Log engine used:
@@ -63,13 +63,13 @@ extern int debug_level;    /*!< Debug level, default valut: #DEFAULT_DEBUG_LEVEL
 extern int debug_areas;    /*!< Debug areas, default value: #DEFAULT_DEBUG_AREAS (all areas) */
 
 void init_log_engine(const char* log_id);
-void log_printf(debug_level_t priority, char *format, ...)
+void log_printf(debug_level_t priority, const char *format, ...)
 #ifdef __GNUC__
 	__attribute__((__format__(printf,2,3)))
 #endif
 ;
 
-void log_area_printf(debug_area_t area, debug_level_t priority, char *format, ...)
+void log_area_printf(debug_area_t area, debug_level_t priority, const char *format, ...)
 #ifdef __GNUC__
 	__attribute__((__format__(printf,3,4)))
 #endif

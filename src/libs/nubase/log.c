@@ -99,7 +99,7 @@ log_callback_t nubase_log_set_callback(log_callback_t cb)
  * Display a message to log, the syntax for format is the same as printf().
  * The priority is used for syslog.
  */
-void do_log_area_printf(int area, int priority, char *format, va_list args)
+void do_log_area_printf(int area, int priority, const char *format, va_list args)
 {
 	va_list ap;
 
@@ -146,7 +146,7 @@ void do_log_area_printf(int area, int priority, char *format, va_list args)
  * The priority is used for syslog.
  */
 void log_area_printf(debug_area_t area, debug_level_t priority,
-		     char *format, ...)
+		     const char *format, ...)
 {
 	va_list args;
 	va_start(args, format);
@@ -158,7 +158,7 @@ void log_area_printf(debug_area_t area, debug_level_t priority,
  * Display a message to log, the syntax for format is the same as printf().
  * The priority is used for syslog.
  */
-void log_printf(debug_level_t priority, char *format, ...)
+void log_printf(debug_level_t priority, const char *format, ...)
 {
 	va_list args;
 	va_start(args, format);
