@@ -143,6 +143,12 @@ G_MODULE_EXPORT gint user_packet_logs(void *element, tcp_state_t state,
 	}
 
 	req = ulogd2_request_new();
+	if (req == NULL) {
+		log_message(WARNING, DEBUG_AREA_MAIN,
+				"ulogd2: unable to allocate request");
+		return 0;
+	}
+
 	ulogd2_request_set_payload(req, (unsigned char*)connection->payload, connection->payload_len);
 
 	if (connection->log_prefix) {
