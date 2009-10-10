@@ -25,6 +25,8 @@
 
 #include <nubase.h>
 
+#define YYDEBUG 0
+
 #define YYERROR_VERBOSE
 
 extern FILE *yyin;
@@ -37,7 +39,6 @@ typedef struct config_arg_t {
 } config_arg_t;
 /* Pass the argument to yyparse through to yylex. */
 #define YYLEX_PARAM   config_arg
-
 %}
 
 %token TOK_EQUAL
@@ -50,6 +51,7 @@ typedef struct config_arg_t {
 	int number;
 }
 
+%debug
 %destructor { free ($$); } TOK_WORD TOK_SECTION
 
 %locations
@@ -58,6 +60,11 @@ typedef struct config_arg_t {
 %parse-param { struct config_arg_t* config_arg }
 
 %{
+
+#if YYDEBUG
+  static void print_token_value (FILE *, int, YYSTYPE);
+# define YYPRINT(file, type, value) print_token_value (file, type, value)
+#endif
 
 /* this must come after bison macros, since we need these types to be defined */
 int yylex(YYSTYPE* lvalp, YYLTYPE* llocp, struct config_arg_t* config_arg);
@@ -126,6 +133,23 @@ struct llist_head * parse_configuration(const char *config)
 		free(config_argument.current_section);
 	return config_table_list;
 }
+
+#if YYDEBUG
+static void print_token_value (FILE *file, int type, YYSTYPE value)
+{
+  if (type == TOK_STRING)
+    fprintf (file, "s %s", value.string);
+  else if (type == TOK_WORD)
+    fprintf (file, "w %s", value.string);
+  else if (type == TOK_SECTION)
+    fprintf (file, "section %s", value.string);
+  else if (type == TOK_EQUAL)
+    fprintf (file, "= %s", value.string);
+  else
+    fprintf (file, "unk %s", value.string);
+}
+#endif
+
 
 
 #ifdef _UNIT_TEST_

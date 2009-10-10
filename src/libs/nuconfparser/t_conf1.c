@@ -17,6 +17,13 @@ int assert_conf_vars(struct llist_head *l)
 		return 1;
 	}
 
+	/* var_str2 => "abc#123" */
+	var_str = nubase_config_table_get(l, "var_str2");
+	if (var_str == NULL || strcmp(var_str,"abc#123") != 0) {
+		fprintf(stderr, "Failed test: nubase_config_table_get(l, \"var_str2\")\n");
+		return 1;
+	}
+
 	/* var_int => "42" */
 	var_str = nubase_config_table_get(l, "var_int");
 	if (var_str == NULL || strcmp(var_str,"42") != 0) {
@@ -59,7 +66,6 @@ int assert_conf_vars(struct llist_head *l)
 		return 1;
 	}
 
-#if 0
 	/* var_str_with_comment => "str" */
 	var_str = nubase_config_table_get(l, "var_str_with_comment");
 	if (var_str == NULL || strcmp(var_str,"str") != 0) {
@@ -67,7 +73,6 @@ int assert_conf_vars(struct llist_head *l)
 		fprintf(stderr, "var_str: %s\n", var_str);
 		return 1;
 	}
-#endif
 
 	return 0;
 }
@@ -78,12 +83,19 @@ int main(int argc, char **argv)
 
 	char * srcdir;
 	char conffile[1024];
+#ifdef YYDEBUG
+	extern int yydebug;
+#endif
 
 	srcdir = getenv("srcdir");
 	if (srcdir == NULL)
 		exit(1);
 
 	sprintf(conffile, "%s/%s", srcdir, "t1.conf");
+
+#ifdef YYDEBUG
+	yydebug = 1;
+#endif
 
 	l = parse_configuration(conffile);
 	if (l == NULL)
