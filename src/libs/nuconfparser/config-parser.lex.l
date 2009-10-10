@@ -105,7 +105,6 @@ SQSTRING	\'([^\\\']|\\.)*\'
 DQSTRING	\"([^\\\"]|\\.)*\"
 STRING		(\"|\')([^\\(\"|\')]|\\.)*(\"|\')
 INCLUDE		include
-COMMENT		^#.*\n
 WORD		([a-zA-Z0-9_\-]+(\(\-?[0-9\*]+\))?\.?)+
 EQUAL		\=
 VOID		[ \t\n]+
@@ -133,9 +132,7 @@ VOID		[ \t\n]+
 			return TOK_STRING;
 		}
 
-{COMMENT}	{
-			/* We don't care */
-		}
+"#"[^\n]*	{ }
 
 {VOID}		{
 			/* We don't care */
