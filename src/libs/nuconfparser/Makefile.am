@@ -1,6 +1,6 @@
 noinst_LTLIBRARIES = libnuconfparser.la
 
-EXTRA_DIST = config-parser.h
+EXTRA_DIST = config-parser.h t1.conf t1_included.conf
 
 AM_CPPFLAGS = -I$(top_srcdir)/src/include/ -I$(top_srcdir)/src/libs/nubase
 BUILT_SOURCES = config-parser.yacc.h
@@ -10,3 +10,9 @@ libnuconfparser_la_SOURCES =			\
 		config-parser.yacc.y	\
 		config-parser.lex.l
 
+check_PROGRAMS = t_conf1
+
+TESTS = t_conf1
+
+t_conf1_SOURCES = t_conf1.c
+t_conf1_LDADD = libnuconfparser.la ../nubase/libnubase.la
