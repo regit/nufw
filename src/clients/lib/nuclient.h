@@ -81,6 +81,7 @@ enum {
 	NUSSL_INIT_ERR,	     /** NuSSL initialisation failed */
 	NUFW_INITNEGO_ERROR, /** Error during initial negotiation phase */
 	NUFW_CRUISE_ERROR,   /** Error during cruise mode extension protocol */
+	PROTO_ERR, 	     /** Protocol error, for example to old nuauth */
 };
 
 /* Define for backward compatibility */

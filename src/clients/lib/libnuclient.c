@@ -1110,6 +1110,8 @@ const char *nu_client_strerror(nuauth_session_t * session, nuclient_error_t * er
 			return "NuFW refused connection during init.";
 		case NUFW_CRUISE_ERROR:
 			return "NuFW error during cruise protocol.";
+		case PROTO_ERR:
+			return "Protocol error (too old authentication server ?).";
 		default:
 			return "Unknown internal error code";
 		}

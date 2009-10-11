@@ -603,6 +603,7 @@ int init_sasl(nuauth_session_t * session, const char *hostname, nuclient_error_t
 	char * krb5_service = NULL;
 	const char * server_fqdn = hostname;
 	sasl_security_properties_t secprops;
+	char buffer[12];
 
 	/* SASL time */
 	sasl_callback_t callbacks[] = {
@@ -615,6 +616,14 @@ int init_sasl(nuauth_session_t * session, const char *hostname, nuclient_error_t
 	ret = nussl_write(session->nussl, "PROTO 6", strlen("PROTO 6"));
 	if (ret < 0) {
 		SET_ERROR(err, NUSSL_ERR, ret);
+		return 0;
+	}
+
+	/* wait of "OK" from server, an other chain will be a failure
+	 * because we can not yet downgrade our protocol */
+	nussl_read(session->nussl, buffer, sizeof(buffer));
+	if (strncmp("OK", buffer, 2)) {
+		SET_ERROR(err, INTERNAL_ERROR, PROTO_ERR);
 		return 0;
 	}
 

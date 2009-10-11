@@ -237,6 +237,54 @@ static unsigned samp_recv(nussl_session* nussl, char *buf, int bufsize)
 	return len;
 }
 
+
+#define MAX_TRY 2
+nu_error_t negotiate_proto_version(user_session_t *c_session)
+{
+	int i = 0;
+	int n = 0;
+
+	while ((c_session->proto_version > PROTO_VERSION) && (i < MAX_TRY)) {
+		char data[10];
+
+		n = snprintf(data, 10, "%s %d", PROTO_STRING, PROTO_VERSION);
+		if (n <= 0) {
+			return NU_EXIT_ERROR;
+		}
+		n = nussl_write(c_session->nussl, data, strlen(data));
+		if (n < 0) {
+			return NU_EXIT_ERROR;
+		}
+		n = nussl_read(c_session->nussl, data, sizeof(data));
+		if (n<0) {
+			return NU_EXIT_ERROR;
+		}
+		if (((int) strlen(PROTO_STRING) + 2) <= n 
+				&& strncmp(data, PROTO_STRING,
+					strlen(PROTO_STRING)) ==
+				0) {
+			data[n] = 0;
+			c_session->proto_version =
+				atoi((char *) data +
+						strlen(PROTO_STRING));
+		} else {
+			return NU_EXIT_ERROR;
+		}
+		i++;
+	}
+	if (c_session->proto_version <= PROTO_VERSION) {
+		n = nussl_write(c_session->nussl, "OK", strlen("OK"));
+		if (n < 0) {
+			return NU_EXIT_ERROR;
+		}
+		return NU_EXIT_OK;
+	} else {
+		nussl_write(c_session->nussl, "NOK", strlen("NOK"));
+		return NU_EXIT_ERROR;
+	}
+	return NU_EXIT_ERROR;
+}
+
 static void sock_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 {
 	user_session_t * c_session = w->data;
@@ -288,6 +336,15 @@ static void sock_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 					"Protocol information: %d",
 					c_session->
 					proto_version);
+			if (c_session->proto_version >= PROTO_VERSION_V24) {
+				int ret = negotiate_proto_version(c_session);
+				if (ret != NU_EXIT_OK) {
+					log_message(INFO, DEBUG_AREA_AUTH,
+							"Unable to negotiate proto");
+					c_session->proto_version = PROTO_VERSION_NONE;
+				}
+				return;
+			}
 			/* sanity check on know protocol */
 			switch (c_session->proto_version) {
 				case PROTO_VERSION_V22:
