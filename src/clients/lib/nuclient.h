@@ -79,8 +79,8 @@ enum {
 	BAD_CREDENTIALS_ERR, /** Username/password error */
 	BINDING_ERR,	     /** bind() call failed */
 	NUSSL_INIT_ERR,	     /** NuSSL initialisation failed */
-	NUFW_INITNEGO_ERROR, /** Error during initial negotiation phase */
-	NUFW_CRUISE_ERROR,   /** Error during cruise mode extension protocol */
+	NUFW_INITNEGO_ERR, /** Error during initial negotiation phase */
+	NUFW_CRUISE_ERR,   /** Error during cruise mode extension protocol */
 	PROTO_ERR, 	     /** Protocol error, for example to old nuauth */
 };
 

@@ -899,7 +899,7 @@ static int finish_init(nuauth_session_t * session, nuclient_error_t * err)
 				finish = 1;
 				switch (message->option) {
 					case INIT_NOK:
-						SET_ERROR(err, INTERNAL_ERROR, NUFW_INITNEGO_ERROR);
+						SET_ERROR(err, INTERNAL_ERROR, NUFW_INITNEGO_ERR);
 						return 0;
 					case INIT_OK:
 						session->connected = 1;
@@ -1106,9 +1106,9 @@ const char *nu_client_strerror(nuauth_session_t * session, nuclient_error_t * er
 			return "Binding (source address) error";
 		case NUSSL_INIT_ERR:
 			return "NuSSL initialisation failed.";
-		case NUFW_INITNEGO_ERROR:
+		case NUFW_INITNEGO_ERR:
 			return "NuFW refused connection during init.";
-		case NUFW_CRUISE_ERROR:
+		case NUFW_CRUISE_ERR:
 			return "NuFW error during cruise protocol.";
 		case PROTO_ERR:
 			return "Protocol error (too old authentication server ?).";
