@@ -1440,7 +1440,7 @@ yyreduce:
 /* Line 1455 of yacc.c  */
 #line 90 "config-parser.yacc.y"
     {
-				nubase_config_table_append_with_section(config_arg->parsed_config, config_arg->current_section, (yyvsp[(1) - (3)].string), (yyvsp[(3) - (3)].string));
+				nubase_config_table_set_with_section(config_arg->parsed_config, config_arg->current_section, (yyvsp[(1) - (3)].string), (yyvsp[(3) - (3)].string));
 				free((yyvsp[(1) - (3)].string));
 				free((yyvsp[(3) - (3)].string));
 			}
@@ -1451,7 +1451,7 @@ yyreduce:
 /* Line 1455 of yacc.c  */
 #line 97 "config-parser.yacc.y"
     {
-				nubase_config_table_append_with_section(config_arg->parsed_config, config_arg->current_section, (yyvsp[(1) - (3)].string), (yyvsp[(3) - (3)].string));
+				nubase_config_table_set_with_section(config_arg->parsed_config, config_arg->current_section, (yyvsp[(1) - (3)].string), (yyvsp[(3) - (3)].string));
 				free((yyvsp[(1) - (3)].string));
 				free((yyvsp[(3) - (3)].string));
 			}

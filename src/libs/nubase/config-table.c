@@ -119,6 +119,22 @@ struct config_table_t *nubase_config_table_append_with_section(struct llist_head
 	return nubase_config_table_append(config_table_list, buffer, value);
 }
 
+struct config_table_t *nubase_config_table_set_with_section(struct llist_head *config_table_list, char *section, char *key, char *value)
+{
+	char buffer[4096];
+	int ret;
+
+	if (section == NULL || strcasecmp(section,"global")==0) {
+		return nubase_config_table_set(config_table_list, key, value);
+	}
+
+	ret = snprintf(buffer, sizeof(buffer), "%s/%s", section, key);
+	if (ret >= (int)sizeof(buffer))
+		return NULL;
+
+	return nubase_config_table_set(config_table_list, buffer, value);
+}
+
 void nubase_config_table_destroy(struct llist_head *config_table_list)
 {
 	struct config_table_t *config_table;

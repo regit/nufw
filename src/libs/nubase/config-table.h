@@ -39,6 +39,7 @@ struct config_table_t *nubase_config_table_append(struct llist_head *config_tabl
 struct config_table_t *nubase_config_table_append_with_section(struct llist_head *config_table_list, char *section, char *key, char *value);
 void nubase_config_table_destroy(struct llist_head *config_table_list);
 struct config_table_t *nubase_config_table_set(struct llist_head *config_table_list, char *key, char *value);
+struct config_table_t *nubase_config_table_set_with_section(struct llist_head *config_table_list, char *section, char *key, char *value);
 void nubase_config_table_print(struct llist_head *config_table_list, void *userdata, void (*func)(void *data, char *keyeqval));
 
 #endif /* _CONFIG_TABLE_H_ */

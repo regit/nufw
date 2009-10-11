@@ -88,14 +88,14 @@ section:		TOK_SECTION {
 			;
 key_value:		TOK_WORD TOK_EQUAL TOK_WORD
 			{
-				nubase_config_table_append_with_section(config_arg->parsed_config, config_arg->current_section, $1, $3);
+				nubase_config_table_set_with_section(config_arg->parsed_config, config_arg->current_section, $1, $3);
 				free($1);
 				free($3);
 			}
 		|
 			TOK_WORD TOK_EQUAL TOK_STRING
 			{
-				nubase_config_table_append_with_section(config_arg->parsed_config, config_arg->current_section, $1, $3);
+				nubase_config_table_set_with_section(config_arg->parsed_config, config_arg->current_section, $1, $3);
 				free($1);
 				free($3);
 			}
