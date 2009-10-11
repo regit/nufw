@@ -115,7 +115,7 @@ int command_new(command_t * this)
 	/* create socket */
 	this->socket = socket(AF_UNIX, SOCK_STREAM, 0);
 	if (this->socket == -1) {
-		g_warning("[%i] Command server: enable to create UNIX socket %s: %s",
+		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL, "Command server: unable to create UNIX socket %s: %s",
 			    getpid(), addr.sun_path, g_strerror(errno));
 		return 0;
 	}
