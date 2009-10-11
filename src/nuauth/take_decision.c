@@ -314,7 +314,7 @@ nu_error_t apply_decision(connection_t * element)
 #endif
 
 	if (element->state == AUTH_STATE_USERPCKT) {
-		debug_log_message(WARNING, DEBUG_AREA_MAIN,
+		log_message(WARNING, DEBUG_AREA_MAIN,
 				  "BUG: Should not be in apply_decision for user only packet");
 		return NU_EXIT_ERROR;
 	}
