@@ -203,7 +203,6 @@ void release_nufw_session(nufw_session_t * session)
 
 nu_error_t nufw_session_send(nufw_session_t * session, char * buffer, int length)
 {
-	int ret;
 	struct nufw_message_t *nmsg;
 
 	if (session->alive == FALSE)
@@ -216,12 +215,6 @@ nu_error_t nufw_session_send(nufw_session_t * session, char * buffer, int length
 	g_async_queue_push(session->queue, nmsg);
 	ev_async_send(session->loop, &session->writer_signal);
 
-	if (ret < 0) {
-		log_message(DEBUG, DEBUG_AREA_GW,
-			"nufw_servers: send failure (%s)",
-			nussl_get_error(session->nufw_client));
-		return NU_EXIT_ERROR;
-	}
 	return NU_EXIT_OK;
 }
 
