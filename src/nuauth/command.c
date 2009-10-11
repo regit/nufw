@@ -32,6 +32,8 @@
 #include <sys/stat.h>		/* fchmod() */
 #include <sys/types.h>		/* mode_t */
 
+#include <ev.h>
+
 #include <nubase.h>
 
 #include "nuauthconf.h"
@@ -65,14 +67,23 @@ const char* COMMAND_HELP =
 
 const char* PYTHON_PROTO_VERSION = "NuFW 0.1";
 
+static void command_activity_cb(struct ev_loop *loop, ev_io *w, int revents);
+static void command_client_activity_cb(struct ev_loop *loop, ev_io *w, int revents);
+
 typedef struct {
 	time_t start_timestamp;
 	int socket;
-	int client;
 	struct sockaddr_un client_addr;
-	int select_max;
-	fd_set select_set;
+	struct ev_loop *loop;
+	ev_io command_watcher;
 } command_t;
+
+typedef struct {
+	int fd;
+	ev_io watcher;
+	command_t *master_command;
+} command_client_t;
+
 
 int command_new(command_t * this)
 {
@@ -83,12 +94,11 @@ int command_new(command_t * this)
 
 	this->start_timestamp = time(NULL);
 	this->socket = -1;
-	this->client = -1;
-	this->select_max = 0;
+	this->loop = NULL;
 
 	/* Create socket dir */
 	ret = mkdir(SOCKET_PATH, S_IRWXU);
-	if ( ret != 0 ) {
+	if ( ret != 0 && errno != EEXIST ) {
 		log_area_printf(DEBUG_AREA_AUTH, DEBUG_LEVEL_FATAL,
 				"Cannot create socket directory %s: %s", SOCKET_PATH, strerror(errno));
 	}
@@ -109,14 +119,12 @@ int command_new(command_t * this)
 			    getpid(), addr.sun_path, g_strerror(errno));
 		return 0;
 	}
-	this->select_max = this->socket + 1;
 
 	/* Set file mode */
 	(void)fchmod(this->socket, 0600);
 
 	/* set reuse option */
-	ret =
-	    setsockopt(this->socket, SOL_SOCKET, SO_REUSEADDR,
+	ret = setsockopt(this->socket, SOL_SOCKET, SO_REUSEADDR,
 		       (char *) &on, sizeof(on));
 	if ( ret != 0 ) {
 		log_area_printf(DEBUG_AREA_AUTH, DEBUG_LEVEL_FATAL,
@@ -137,29 +145,42 @@ int command_new(command_t * this)
 			    getpid(), g_strerror(errno));
 		return 0;
 	}
+
+	this->loop = ev_loop_new(0);
+	if ( this->loop == NULL ) {
+		log_area_printf(DEBUG_AREA_AUTH, DEBUG_LEVEL_FATAL,
+				"Command server: could not create ev loop");
+	}
+
+	ev_io_init(&this->command_watcher, command_activity_cb, this->socket, EV_READ);
+	this->command_watcher.data = this;
+	ev_io_start(this->loop, &this->command_watcher);
+
 	return 1;
 }
 
-void command_client_close(command_t * this)
+void command_client_close(command_client_t * this)
 {
 	log_message(WARNING, DEBUG_AREA_MAIN,
 		    "Command server: close client connection");
-	close(this->client);
-	this->client = -1;
-	this->select_max = this->socket + 1;
+	close(this->fd);
+	this->fd = -1;
+
+	ev_io_stop(this->master_command->loop, &this->watcher);
+	ev_unloop(this->master_command->loop, EVUNLOOP_ONE);
 }
 
 int command_client_accept(command_t * this)
 {
 	char buffer[9];
 	int ret;
+	command_client_t *client;
+	int clientfd;
 
 	/* accept client socket */
 	socklen_t len = sizeof(this->client_addr);
-	this->client =
-	    accept(this->socket, (struct sockaddr *) &this->client_addr,
-		   &len);
-	if (this->client < 0) {
+	clientfd = accept(this->socket, (struct sockaddr *) &this->client_addr, &len);
+	if (clientfd < 0) {
 		log_message(CRITICAL, DEBUG_AREA_MAIN,
 			    "Command server: accept() error: %s",
 			    g_strerror(errno));
@@ -170,41 +191,46 @@ int command_client_accept(command_t * this)
 
 	/* read client version */
 	buffer[sizeof(buffer)-1] = 0;
-	ret = recv(this->client, buffer, sizeof(buffer)-1, 0);
+	ret = recv(clientfd, buffer, sizeof(buffer)-1, 0);
 	if (ret < 0) {
 		log_message(CRITICAL, DEBUG_AREA_MAIN,
 			    "Command server: client doesn't send version");
-		command_client_close(this);
+		close(clientfd);
 		return 0;
 	}
 	buffer[ret] = 0;
 
 	/* send server version */
-	send(this->client, PYTHON_PROTO_VERSION, 8, 0);
+	send(clientfd, PYTHON_PROTO_VERSION, 8, 0);
 
 	/* check client version */
 	if (strcmp(buffer, PYTHON_PROTO_VERSION) != 0) {
 		log_message(CRITICAL, DEBUG_AREA_MAIN,
 			    "Command server: invalid client version: \"%s\"",
 			    buffer);
-		command_client_close(this);
+		close(clientfd);
 		return 0;
 	}
+
+	client = g_new(command_client_t, 1);
+	client->fd = clientfd;
+	client->master_command = this;
+
+	ev_io_init(&client->watcher, command_client_activity_cb, client->fd, EV_READ);
+	client->watcher.data = client;
+	ev_io_start(this->loop, &client->watcher);
 
 	/* client connected */
 	log_message(WARNING, DEBUG_AREA_MAIN,
 		    "Command server: client connected");
-	if (this->socket < this->client)
-		this->select_max = this->client + 1;
-	else
-		this->select_max = this->socket + 1;
+
 	return 1;
 }
 
-void command_uptime(encoder_t* encoder, command_t *this)
+void command_uptime(encoder_t* encoder, command_client_t *this)
 {
-	time_t diff = time(NULL) - this->start_timestamp;
-	return encoder_add_uptime(encoder, this->start_timestamp, diff);
+	time_t diff = time(NULL) - this->master_command->start_timestamp;
+	return encoder_add_uptime(encoder, this->master_command->start_timestamp, diff);
 }
 
 void command_users_callback(int sock, user_session_t *session, GSList **users)
@@ -213,7 +239,7 @@ void command_users_callback(int sock, user_session_t *session, GSList **users)
 	*users = g_slist_prepend(*users, encoder);
 }
 
-void command_users(command_t *this, encoder_t *encoder)
+void command_users(command_client_t *this, encoder_t *encoder)
 {
 	/* read user list */
 	GSList *users = NULL;
@@ -230,7 +256,7 @@ void command_server_callback(int sock, nufw_session_t *session, GSList **servers
 	*servers = g_slist_prepend(*servers, encoder);
 }
 
-void command_servers(command_t *this, encoder_t *encoder)
+void command_servers(command_client_t *this, encoder_t *encoder)
 {
 	/* read user list */
 	GSList *servers = NULL;
@@ -286,7 +312,7 @@ int command_do_disconnect(int sock)
 /**
  * Disconnect all client
  **/
-int command_disconnect_all(command_t *this, encoder_t *encoder)
+int command_disconnect_all(command_client_t *this, encoder_t *encoder)
 {
 	if (command_do_disconnect(-1)) {
 		encoder_add_string(encoder, "users disconnected");
@@ -300,7 +326,7 @@ int command_disconnect_all(command_t *this, encoder_t *encoder)
 /**
  * Disconnect a client
  */
-int command_disconnect(command_t *this, encoder_t *encoder, char *command)
+int command_disconnect(command_client_t *this, encoder_t *encoder, char *command)
 {
 	int sock;
 
@@ -342,7 +368,7 @@ static void conf_server_side_print(void *encoder, char *buffer)
 	encoder_add_string(encoder, buffer);
 }
 
-void command_execute(command_t * this, char *command)
+void command_execute(command_client_t * this, char *command)
 {
 	encoder_t *encoder, *answer;
 	int ret;
@@ -441,7 +467,7 @@ void command_execute(command_t * this, char *command)
 	encoder_destroy(encoder);
 
 	/* send answer */
-	ret = send(this->client, answer->data, answer->size, 0);
+	ret = send(this->fd, answer->data, answer->size, 0);
 	if (ret < 0) {
 		log_message(WARNING, DEBUG_AREA_MAIN,
 			    "Command server: client send() error: %s",
@@ -451,11 +477,11 @@ void command_execute(command_t * this, char *command)
 	encoder_destroy(answer);
 }
 
-void command_client_run(command_t * this)
+void command_client_run(command_client_t * this)
 {
 	char buffer[40];
 	int ret;
-	ret = recv(this->client, buffer, sizeof(buffer) - 1, 0);
+	ret = recv(this->fd, buffer, sizeof(buffer) - 1, 0);
 	if (ret <= 0) {
 		if (ret == 0) {
 			log_message(WARNING, DEBUG_AREA_MAIN, "Command server: "
@@ -479,45 +505,22 @@ void command_client_run(command_t * this)
 	command_execute(this, buffer);
 }
 
+static void command_client_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
+{
+	if (w && w->data)
+		command_client_run(w->data);
+}
+
+static void command_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
+{
+	if (w && w->data)
+		command_client_accept(w->data);
+}
+
 int command_main(command_t * this)
 {
-	struct timeval tv;
-	int ret;
+	ev_loop(this->loop, 0);
 
-	/* Wait activity on the socket */
-	FD_ZERO(&this->select_set);
-	FD_SET(this->socket, &this->select_set);
-	if (0 <= this->client)
-		FD_SET(this->client, &this->select_set);
-	tv.tv_sec = 1;
-	tv.tv_usec = 0;
-	ret = select(this->select_max, &this->select_set, NULL, NULL, &tv);
-
-	/* catch select() error */
-	if (ret == -1) {
-		/* Signal was catched: just ignore it */
-		if (errno == EINTR) {
-			return 1;
-		}
-
-		log_message(CRITICAL, DEBUG_AREA_MAIN,
-			    "Command server: select() fatal error: %s",
-			    g_strerror(errno));
-		return 0;
-	}
-
-	/* timeout: continue */
-	if (ret == 0) {
-		return 1;
-	}
-
-	if (0 <= this->client && FD_ISSET(this->client, &this->select_set)) {
-		command_client_run(this);
-	}
-	if (FD_ISSET(this->socket, &this->select_set)) {
-		if (!command_client_accept(this))
-			return 0;
-	}
 	return 1;
 }
 
