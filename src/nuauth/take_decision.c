@@ -214,7 +214,7 @@ nu_error_t take_decision(connection_t * element, packet_place_t place)
 						answer = DECISION_DROP;
 					}
 					update_decision((struct acl_group *)(parcours->data),
-							&answer, &test, element, &expire);	
+							&answer, &test, element, &expire);
 				} else {
 					/* search for a userid-based rule */
 					search_user_id_in_acl_groups(((struct acl_group *)(parcours->data)),

@@ -116,7 +116,7 @@ int init_nuauthconf(struct nuauth_params **result)
 	conf->log_users_sync = nuauth_config_table_get_or_default_int("nuauth_log_users_sync", 1);
 	conf->log_users_strict = nuauth_config_table_get_or_default_int("nuauth_log_users_strict", 1);
 	conf->log_users_without_realm =	nuauth_config_table_get_or_default_int("nuauth_log_users_without_realm", 1);
-	conf->prio_to_nok = nuauth_config_table_get_or_default_int("nuauth_prio_to_nok", 1);
+	conf->prio_to_nok = nuauth_config_table_get_or_default_int("nuauth_prio_to_nok", 2);
 	conf->single_user_client_limit = nuauth_config_table_get_or_default_int("nuauth_single_user_client_limit", 0);
 	conf->single_ip_client_limit = nuauth_config_table_get_or_default_int("nuauth_single_ip_client_limit", 0);
 	connect_policy = nuauth_config_table_get_or_default_int("nuauth_connect_policy", POLICY_MULTIPLE_LOGIN);

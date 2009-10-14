@@ -359,8 +359,8 @@ struct weighted_acl {
 
 gint compare_acl_weight(gconstpointer data1, gconstpointer data2)
 {
-	return ((struct weighted_acl *)data2)->weight
-		- ((struct weighted_acl *)data1)->weight;
+	return ((struct weighted_acl *)data1)->weight
+		- ((struct weighted_acl *)data2)->weight;
 }
 
 static void local_free(gpointer data, gpointer userdata)
