@@ -528,7 +528,7 @@ static void command_timeout_cb(struct ev_loop *loop, ev_timer *w, int revents)
 
 int command_main(command_t * this)
 {
-	ev_loop(this->loop, EVLOOP_NONBLOCK);
+	ev_loop(this->loop, EVLOOP_ONESHOT);
 
 	return 1;
 }
