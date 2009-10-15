@@ -69,6 +69,7 @@ const char* PYTHON_PROTO_VERSION = "NuFW 0.1";
 
 static void command_activity_cb(struct ev_loop *loop, ev_io *w, int revents);
 static void command_client_activity_cb(struct ev_loop *loop, ev_io *w, int revents);
+static void command_timeout_cb(struct ev_loop *loop, ev_timer *w, int revents);
 
 typedef struct {
 	time_t start_timestamp;
@@ -76,6 +77,7 @@ typedef struct {
 	struct sockaddr_un client_addr;
 	struct ev_loop *loop;
 	ev_io command_watcher;
+	ev_timer timer;
 } command_t;
 
 typedef struct {
@@ -83,7 +85,6 @@ typedef struct {
 	ev_io watcher;
 	command_t *master_command;
 } command_client_t;
-
 
 int command_new(command_t * this)
 {
@@ -155,6 +156,8 @@ int command_new(command_t * this)
 	ev_io_init(&this->command_watcher, command_activity_cb, this->socket, EV_READ);
 	this->command_watcher.data = this;
 	ev_io_start(this->loop, &this->command_watcher);
+	ev_timer_init (&this->timer, command_timeout_cb, 0, 0.200);
+	ev_timer_start (this->loop, &this->timer);
 
 	return 1;
 }
@@ -517,9 +520,15 @@ static void command_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 		command_client_accept(w->data);
 }
 
+static void command_timeout_cb(struct ev_loop *loop, ev_timer *w, int revents)
+{
+	return;
+}
+
+
 int command_main(command_t * this)
 {
-	ev_loop(this->loop, 0);
+	ev_loop(this->loop, EVLOOP_NONBLOCK);
 
 	return 1;
 }
