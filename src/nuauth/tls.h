@@ -109,6 +109,8 @@ struct tls_nufw_context_t {
 	GMutex *mutex;
 	nussl_session *server;
 	struct ev_loop *loop;
+	ev_async loop_fini_signal;
+	GSList *clients;
 };
 
 /**

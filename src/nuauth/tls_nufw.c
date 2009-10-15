@@ -362,7 +362,15 @@ void *tls_nufw_worker(struct nuauth_thread_t *thread)
 
 	debug_log_message(INFO, DEBUG_AREA_GW, "nufw loop starting (socket %d)",
 			  nussl_session_get_fd(nu_session->nufw_client));
+
+	nu_session->context->clients = g_slist_prepend(nu_session->context->clients, nu_session->loop);
+
 	ev_loop(nu_session->loop, 0);
+
+	g_mutex_lock(nu_session->context->mutex);
+	nu_session->context->clients = g_slist_remove(nu_session->context->clients, nu_session->loop);
+	g_mutex_unlock(nu_session->context->mutex);
+
 	ev_loop_destroy(nu_session->loop);
 
 	declare_dead_nufw_session(nu_session);
@@ -397,7 +405,16 @@ void *tls_nufw_unix_worker(struct nuauth_thread_t *thread)
 	debug_log_message(INFO, DEBUG_AREA_GW, "nufw loop starting (socket %d) (unix)",
 			  fdno);
 
+	nu_session->context->clients = g_slist_prepend(nu_session->context->clients, nu_session->loop);
+
 	ev_loop(nu_session->loop, 0);
+
+	g_mutex_lock(nu_session->context->mutex);
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
+				  "removing loop from context");
+	nu_session->context->clients = g_slist_remove(nu_session->context->clients, nu_session->loop);
+	g_mutex_unlock(nu_session->context->mutex);
+
 	ev_loop_destroy(nu_session->loop);
 
 	declare_dead_nufw_session(nu_session);
@@ -470,6 +487,7 @@ int tls_nufw_accept_unix(struct tls_nufw_context_t *context)
 	nu_session->connect_timestamp = time(NULL);
 	nu_session->usage = 0;
 	nu_session->alive = TRUE;
+	nu_session->context = context;
 
 	/* We have to wait the first packet */
 	nu_session->proto_version = PROTO_UNKNOWN;
@@ -479,8 +497,11 @@ int tls_nufw_accept_unix(struct tls_nufw_context_t *context)
 	conn_fd = accept(context->sck_unix, (struct sockaddr*)&sockaddr, &len_unix);
 	if ( conn_fd < 0 ) {
 		g_free(nu_session);
-		log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_WARNING,
-				"Error while accepting nufw server connection");
+		if (errno != EAGAIN) {
+			log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_WARNING,
+					"Error while accepting nufw server connection (%d)",
+					errno);
+		}
 		return 1;
 	}
 
@@ -556,6 +577,28 @@ static void nufw_accept_unix_cb(struct ev_loop *loop, ev_io *w, int revents)
 	}
 
 }
+
+static void finish_nufw_loop(void *data, void *user_data)
+{
+	struct ev_loop *loop = (struct ev_loop *) data;
+	if (loop) {
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
+				  "Closing nufw loop (%p)",
+				  loop);
+		ev_unloop(loop, EVUNLOOP_ALL);
+	}
+}
+
+/* this is a global destructor for all event loop */
+static void loop_destructor_cb(struct ev_loop *loop, ev_async *w, int revents)
+{
+	struct tls_nufw_context_t *context = (struct tls_nufw_context_t *) w->data;
+	g_mutex_lock(context->mutex);
+	g_slist_foreach(context->clients, finish_nufw_loop, NULL);
+	g_mutex_unlock(context->mutex);
+	ev_unloop(loop, EVUNLOOP_ALL);
+}
+
 /**
  * NuFW TLS thread main loop:
  *   - Wait events (message/new connection) using select() with a timeout
@@ -588,6 +631,11 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex * mutex)
 		ev_io_start(context->loop, &nufw_watcher_unix);
 		nufw_watcher_unix.data = context;
 	}
+	/* register destructor cb */
+	ev_async_init(&context->loop_fini_signal, loop_destructor_cb);
+	ev_async_start(context->loop, &context->loop_fini_signal);
+	context->loop_fini_signal.data = context;
+
 
 	ev_loop(context->loop, 0);
 
@@ -599,6 +647,8 @@ void tls_nufw_main_loop(struct tls_nufw_context_t *context, GMutex * mutex)
 		unlink(unix_path);
 	}
 	/* FIXME clean and free context ? */
+	g_mutex_free(context->mutex);
+	g_free(context);
 }
 
 /**
@@ -794,6 +844,7 @@ void tls_nufw_start_servers(GSList *servers)
 			g_new0(struct tls_nufw_context_t, 1);
 		struct nuauth_thread_t *srv_thread =
 			g_new0(struct nuauth_thread_t, 1);
+		context->mutex = g_mutex_new();
 		if (!parse_addr_port(nufw_servers[i], nuauthconf->authreq_port, &context->addr, &context->port)) {
 			log_message(FATAL, DEBUG_AREA_MAIN | DEBUG_AREA_GW,
 			    "Address parsing error at %s:%d (\"%s\")", __FILE__,

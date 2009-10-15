@@ -253,8 +253,8 @@ void stop_threads(gboolean wait)
 	}
 
 	/* kill entries point */
-	thread_list_stop_ev(nuauthdatas->tls_auth_servers);
-	thread_list_stop(nuauthdatas->tls_nufw_servers);
+	thread_list_stop_user_ev(nuauthdatas->tls_auth_servers);
+	thread_list_stop_nufw_ev(nuauthdatas->tls_nufw_servers);
 	thread_stop(&nuauthdatas->pre_client_thread);
 	if (wait) {
 		thread_list_wait_end(nuauthdatas->tls_auth_servers);
