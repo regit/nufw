@@ -463,7 +463,7 @@ static int raw_poll(int fdno, int rdwr, int secs)
 	timer.data = &sock_watcher;
 	ev_timer_start(loop, &timer);
 
-	ev_loop(loop, EVLOOP_NONBLOCK);
+	ev_loop(loop, EVLOOP_ONESHOT);
 
 	ev_loop_destroy(loop);
 

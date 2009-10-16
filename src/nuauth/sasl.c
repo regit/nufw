@@ -413,7 +413,7 @@ nu_error_t get_proto_info(user_session_t * c_session)
 	timer.data = c_session;
 	ev_timer_start(loop, &timer);
 
-	ev_loop(loop, EVLOOP_NONBLOCK);
+	ev_loop(loop, EVLOOP_ONESHOT);
 
 	ev_loop_destroy(loop);
 
