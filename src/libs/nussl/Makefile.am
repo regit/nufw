@@ -36,4 +36,6 @@ endif
 
 libnussl_la_LDFLAGS = -version-info ${LIBNUSSL_AC}:${LIBNUSSL_REV}:${LIBNUSSL_ANC} -lev
 
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = libnussl.pc
 

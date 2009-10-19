@@ -1,0 +1,13 @@
+prefix=@prefix@
+
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: libnussl
+Description: NuFW SSL library
+Version: @PACKAGE_VERSION@
+Requires: 
+Libs: -L${libdir} -lnussl
+Libs.private: -ldl -lpthread
+Cflags: -I${includedir}

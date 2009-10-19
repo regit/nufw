@@ -367,6 +367,7 @@ AC_CONFIG_FILES([Makefile
         src/libs/nubase/Makefile
         src/libs/nuconfparser/Makefile
         src/libs/nussl/Makefile
+        src/libs/nussl/libnussl.pc
         src/nuauth/Makefile
         src/nuauth/modules/Makefile
         src/nuauth/modules/ldap/Makefile
@@ -393,6 +394,7 @@ AC_CONFIG_FILES([Makefile
         src/nuauth/modules/postauth_localuser/Makefile
         src/clients/Makefile
         src/clients/lib/Makefile
+        src/clients/lib/libnuclient.pc
         src/clients/lib/tests/Makefile
         src/clients/lib/plugins/Makefile
         src/clients/lib/plugins/luser/Makefile

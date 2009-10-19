@@ -25,4 +25,7 @@ LIBNUCLIENT_ANC=0
 
 libnuclient_la_LDFLAGS=-version-info ${LIBNUCLIENT_AC}:${LIBNUCLIENT_REV}:${LIBNUCLIENT_ANC}
 
+pkgconfigdir = $(libdir)/pkgconfig
+pkgconfig_DATA = libnuclient.pc
+
 endif

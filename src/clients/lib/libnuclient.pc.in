@@ -1,0 +1,13 @@
+prefix=@prefix@
+
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: libnuclient
+Description: NuFW client library
+Version: @PACKAGE_VERSION@
+Requires: libnussl
+Libs: -L${libdir} -lnuclient
+Libs.private: -ldl -lpthread
+Cflags: -I${includedir}
