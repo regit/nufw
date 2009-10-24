@@ -191,6 +191,9 @@ static nu_error_t delete_client_by_session(user_session_t * session)
 {
 	nu_error_t ret;
 
+	ev_io_stop(session->srv_context->loop,
+			&session->client_watcher);
+
 	ret = cleanup_session(session);
 
 	if (ret != NU_EXIT_OK) {
@@ -223,6 +226,8 @@ nu_error_t delete_client_by_socket_ext(int socket, int use_lock)
 		return NU_EXIT_ERROR;
 	}
 
+	ev_io_stop(session->srv_context->loop,
+			&session->client_watcher);
 
 	ret = cleanup_session(session);
 
