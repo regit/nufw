@@ -148,6 +148,22 @@ G_MODULE_EXPORT gint user_packet_logs(void *element, tcp_state_t state,
 	ulogd2_request_set_payload(req, (unsigned char*)connection->payload, connection->payload_len);
 
 	if (connection->log_prefix) {
+		gchar *place;
+		place = strchr(connection->log_prefix, '?');
+		if (place) {
+			switch (state) {
+				case TCP_STATE_OPEN:
+					*place = 'A';
+					break;
+				case TCP_STATE_DROP:
+					*place = 'D';
+					break;
+				case TCP_STATE_ESTABLISHED:
+				case TCP_STATE_CLOSE:
+				default:
+					break;
+			}
+		}
 		ulogd2_request_add_option(req, ULOGD2_OPT_PREFIX,
 				connection->log_prefix, strlen(connection->log_prefix));
 	} else {
