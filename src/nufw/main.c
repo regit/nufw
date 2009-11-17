@@ -526,7 +526,12 @@ int main(int argc, char *argv[])
 			}
 			break;
 		case 'V':
-			fprintf(stdout, "%s (version %s)\n", PACKAGE_NAME,
+			fprintf(stdout, "%s (version %s)"
+#if HAVE_NFQ_MARK_EXPTIME
+			" Supported features: EXPTIME"
+#endif
+			"\n"
+				, PACKAGE_NAME,
 				version);
 			return 1;
 		case 'D':
