@@ -432,6 +432,7 @@ gint print_connection_wid(gpointer data, gpointer userdata, gboolean pid, uint32
 	char * str_os = NULL;
 	char * str_app = NULL;
 	char * str_sig = NULL;
+	char * str_exptime = NULL;
 	char * message = NULL;
 
 	str_tracking = str_print_tracking_t(&(conn->tracking));
@@ -491,9 +492,15 @@ gint print_connection_wid(gpointer data, gpointer userdata, gboolean pid, uint32
 		str_sig = g_strdup("");
 	}
 
+	if (conn->expire) {
+		str_exptime = g_strdup_printf(", exptime=%d", conn->expire);
+	} else {
+		str_exptime = g_strdup("");
+	}
+
 	message = g_strconcat(prefix, ":", str_tracking, str_state, str_iface,
 			      str_id, str_mark, str_user, str_os, str_app,
-			      str_sig, NULL);
+			      str_sig, str_exptime, NULL);
 	g_free(str_tracking);
 	g_free(str_state);
 	g_free(str_iface);
@@ -503,6 +510,7 @@ gint print_connection_wid(gpointer data, gpointer userdata, gboolean pid, uint32
 	g_free(str_os);
 	g_free(str_app);
 	g_free(str_sig);
+	g_free(str_exptime);
 
 	g_message("%s", message);
 
