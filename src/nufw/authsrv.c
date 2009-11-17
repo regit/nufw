@@ -90,7 +90,7 @@ int auth_process_answer(char *dgram, int dgram_size)
 			if (ntohl(answer->expiration) != -1) {
 				IPQ_SET_VWMARK_EXPTIME(packet_id, NF_ACCEPT,
 					       answer->tcmark,
-					       answer->expiration);
+					       ntohl(answer->expiration));
 			} else {
 				IPQ_SET_VWMARK(packet_id, NF_ACCEPT,
 					       answer->tcmark);
