@@ -51,7 +51,7 @@ static time_t get_end_of_period_item_for_time(struct period_item
 {
 	time_t endtime = -1;
 	if (perioditem->duration > 0) {
-		endtime = time(NULL) + perioditem->duration;
+		endtime = pckt_time + perioditem->duration;
 		return endtime;
 	}
 	if ((perioditem->start_date != -1) || (perioditem->end_date != -1)) {
