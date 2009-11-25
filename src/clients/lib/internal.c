@@ -83,7 +83,7 @@ static int samp_send(nuauth_session_t* session, const char *buffer,
 		return 0;
 	}
 
-	result = sasl_encode64(buffer, length, buf + 3, alloclen, &len);
+	result = sasl_encode64(buffer, length, buf + 3, alloclen - 3, &len);
 	if (result != SASL_OK) {
 		SET_ERROR(err, SASL_ERROR, result);
 		free(buf);
