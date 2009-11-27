@@ -20,6 +20,8 @@
 
 #include <auth_srv.h>
 
+#define PORTAL_STRING "Java portal"
+
 /** \ingroup Nuauth
  * \defgroup NuauthHello Hello Authentication
  * @{
@@ -146,6 +148,7 @@ void localid_insert_message(connection_t * pckt,
 				element->mark = pckt->mark;
 				element->username = pckt->username;
 				element->user_groups = pckt->user_groups;
+				element->app_name = g_strdup(PORTAL_STRING);
 				element->auth_quality = AUTHQ_HELLO;
 				/* do asynchronous call to acl check */
 				thread_pool_push(nuauthdatas->
