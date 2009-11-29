@@ -266,7 +266,7 @@ void nussl_set_hostinfo(nussl_session * sess, const char *hostname,
 /* Write to session */
 /* Return NUSSL_OK on success
  * Returns a NUSSL_SOCK_* on failure */
-int nussl_write(nussl_session * session, char *buffer, size_t count);
+int nussl_write(nussl_session * session, const char *buffer, size_t count);
 
 /* Read from session */
 /* Return the number of bytes read on success

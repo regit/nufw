@@ -684,7 +684,7 @@ void nussl_unhook_destroy_session(nussl_session *sess,
 }
 */
 
-int nussl_write(nussl_session * session, char *buffer, size_t count)
+int nussl_write(nussl_session * session, const char *buffer, size_t count)
 {
 	int ret;
 

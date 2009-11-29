@@ -83,7 +83,7 @@ extern "C" {
 	const char *nussl_get_error(nussl_session * sess);
 
 /* Write to session */
-	int nussl_write(nussl_session * sess, char *buffer, size_t count);
+	int nussl_write(nussl_session * sess, const char *buffer, size_t count);
 
 /* Read from session */
 /* returns the number of octets read on success */
