@@ -122,6 +122,9 @@ static void tls_sasl_connect_ok(user_session_t * c_session, struct client_connec
 
 	c_session->connect_timestamp = time(NULL);
 	c_session->srv_context = client->srv_context;
+	/* init event loop stuff */
+	ev_io_init(&c_session->client_watcher, client_activity_cb, c_session->socket, EV_READ);
+	c_session->client_watcher.data = c_session->srv_context;
 	/* send new valid session to user session logging system */
 	log_user_session(c_session, SESSION_OPEN);
 	activate_client_by_socket(c_session->socket);

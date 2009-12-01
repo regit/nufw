@@ -231,4 +231,6 @@ void force_refresh_crl_file(void);
 
 int tls_user_do_handshake(struct client_connection *current_client_conn, struct tls_user_context_t *context);
 
+void client_activity_cb(struct ev_loop *loop, ev_io *w, int revents);
+
 #endif

@@ -526,7 +526,7 @@ static void client_accept_cb(struct ev_loop *loop, ev_io *w, int revents)
 	}
 }
 
-static void client_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
+void client_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 {
 	struct tls_user_context_t *context = (struct tls_user_context_t *) w->data;
 	/* get_client_datas_by_socket acquire client datas lock if session is found */
@@ -615,8 +615,6 @@ static void __client_injector_cb(struct ev_loop *loop, struct tls_user_context_t
 			continue;
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER, "reinjecting %d (%d)",
 				  session->socket, i);
-		ev_io_init(&session->client_watcher, client_activity_cb, session->socket, EV_READ);
-		session->client_watcher.data = session->srv_context;
 		ev_io_start(session->srv_context->loop, &session->client_watcher);
 		session->activated = TRUE;
 #if DEBUG_ENABLE
