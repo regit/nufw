@@ -18,9 +18,11 @@
 
 from socket import socket, AF_UNIX, error
 from command_dec import PROTO_VERSION, decode, Answer
+from time import mktime, gmtime, sleep
 import re
 
 DISCONNECT_REGEX = re.compile("^disconnect +(.*)$")
+TIMEOUT = 30
 
 class NuauthError(Exception):
     pass
@@ -31,10 +33,11 @@ class NuauthSocket:
         self.socket.connect(filename)
         self.socket.setblocking(0)
 
-    def recv(self):
+    def recv(self, timeout=TIMEOUT):
         SIZE = 4096
         alldata = []
         data = ""
+        start_time = mktime(gmtime())
         while len(data) == SIZE or len(alldata) == 0:
             try:
                 data = self.socket.recv(SIZE)
@@ -46,9 +49,13 @@ class NuauthSocket:
                     err = "lost connection"
                 else:
                     return (str(err), None)
-            if not data:
+
+            if not data and timeout and (mktime(gmtime()) - start_time) > timeout:
                 break
-            alldata.append(data)
+            if data:
+                alldata.append(data)
+            else:
+                sleep(0.1)
 
         data = "".join(alldata)
 
