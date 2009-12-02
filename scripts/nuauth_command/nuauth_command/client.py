@@ -29,37 +29,31 @@ class NuauthSocket:
     def __init__(self, filename):
         self.socket = socket(AF_UNIX)
         self.socket.connect(filename)
+        self.socket.setblocking(0)
 
     def recv(self):
-        size = 4096
-        try:
-            data = self.socket.recv(size)
-        except error, err:
-            code = err[0]
-            if code == 104:
-                err = "lost connection"
-            else:
-                err = str(err)
-            return (err, None)
+        SIZE = 4096
+        alldata = []
+        data = ""
+        while len(data) == SIZE or len(alldata) == 0:
+            try:
+                data = self.socket.recv(SIZE)
+            except error, err:
+                code = err[0]
+                if code == 11:
+                    data = ''
+                elif code == 104:
+                    err = "lost connection"
+                else:
+                    return (str(err), None)
+            if not data:
+                break
+            alldata.append(data)
+
+        data = "".join(alldata)
+
         if data == '':
             return ("no data", None)
-        if len(data) == size:
-            self.socket.setblocking(0)
-            alldata = [data]
-            while len(data) == size:
-                try:
-                    data = self.socket.recv(size)
-                except error, err:
-                    code = err[0]
-                    if code == 11:
-                        data = ''
-                    else:
-                        return (str(err), None)
-                if not data:
-                    break
-                alldata.append(data)
-            self.socket.setblocking(1)
-            data = "".join(alldata)
         return (None, data)
 
     def send(self, data):
