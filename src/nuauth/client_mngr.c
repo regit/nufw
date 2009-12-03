@@ -103,13 +103,23 @@ void init_client_struct()
 					  (GDestroyNotify) g_free);
 }
 
+void lock_client_datas()
+{
+	g_mutex_lock(client_mutex);
+}
+
+void unlock_client_datas()
+{
+	g_mutex_unlock(client_mutex);
+}
+
 void add_client(int socket, gpointer datas)
 {
 	user_session_t *c_session = (user_session_t *) datas;
 	ip_sessions_t *ipsessions;
 	gpointer key;
 
-	g_mutex_lock(client_mutex);
+	lock_client_datas();
 
 	g_hash_table_insert(client_conn_hash, GINT_TO_POINTER(socket),
 			    datas);
@@ -145,7 +155,7 @@ void add_client(int socket, gpointer datas)
 				buffer);
 	}
 	ipsessions->sessions = g_slist_prepend(ipsessions->sessions, c_session);
-	g_mutex_unlock(client_mutex);
+	unlock_client_datas();
 }
 
 static ip_sessions_t *delete_session_from_hash(ip_sessions_t *ipsessions,
@@ -167,7 +177,6 @@ static ip_sessions_t *delete_session_from_hash(ip_sessions_t *ipsessions,
 	}
 	return ipsessions;
 }
-
 
 static nu_error_t cleanup_session(user_session_t * session)
 {
@@ -211,7 +220,7 @@ nu_error_t delete_client_by_socket_ext(int socket, int use_lock)
 
 
 	if (use_lock) {
-		g_mutex_lock(client_mutex);
+		lock_client_datas();
 	}
 
 	session =
@@ -222,7 +231,7 @@ nu_error_t delete_client_by_socket_ext(int socket, int use_lock)
 		log_message(WARNING, DEBUG_AREA_USER,
 				"Could not find user session in hash");
 		if (use_lock)
-			g_mutex_unlock(client_mutex);
+			unlock_client_datas();
 		return NU_EXIT_ERROR;
 	}
 
@@ -233,7 +242,7 @@ nu_error_t delete_client_by_socket_ext(int socket, int use_lock)
 
 	if (ret != NU_EXIT_OK) {
 		if (use_lock)
-			g_mutex_unlock(client_mutex);
+			unlock_client_datas();
 		return ret;
 	}
 
@@ -251,7 +260,7 @@ nu_error_t delete_client_by_socket_ext(int socket, int use_lock)
 	g_hash_table_remove(client_conn_hash, key);
 
 	if (use_lock) {
-		g_mutex_unlock(client_mutex);
+		unlock_client_datas();
 	}
 
 	return NU_EXIT_OK;
@@ -272,11 +281,11 @@ nu_error_t delete_rw_locked_client(user_session_t *c_session)
 	GMutex *session_rw;
 	int ret = NU_EXIT_OK;
 
-	g_mutex_lock(client_mutex);
+	lock_client_datas();
 	session_rw = c_session->rw_lock;
 	c_session->rw_lock = NULL;
 	ret = delete_client_by_socket_ext(c_session->socket, 0);
-	g_mutex_unlock(client_mutex);
+	unlock_client_datas();
 	g_mutex_unlock(session_rw);
 
 	return ret;
@@ -286,23 +295,13 @@ user_session_t *get_client_datas_by_socket(int socket)
 {
 	void *ret;
 
-	g_mutex_lock(client_mutex);
+	lock_client_datas();
 	ret =
 	    g_hash_table_lookup(client_conn_hash, GINT_TO_POINTER(socket));
 	if (! ret) {
-		g_mutex_unlock(client_mutex);
+		unlock_client_datas();
 	}
 	return ret;
-}
-
-void lock_client_datas()
-{
-	g_mutex_lock(client_mutex);
-}
-
-void unlock_client_datas()
-{
-	g_mutex_unlock(client_mutex);
 }
 
 GSList *get_client_sockets_by_ip(struct in6_addr * ip)
@@ -310,11 +309,11 @@ GSList *get_client_sockets_by_ip(struct in6_addr * ip)
 	ip_sessions_t *session;
 	GSList *ret = NULL;
 
-	g_mutex_lock(client_mutex);
+	lock_client_datas();
 	session = g_hash_table_lookup(client_ip_hash, ip);
 	if (session)
 		ret = session->sessions;
-	g_mutex_unlock(client_mutex);
+	unlock_client_datas();
 	return ret;
 }
 
@@ -337,11 +336,11 @@ static gboolean look_for_username_callback(gpointer key,
 user_session_t *look_for_username(const gchar * username)
 {
 	void *ret;
-	g_mutex_lock(client_mutex);
+	lock_client_datas();
 	ret =
 	    g_hash_table_find(client_conn_hash, look_for_username_callback,
 			      (void *) username);
-	g_mutex_unlock(client_mutex);
+	unlock_client_datas();
 	return ret;
 }
 
@@ -369,10 +368,10 @@ gboolean test_username_count_vs_max(const gchar * username, int maxcount)
 	count_user->max = maxcount;
 	count_user->counter = 0;
 	void *usersession;
-	g_mutex_lock(client_mutex);
+	lock_client_datas();
 	usersession =
 	    g_hash_table_find(client_conn_hash, (GHRFunc)count_username_callback, count_user);
-	g_mutex_unlock(client_mutex);
+	unlock_client_datas();
 	g_free(count_user);
 	if (usersession) {
 		return FALSE;
@@ -391,7 +390,7 @@ gboolean check_property_clients(struct in6_addr *addr, user_session_check_t *sch
 	ip_sessions_t *ipsessions = NULL;
 	GSList *ipsockets = NULL;
 
-	g_mutex_lock(client_mutex);
+	lock_client_datas();
 	ipsessions = g_hash_table_lookup(client_ip_hash, addr);
 	if (ipsessions) {
 		for (ipsockets = ipsessions->sessions; ipsockets; ipsockets = ipsockets->next) {
@@ -399,18 +398,18 @@ gboolean check_property_clients(struct in6_addr *addr, user_session_check_t *sch
 			cst = scheck(session, data);
 			if (mode) {
 				if (cst == TRUE) {
-					g_mutex_unlock(client_mutex);
+					unlock_client_datas();
 					return TRUE;
 				}
 			}
 		}
-		g_mutex_unlock(client_mutex);
+		unlock_client_datas();
 		return cst;
 	} else {
-		g_mutex_unlock(client_mutex);
+		unlock_client_datas();
 		return FALSE;
 	}
-	g_mutex_unlock(client_mutex);
+	unlock_client_datas();
 	return FALSE;
 }
 
@@ -437,7 +436,7 @@ char warn_clients(struct msg_addr_set *global_msg,
 	}
 #endif
 
-	g_mutex_lock(client_mutex);
+	lock_client_datas();
 	ipsessions = g_hash_table_lookup(client_ip_hash, &global_msg->addr);
 	if (ipsessions) {
 		global_msg->found = TRUE;
@@ -446,7 +445,7 @@ char warn_clients(struct msg_addr_set *global_msg,
 			gettimeofday(&timestamp, NULL);
 			timeval_substract(&interval, &timestamp, &(ipsessions->last_message));
 			if ((interval.tv_sec == 0) && ((unsigned)interval.tv_usec < nuauthconf->push_delay)) {
-				g_mutex_unlock(client_mutex);
+				unlock_client_datas();
 				return 1;
 			} else {
 				ipsessions->last_message.tv_sec = timestamp.tv_sec;
@@ -479,11 +478,11 @@ char warn_clients(struct msg_addr_set *global_msg,
 			}
 		}
 
-		g_mutex_unlock(client_mutex);
+		unlock_client_datas();
 		return 1;
 	} else {
 		global_msg->found = FALSE;
-		g_mutex_unlock(client_mutex);
+		unlock_client_datas();
 		return 0;
 	}
 }
@@ -527,9 +526,9 @@ gboolean is_expired_client(gpointer key,
 
 void clean_client_session_bycallback(GHRFunc cb, gpointer data)
 {
-	g_mutex_lock(client_mutex);
+	lock_client_datas();
 	g_hash_table_foreach_remove(client_conn_hash, cb, data);
-	g_mutex_unlock(client_mutex);
+	unlock_client_datas();
 }
 
 void kill_expired_clients_session()
@@ -543,9 +542,9 @@ void kill_expired_clients_session()
  */
 void foreach_session(GHFunc callback, void *data)
 {
-	g_mutex_lock(client_mutex);
+	lock_client_datas();
 	g_hash_table_foreach(client_conn_hash, callback, data);
-	g_mutex_unlock(client_mutex);
+	unlock_client_datas();
 }
 
 gboolean kill_all_clients_cb(gpointer sock, user_session_t* session, gpointer data)
@@ -567,9 +566,9 @@ gboolean kill_all_clients_cb(gpointer sock, user_session_t* session, gpointer da
 nu_error_t kill_all_clients()
 {
 	int count;
-	g_mutex_lock(client_mutex);
+	lock_client_datas();
 	count = g_hash_table_foreach_remove(client_conn_hash, (GHRFunc)kill_all_clients_cb, NULL);
-	g_mutex_unlock(client_mutex);
+	unlock_client_datas();
 	if (count)
 		return NU_EXIT_OK;
 	else
@@ -578,17 +577,17 @@ nu_error_t kill_all_clients()
 
 nu_error_t activate_client_by_socket(int socket)
 {
-	g_mutex_lock(client_mutex);
+	lock_client_datas();
 	user_session_t *session =
 	    (user_session_t
 	     *) (g_hash_table_lookup(client_conn_hash,
 				     GINT_TO_POINTER(socket)));
 	if (session) {
 		session->activated = TRUE;
-		g_mutex_unlock(client_mutex);
+		unlock_client_datas();
 		return NU_EXIT_OK;
 	}
-	g_mutex_unlock(client_mutex);
+	unlock_client_datas();
 	return NU_EXIT_ERROR;
 }
 
