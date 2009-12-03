@@ -287,6 +287,7 @@ nu_error_t delete_rw_locked_client(user_session_t *c_session)
 	ret = delete_client_by_socket_ext(c_session->socket, 0);
 	unlock_client_datas();
 	g_mutex_unlock(session_rw);
+	g_mutex_free(session_rw);
 
 	return ret;
 }
