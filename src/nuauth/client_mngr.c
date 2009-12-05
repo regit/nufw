@@ -276,16 +276,20 @@ nu_error_t delete_locked_client_by_socket(int socket)
 	return delete_client_by_socket_ext(socket, 0);
 }
 
+
+/** delete a session where a rw lock has been put 
+ *
+ * This function has to be called when owning client
+ * lock
+ * */
 nu_error_t delete_rw_locked_client(user_session_t *c_session)
 {
 	GMutex *session_rw;
 	int ret = NU_EXIT_OK;
 
-	lock_client_datas();
 	session_rw = c_session->rw_lock;
 	c_session->rw_lock = NULL;
 	ret = delete_client_by_socket_ext(c_session->socket, 0);
-	unlock_client_datas();
 	g_mutex_unlock(session_rw);
 	g_mutex_free(session_rw);
 

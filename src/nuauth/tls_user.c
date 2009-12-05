@@ -466,7 +466,9 @@ void user_worker(gpointer psession, gpointer data)
 						debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 								"problem reading message from \"%s\"",
 								usersession->user_name);
+						lock_client_datas();
 						delete_rw_locked_client(usersession);
+						unlock_client_datas();
 						return;
 					case NU_EXIT_CONTINUE:
 						/* send socket back to user select no message are waiting */
@@ -492,7 +494,9 @@ void user_worker(gpointer psession, gpointer data)
 					debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 							"client disconnect");
 					/* clean client structure, session is outside event loop */
+					lock_client_datas();
 					delete_rw_locked_client(usersession);
+					unlock_client_datas();
 					return;
 				}
 			}
@@ -569,8 +573,6 @@ void client_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 		    revents);
 	/* disconnecting session to be sure */
 	if (g_mutex_trylock(c_session->rw_lock)) {
-		ev_io_stop(c_session->srv_context->loop,
-				&c_session->client_watcher);
 		delete_rw_locked_client(c_session);
 	} else {
 		c_session->pending_disconnect = TRUE;
