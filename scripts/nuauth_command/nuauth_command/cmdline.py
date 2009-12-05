@@ -4,7 +4,7 @@ import re
 from command_dec import Answer
 
 COMMANDS_COMPLETION = ("version", "confdump", "users", "refresh cache",
-    "disconnect ", "uptime", "reload", "help", "quit",
+    "disconnect", "uptime", "reload", "help", "quit",
     "display debug_level", "display debug_areas", "debug_level",
     "debug_areas", "firewalls", "packets count", "reload periods", "user count")
 
