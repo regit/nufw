@@ -85,6 +85,7 @@ typedef struct {
 	time_t connect_timestamp;
 	time_t last_request;
 	gboolean activated;	/*!< \brief TRUE if user server listen for event for this session */
+	gboolean pending_disconnect; /*!< \brief TRUE if session must be killed during loop reinjection */
 } user_session_t;
 
 char *capa_array[32];

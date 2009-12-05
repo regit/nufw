@@ -613,6 +613,14 @@ static void __client_injector_cb(struct ev_loop *loop, struct tls_user_context_t
 	while ((session = (user_session_t *) g_async_queue_try_pop(mx_queue))) {
 		if (session == NULL)
 			continue;
+		if (session->pending_disconnect) {
+			debug_log_message(VERBOSE_DEBUG,
+					  DEBUG_AREA_USER,
+					  "disconnecting %d (%d)",
+					  session->socket, i);
+			delete_client_by_socket(session->socket);
+			continue;
+		}
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER, "reinjecting %d (%d)",
 				  session->socket, i);
 		ev_io_start(session->srv_context->loop, &session->client_watcher);
@@ -646,13 +654,28 @@ static void client_destructor_cb(struct ev_loop *loop, ev_async *w, int revents)
 {
 	struct tls_user_context_t *context = (struct tls_user_context_t *) w->data;
 	disconnect_user_msg_t *disconnect_msg;
+	user_session_t *session;
 
 	disconnect_msg = g_async_queue_pop(context->cmd_queue);
 
 	if (disconnect_msg->socket == -1) {
 		disconnect_msg->result = kill_all_clients();
 	} else {
-		disconnect_msg->result = delete_client_by_socket(disconnect_msg->socket);
+		session = get_client_datas_by_socket(disconnect_msg->socket);
+		unlock_client_datas();
+		if (session == NULL) {
+			disconnect_msg->result = NU_EXIT_ERROR;
+			g_mutex_unlock(disconnect_msg->mutex);
+			return;
+		}
+		if (g_mutex_trylock(session->rw_lock)) {
+			ev_io_stop(session->srv_context->loop,
+					&session->client_watcher);
+			disconnect_msg->result = delete_rw_locked_client(session);
+		} else {
+			session->pending_disconnect = TRUE;
+			disconnect_msg->result = NU_EXIT_OK;
+		}
 	}
 	g_mutex_unlock(disconnect_msg->mutex);
 }
