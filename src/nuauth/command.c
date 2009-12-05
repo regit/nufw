@@ -317,6 +317,7 @@ int command_do_disconnect(int sock)
  **/
 int command_disconnect_all(command_client_t *this, encoder_t *encoder)
 {
+	log_message(INFO, DEBUG_AREA_USER, "Disconnection of all users asked");
 	if (command_do_disconnect(-1)) {
 		encoder_add_string(encoder, "users disconnected");
 		return 1;
