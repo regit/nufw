@@ -560,8 +560,10 @@ void foreach_session(GHFunc callback, void *data)
 
 gboolean kill_all_clients_cb(gpointer sock, user_session_t* session, gpointer data)
 {
-	if (session->activated == FALSE)
+	if (session->activated == FALSE) {
+		session->pending_disconnect = TRUE;
 		return FALSE;
+	}
 
 	if (delete_client_by_session(session) == NU_EXIT_OK)
 		return TRUE;
