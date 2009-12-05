@@ -546,10 +546,7 @@ void client_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 		c_session->activated = FALSE;
 	}
 
-	if (g_mutex_trylock(c_session->rw_lock)) {
-		ev_io_stop(context->loop, w);
-		g_mutex_unlock(c_session->rw_lock);
-	}
+	ev_io_stop(context->loop, w);
 
 	if (revents & EV_ERROR) {
 		log_message(INFO, DEBUG_AREA_USER,
@@ -564,6 +561,19 @@ void client_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 				c_session->user_name);
 		g_async_queue_push(c_session->workunits_queue, GINT_TO_POINTER(0x1));
 		thread_pool_push(nuauthdatas->user_workers, c_session, NULL);
+		unlock_client_datas();
+		return;
+	}
+	/* we should not reach this point */
+	log_message(WARNING, DEBUG_AREA_USER, "Surprising event from libev: %d",
+		    revents);
+	/* disconnecting session to be sure */
+	if (g_mutex_trylock(c_session->rw_lock)) {
+		ev_io_stop(c_session->srv_context->loop,
+				&c_session->client_watcher);
+		delete_rw_locked_client(c_session);
+	} else {
+		c_session->pending_disconnect = TRUE;
 	}
 	unlock_client_datas();
 }
@@ -662,10 +672,10 @@ static void client_destructor_cb(struct ev_loop *loop, ev_async *w, int revents)
 		disconnect_msg->result = kill_all_clients();
 	} else {
 		session = get_client_datas_by_socket(disconnect_msg->socket);
-		unlock_client_datas();
 		if (session == NULL) {
 			disconnect_msg->result = NU_EXIT_ERROR;
 			g_mutex_unlock(disconnect_msg->mutex);
+			unlock_client_datas();
 			return;
 		}
 		if (g_mutex_trylock(session->rw_lock)) {
@@ -676,6 +686,7 @@ static void client_destructor_cb(struct ev_loop *loop, ev_async *w, int revents)
 			session->pending_disconnect = TRUE;
 			disconnect_msg->result = NU_EXIT_OK;
 		}
+		unlock_client_datas();
 	}
 	g_mutex_unlock(disconnect_msg->mutex);
 }
