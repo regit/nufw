@@ -583,11 +583,15 @@ void client_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 static void __client_writer_cb(struct ev_loop *loop, struct tls_user_context_t *context, int revents)
 {
 	user_session_t *session;
+	int fd;
 #if DEBUG_ENABLE
 	int i = 0;
 #endif
-	lock_client_datas();
-	while ((session = g_async_queue_try_pop(writer_queue))) {
+	while ((fd = GPOINTER_TO_INT(g_async_queue_try_pop(writer_queue)))) {
+		session = get_client_datas_by_socket(fd);
+		if (session == NULL) {
+			continue;
+		}
 		if (g_mutex_trylock(session->rw_lock)) {
 			ev_io_stop(session->srv_context->loop,
 					&session->client_watcher);
@@ -600,8 +604,8 @@ static void __client_writer_cb(struct ev_loop *loop, struct tls_user_context_t *
 #if DEBUG_ENABLE
 		i++;
 #endif
+		unlock_client_datas();
 	}
-	unlock_client_datas();
 }
 
 static void client_writer_cb(struct ev_loop *loop, ev_async *w, int revents)

@@ -472,7 +472,8 @@ char warn_clients(struct msg_addr_set *global_msg,
 				g_async_queue_push(session->workunits_queue, gmsg);
 				if (session->activated) {
 					session->activated = FALSE;
-					g_async_queue_push(writer_queue, session);
+					g_async_queue_push(writer_queue,
+							   GINT_TO_POINTER(session->socket));
 					ev_async_send(session->srv_context->loop,
 							&session->srv_context->client_writer_signal);
 				}
