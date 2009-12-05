@@ -512,6 +512,7 @@ void close_clients(int signal)
 gboolean is_expired_client(gpointer key,
 			   gpointer value, gpointer user_data)
 {
+	gboolean ret = FALSE;
 	if (! value) {
 		return FALSE;
 	}
@@ -519,10 +520,14 @@ gboolean is_expired_client(gpointer key,
 		return FALSE;
 	}
 	if (((user_session_t *) value)->expire < *((time_t *) user_data)) {
-		return TRUE;
-	} else {
-		return FALSE;
+		if (g_mutex_trylock(((user_session_t *) value)->rw_lock)) {
+			ret = TRUE;
+			g_mutex_unlock(((user_session_t *) value)->rw_lock);
+		} else {
+			((user_session_t *) value)->pending_disconnect = TRUE;
+		}
 	}
+	return ret;
 }
 
 void clean_client_session_bycallback(GHRFunc cb, gpointer data)
