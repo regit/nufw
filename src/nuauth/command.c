@@ -288,8 +288,12 @@ int command_do_disconnect(int sock)
 		msg->mutex = g_mutex_new();
 
 		g_async_queue_push(this->cmd_queue, msg);
-		ev_async_send(this->loop,
-			      &this->client_destructor_signal);
+		if (this->loop) {
+			ev_async_send(this->loop,
+				      &this->client_destructor_signal);
+		} else {
+			return 0;
+		}
 		/* wait until clients are disconnected */
 		g_mutex_lock(msg->mutex);
 		g_mutex_lock(msg->mutex);
