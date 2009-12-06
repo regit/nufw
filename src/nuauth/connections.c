@@ -493,7 +493,7 @@ gint print_connection_wid(gpointer data, gpointer userdata, gboolean pid, uint32
 	}
 
 	if (conn->expire) {
-		str_exptime = g_strdup_printf(", exptime=%d", conn->expire);
+		str_exptime = g_strdup_printf(", exptime=%d", (int)conn->expire);
 	} else {
 		str_exptime = g_strdup("");
 	}
