@@ -446,10 +446,11 @@ void user_worker(gpointer psession, gpointer data)
 	user_session_t *usersession = (user_session_t *) psession;
 	struct msg_addr_set *gmsg;
 	int ret;
+	gboolean sess_ok = TRUE;
 
 
 	if (g_mutex_trylock(usersession->rw_lock)) {
-		while ((gmsg = g_async_queue_try_pop(usersession->workunits_queue))) {
+		while (sess_ok && (gmsg = g_async_queue_try_pop(usersession->workunits_queue))) {
 			if (gmsg == GINT_TO_POINTER(0x1)) {
 				debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 						"reading message from \"%s\"",
@@ -462,10 +463,9 @@ void user_worker(gpointer psession, gpointer data)
 						debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 								"problem reading message from \"%s\"",
 								usersession->user_name);
-						lock_client_datas();
-						delete_rw_locked_client(usersession);
-						unlock_client_datas();
-						return;
+						usersession->pending_disconnect = TRUE;
+						sess_ok = FALSE;
+						break;
 					case NU_EXIT_CONTINUE:
 						/* send socket back to user select no message are waiting */
 						g_async_queue_push(mx_queue, usersession);
@@ -489,11 +489,9 @@ void user_worker(gpointer psession, gpointer data)
 				if (ret < 0) {
 					debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 							"client disconnect");
-					/* clean client structure, session is outside event loop */
-					lock_client_datas();
-					delete_rw_locked_client(usersession);
-					unlock_client_datas();
-					return;
+					usersession->pending_disconnect = TRUE;
+					sess_ok = FALSE;
+					break;
 				}
 			}
 		}
