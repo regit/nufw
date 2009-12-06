@@ -77,6 +77,10 @@ void clean_session(user_session_t * c_session)
 		g_free(c_session->release);
 	if (c_session->version)
 		g_free(c_session->version);
+	if (c_session->client_name)
+		g_free(c_session->client_name);
+	if (c_session->client_version)
+		g_free(c_session->client_version);
 
 	g_mutex_free(c_session->tls_lock);
 	if (c_session->rw_lock) {
