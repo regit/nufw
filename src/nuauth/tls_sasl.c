@@ -712,7 +712,6 @@ void tls_sasl_connect(gpointer userdata, gpointer data)
 	c_session = g_new0(user_session_t, 1);
 	c_session->nussl = client->nussl;
 	c_session->socket = socket_fd;
-	c_session->tls_lock = g_mutex_new();
 	c_session->rw_lock = g_mutex_new();
 	c_session->addr = client->addr;
 	(void)getsockname_ipv6(socket_fd, &c_session->server_addr);

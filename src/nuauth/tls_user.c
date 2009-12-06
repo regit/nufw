@@ -170,11 +170,9 @@ nu_error_t treat_user_request(user_session_t * c_session,
 		g_free(data);
 		return NU_EXIT_ERROR;
 	}
-	g_mutex_lock(c_session->tls_lock);
 	data->buffer_len = nussl_read(c_session->nussl, data->buffer,
 			       CLASSIC_NUFW_PACKET_SIZE);
 
-	g_mutex_unlock(c_session->tls_lock);
 	if (data->buffer_len < (int) sizeof(struct nu_header)) {
 #ifdef DEBUG_ENABLE
 		if (data->buffer_len <= 0)
@@ -212,12 +210,10 @@ nu_error_t treat_user_request(user_session_t * c_session,
 		data->buffer = g_realloc(data->buffer, header_length);
 		header = (struct nu_header *) data->buffer;
 
-		g_mutex_lock(c_session->tls_lock);
 		tmp_len = nussl_read(c_session->nussl,
 				       data->buffer +
 				       CLASSIC_NUFW_PACKET_SIZE,
 				       header_length - data->buffer_len);
-		g_mutex_unlock(c_session->tls_lock);
 		if (tmp_len <= 0) {
 			free_buffer_read(data);
 			return NU_EXIT_ERROR;
