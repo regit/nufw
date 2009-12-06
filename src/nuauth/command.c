@@ -277,6 +277,7 @@ int command_do_disconnect(int sock)
 {
 	int ok = 1;
 	GSList *thread_p;
+	GTimeVal timeval;
 
 	/* iter on each server thread */
 	for (thread_p=nuauthdatas->tls_auth_servers; thread_p; thread_p = thread_p->next) {
@@ -285,20 +286,34 @@ int command_do_disconnect(int sock)
 		/* send query to disconnect all users */
 		disconnect_user_msg_t *msg = g_new(disconnect_user_msg_t, 1);
 		msg->socket = sock;
+		msg->cond = g_cond_new();
 		msg->mutex = g_mutex_new();
 
+		g_mutex_lock(msg->mutex);
 		g_async_queue_push(this->cmd_queue, msg);
 		if (this->loop) {
 			ev_async_send(this->loop,
 				      &this->client_destructor_signal);
 		} else {
+			g_mutex_unlock(msg->mutex);
+			g_mutex_free(msg->mutex);
+			g_cond_free(msg->cond);
+			g_free(msg);
 			return 0;
 		}
 		/* wait until clients are disconnected */
-		g_mutex_lock(msg->mutex);
-		g_mutex_lock(msg->mutex);
+		g_get_current_time(&timeval);
+		timeval.tv_sec++;
+		if (! g_cond_timed_wait(msg->cond, msg->mutex, &timeval)) {
+			g_mutex_unlock(msg->mutex);
+			g_mutex_free(msg->mutex);
+			g_cond_free(msg->cond);
+			g_free(msg);
+			return 0;
+		}
 		g_mutex_unlock(msg->mutex);
 		g_mutex_free(msg->mutex);
+		g_cond_free(msg->cond);
 
 		/* write answer */
 		if (msg->result == NU_EXIT_OK) {
@@ -306,6 +321,7 @@ int command_do_disconnect(int sock)
 			g_free(msg);
 			break;
 		} else {
+			g_free(msg);
 			ok = 0;
 		}
 		/* return in case we've just send a global disconnect message */

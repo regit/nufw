@@ -673,7 +673,9 @@ static void client_destructor_cb(struct ev_loop *loop, ev_async *w, int revents)
 	} else {
 		session = get_client_datas_by_socket(disconnect_msg->socket);
 		if (session == NULL) {
+			g_mutex_lock(disconnect_msg->mutex);
 			disconnect_msg->result = NU_EXIT_ERROR;
+			g_cond_signal(disconnect_msg->cond);
 			g_mutex_unlock(disconnect_msg->mutex);
 			unlock_client_datas();
 			return;
@@ -688,6 +690,8 @@ static void client_destructor_cb(struct ev_loop *loop, ev_async *w, int revents)
 		}
 		unlock_client_datas();
 	}
+	g_mutex_lock(disconnect_msg->mutex);
+	g_cond_signal(disconnect_msg->cond);
 	g_mutex_unlock(disconnect_msg->mutex);
 }
 

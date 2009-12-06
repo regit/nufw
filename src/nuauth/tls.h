@@ -214,6 +214,7 @@ struct tls_user_context_t {
 typedef struct {
 	int socket;
 	GMutex *mutex;
+	GCond *cond;
 	int result;
 } disconnect_user_msg_t;
 
