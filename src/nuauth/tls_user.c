@@ -628,7 +628,7 @@ static void __client_injector_cb(struct ev_loop *loop, struct tls_user_context_t
 					  DEBUG_AREA_USER,
 					  "disconnecting %d (%d)",
 					  session->socket, i);
-			delete_client_by_socket(session->socket);
+			delete_locked_client_by_socket(session->socket);
 			continue;
 		}
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER, "reinjecting %d (%d)",
