@@ -150,6 +150,7 @@ void localid_insert_message(connection_t * pckt,
 				element->user_groups = pckt->user_groups;
 				element->app_name = g_strdup(PORTAL_STRING);
 				element->auth_quality = AUTHQ_HELLO;
+				element->expire = -1;
 				/* do asynchronous call to acl check */
 				thread_pool_push(nuauthdatas->
 						   acl_checkers, element,
