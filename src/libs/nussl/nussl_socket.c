@@ -1887,9 +1887,10 @@ int nussl_sock_close(nussl_socket * sock)
 	}
 #elif defined(HAVE_GNUTLS)
 	if (sock->ssl) {
+		int try = 0;
 		do {
 			ret = gnutls_bye(sock->ssl, GNUTLS_SHUT_RDWR);
-		} while (ret < 0
+		} while (ret < 0 && try++ < 2
 			 && (ret == GNUTLS_E_INTERRUPTED
 			     || ret == GNUTLS_E_AGAIN));
 		gnutls_deinit(sock->ssl);
