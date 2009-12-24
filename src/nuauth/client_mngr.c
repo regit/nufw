@@ -535,6 +535,16 @@ gboolean is_expired_client(gpointer key,
 			((user_session_t *) value)->pending_disconnect = TRUE;
 		}
 	}
+	/* If no USER_HELLO is received for some time, client deserve death */
+	if (*((time_t *) user_data) - ((user_session_t *) value)->last_request
+			> NU_USER_HELLO_INTERVAL + NU_USER_HELLO_GRACETIME) {
+		if (g_mutex_trylock(((user_session_t *) value)->rw_lock)) {
+			ret = TRUE;
+			g_mutex_unlock(((user_session_t *) value)->rw_lock);
+		} else {
+			((user_session_t *) value)->pending_disconnect = TRUE;
+		}
+	}
 	return ret;
 }
 

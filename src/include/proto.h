@@ -126,6 +126,7 @@ typedef struct {
  * Define client HELLO interval
  */
 #define NU_USER_HELLO_INTERVAL 30
+#define NU_USER_HELLO_GRACETIME 10
 
 typedef enum {
 	DECISION_DROP = 0,	/*!< NuAuth decision answer: drop packet */
