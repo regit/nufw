@@ -223,7 +223,7 @@ int nu_client_check(nuauth_session_t * session, nuclient_error_t * err)
 			}
 			/* sending hello if needed */
 			if ((time(NULL) - session->timestamp_last_sent) >
-					SENT_TEST_INTERVAL) {
+					NU_USER_HELLO_INTERVAL) {
 				if (!send_hello_pckt(session)) {
 					SET_ERROR(err, INTERNAL_ERROR,
 							TIMEOUT_ERR);

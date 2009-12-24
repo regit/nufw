@@ -122,6 +122,11 @@ typedef struct {
  */
 #define APP_TYPE_SHA1 0x2
 
+/**
+ * Define client HELLO interval
+ */
+#define NU_USER_HELLO_INTERVAL 30
+
 typedef enum {
 	DECISION_DROP = 0,	/*!< NuAuth decision answer: drop packet */
 	DECISION_ACCEPT,	/*!< NuAuth decision answer: packet accepted */
