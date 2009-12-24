@@ -64,6 +64,7 @@
 #include "nussl_socket.h"
 
 #define DH_BITS 1024
+#define NUSSL_OP_RETRY 3
 
 #ifdef HAVE_OPENSSL
 #include <openssl/ssl.h>

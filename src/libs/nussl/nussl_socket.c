@@ -568,6 +568,7 @@ static int readable_raw(nussl_socket * sock, int secs)
 static ssize_t read_raw(nussl_socket * sock, char *buffer, size_t len)
 {
 	ssize_t ret;
+	int try = 0;
 
 	ret = readable_raw(sock, sock->rdtimeout);
 	if (ret)
@@ -575,7 +576,7 @@ static ssize_t read_raw(nussl_socket * sock, char *buffer, size_t len)
 
 	do {
 		ret = recv(sock->fd, buffer, len, 0);
-	} while (ret == -1 && NUSSL_ISINTR(nussl_errno));
+	} while (ret == -1 && try++ < NUSSL_OP_RETRY && NUSSL_ISINTR(nussl_errno));
 
 	if (ret == 0) {
 		set_error(sock, _("Connection closed"));
@@ -598,6 +599,7 @@ static ssize_t write_raw(nussl_socket * sock, const char *data,
 			 size_t length)
 {
 	ssize_t ret;
+	int try = 0;
 
 #ifdef __QNX__
 	/* Test failures seen on QNX over loopback, if passing large
@@ -608,7 +610,7 @@ static ssize_t write_raw(nussl_socket * sock, const char *data,
 
 	do {
 		ret = send(sock->fd, data, length, 0);
-	} while (ret == -1 && NUSSL_ISINTR(nussl_errno));
+	} while (ret == -1 && try++ < NUSSL_OP_RETRY && NUSSL_ISINTR(nussl_errno));
 
 	if (ret < 0) {
 		int errnum = nussl_errno;
@@ -680,6 +682,7 @@ static ssize_t read_ossl(nussl_socket * sock, char *buffer, size_t len)
 	int ret;
 	int sslerr = 0;
 	int i = 0;
+	int try = 0;
 
 	ret = readable_ossl(sock, sock->rdtimeout);
 	if (ret)
@@ -693,7 +696,7 @@ static ssize_t read_ossl(nussl_socket * sock, char *buffer, size_t len)
 		if (ret < 0) {
 			sslerr = SSL_get_error(sock->ssl, ret);
 		}
-	} while ((ret < 0) && (sslerr == 2));
+	} while ((ret < 0) && try++ < NUSSL_OP_RETRY && (sslerr == 2));
 
 	if (ret <= 0) {
 		ret = error_ossl(sock, ret);
@@ -790,12 +793,14 @@ static ssize_t error_gnutls(nussl_socket * sock, ssize_t sret)
 }
 
 #define RETRY_GNUTLS(sock, ret) ((ret < 0) \
+		&& try++ < NUSSL_OP_RETRY \
 		&& (ret == GNUTLS_E_INTERRUPTED || ret == GNUTLS_E_AGAIN \
 		|| check_alert(sock, ret) == 0))
 
 static ssize_t read_gnutls(nussl_socket * sock, char *buffer, size_t len)
 {
 	ssize_t ret;
+	int try = 0;
 
 	ret = readable_gnutls(sock, sock->rdtimeout);
 	if (ret)
@@ -815,6 +820,7 @@ static ssize_t write_gnutls(nussl_socket * sock, const char *data,
 			    size_t len)
 {
 	ssize_t ret;
+	int try = 0;
 
 	do {
 		ret = gnutls_record_send(sock->ssl, data, len);
@@ -1890,7 +1896,7 @@ int nussl_sock_close(nussl_socket * sock)
 		int try = 0;
 		do {
 			ret = gnutls_bye(sock->ssl, GNUTLS_SHUT_RDWR);
-		} while (ret < 0 && try++ < 2
+		} while (ret < 0 && try++ < NUSSL_OP_RETRY
 			 && (ret == GNUTLS_E_INTERRUPTED
 			     || ret == GNUTLS_E_AGAIN));
 		gnutls_deinit(sock->ssl);
