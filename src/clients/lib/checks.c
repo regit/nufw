@@ -218,18 +218,18 @@ int nu_client_check(nuauth_session_t * session, nuclient_error_t * err)
 				SET_ERROR(err, INTERNAL_ERROR, NO_ERR);
 				if (checkreturn == 0) {
 					increase_refresh_delay(session);
+					/* sending hello if needed */
+					if ((time(NULL) - session->timestamp_last_sent) >
+							NU_USER_HELLO_INTERVAL) {
+						if (!send_hello_pckt(session)) {
+							SET_ERROR(err, INTERNAL_ERROR,
+									TIMEOUT_ERR);
+							return -1;
+						}
+						session->timestamp_last_sent = time(NULL);
+					}
 				}
 				return 1;
-			}
-			/* sending hello if needed */
-			if ((time(NULL) - session->timestamp_last_sent) >
-					NU_USER_HELLO_INTERVAL) {
-				if (!send_hello_pckt(session)) {
-					SET_ERROR(err, INTERNAL_ERROR,
-							TIMEOUT_ERR);
-					return -1;
-				}
-				session->timestamp_last_sent = time(NULL);
 			}
 		} else {
 			if (recv_message(session, err) == NU_EXIT_ERROR) {
