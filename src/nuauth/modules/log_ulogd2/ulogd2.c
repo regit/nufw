@@ -90,7 +90,7 @@ static ssize_t _ulogd2_write(struct log_ulogd2_params *params, const void *data,
 
 static ssize_t ulogd2_send_request(struct log_ulogd2_params *params, struct ulogd2_request*req)
 {
-	unsigned char buf[1024];
+	unsigned char buf[4096];
 	int ret;
 
 	ret = ulogd2_request_format(req, buf, sizeof(buf));

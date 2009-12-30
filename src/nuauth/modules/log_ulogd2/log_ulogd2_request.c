@@ -30,6 +30,8 @@
 
 #include "security.h"
 
+#define ALIGN 4
+
 /**
  * \ingroup Ulogd2Module
  *
@@ -79,6 +81,7 @@ ssize_t ulogd2_request_format(struct ulogd2_request *req, unsigned char*buf, uns
 {
 	struct ulogd2_option *opt, *optbkp;
 	ssize_t ret=0;
+	int padded_length;
 
 	/* write ulogd packet signature first */
 	*(u_int32_t*)(buf) = htonl(ULOGD_SOCKET_MARK);
@@ -92,7 +95,8 @@ ssize_t ulogd2_request_format(struct ulogd2_request *req, unsigned char*buf, uns
 	INC_RET(sizeof(u_int16_t));
 
 	memcpy(buf+ret, req->payload, req->payload_len);
-	INC_RET(req->payload_len);
+	padded_length = ALIGN + ((req->payload_len - 1) & ~(ALIGN - 1));
+	INC_RET(padded_length);
 
 	/* Options, in KLV (Key Length Value) format */
 	llist_for_each_entry_safe(opt, optbkp, &req->options->list, list) {
@@ -105,9 +109,9 @@ ssize_t ulogd2_request_format(struct ulogd2_request *req, unsigned char*buf, uns
 		INC_RET(sizeof(u_int16_t));
 		/* Value */
 		memcpy(buf+ret, opt->value, opt->length);
-		INC_RET(opt->length);
-		buf[ret] = '\0';
-		ret++;
+		buf[ret + opt->length] = '\0';
+		padded_length = ALIGN + ((opt->length + 1 - 1) & ~(ALIGN - 1));
+		INC_RET(padded_length);
 	}
 
 	/* finally, set options length */
