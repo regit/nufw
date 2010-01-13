@@ -122,7 +122,7 @@ gchar *string_escape(const gchar * orig)
 		traduc =
 		    g_locale_from_utf8(orig, -1, NULL, &bwritten, NULL);
 		if (!traduc) {
-			log_message(WARNING, DEBUG_AREA_PACKET | DEBUG_AREA_USER,
+			log_message(DEBUG, DEBUG_AREA_PACKET | DEBUG_AREA_USER,
 				    "UTF-8 conversion failed at %s:%d: %s",
 				    __FILE__, __LINE__,
 				    orig);
