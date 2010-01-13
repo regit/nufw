@@ -23,6 +23,8 @@
 
 #include <auth_srv.h>
 
+#define INVALID_ENC_NAME "INVALID NAME"
+
 /** \addtogroup NuauthCore
  * @{
  */
@@ -121,9 +123,10 @@ gchar *string_escape(const gchar * orig)
 		    g_locale_from_utf8(orig, -1, NULL, &bwritten, NULL);
 		if (!traduc) {
 			log_message(WARNING, DEBUG_AREA_PACKET | DEBUG_AREA_USER,
-				    "UTF-8 conversion failed at %s:%d",
-				    __FILE__, __LINE__);
-			return NULL;
+				    "UTF-8 conversion failed at %s:%d: %s",
+				    __FILE__, __LINE__,
+				    orig);
+			return g_strdup(INVALID_ENC_NAME);
 		}
 	} else {
 		traduc = g_strdup(orig);
