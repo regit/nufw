@@ -356,6 +356,7 @@ nu_error_t authpckt_decode(unsigned char **pdgram,
 			log_message(CRITICAL, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
 				    "NuFW protocol is unknown");
 		}
+		return NU_EXIT_ERROR;
 
 	}
 	return NU_EXIT_OK;
