@@ -120,7 +120,7 @@ extern "C" {
 	char *nussl_get_server_cert_dn(nussl_session * sess);
 
 /* Returns a string containing informations about the peer certificate */
-	char *nussl_get_peer_dn(nussl_session * sess, char *buf,
+	int nussl_get_peer_dn(nussl_session * sess, char *buf,
 				size_t * buf_size);
 
 /* Server related functions */
