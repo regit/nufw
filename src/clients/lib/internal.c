@@ -29,6 +29,7 @@
 #include <stdarg.h>		/* va_list, va_start, ... */
 #include <langinfo.h>
 #include <proto.h>
+#include "proc.h"
 #include "security.h"
 #include "internal.h"
 #include <sys/utsname.h>
@@ -285,6 +286,9 @@ int compare(nuauth_session_t * session, conntable_t * old, conntable_t * new,
 #if DEBUG
 				log_printf(DEBUG_LEVEL_DEBUG, "sending new");
 #endif
+#ifdef LINUX
+				prg_cache_load();
+#endif
 				if (add_packet_to_send
 				    (session, auth, &count,
 				     bucket) == -1) {
@@ -300,6 +304,10 @@ int compare(nuauth_session_t * session, conntable_t * old, conntable_t * new,
 #if DEBUG
 					log_printf(DEBUG_LEVEL_DEBUG, "sending retransmit");
 #endif
+#ifdef LINUX
+					prg_cache_load();
+#endif
+
 					if (add_packet_to_send
 					    (session, auth, &count,
 					     bucket) == -1) {
@@ -319,6 +327,9 @@ int compare(nuauth_session_t * session, conntable_t * old, conntable_t * new,
 #if DEBUG
 						log_printf(DEBUG_LEVEL_DEBUG,
 						    "working on timeout issue");
+#endif
+#ifdef LINUX
+						prg_cache_load();
 #endif
 						if (add_packet_to_send
 						    (session, auth, &count,

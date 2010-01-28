@@ -271,10 +271,6 @@ int nu_client_real_check(nuauth_session_t * session, nuclient_error_t * err)
 		SET_ERROR(err, INTERNAL_ERROR, TCPTABLE_ERR);
 		return -1;
 	}
-#ifdef LINUX
-	/* update cache for link between proc and socket inode */
-	prg_cache_load();
-#endif
 	nb_packets = compare(session, session->ct, new, err);
 
 	plugin_emit_event(NUCLIENT_EVENT_END_CHECK, session, (void *) (long)nb_packets);
