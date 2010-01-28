@@ -121,6 +121,8 @@ int nussl_hash_file(nussl_hash_algo_t algo, const char * filename,
 	EVP_DigestFinal_ex(&mdctx, (unsigned char*)out, (unsigned int*)outsz);
 	EVP_MD_CTX_cleanup(&mdctx);
 
+	fclose(stream);
+
 	return 0;
 }
 
