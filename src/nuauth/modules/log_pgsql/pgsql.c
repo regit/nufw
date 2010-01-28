@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2003-2009 INL
+ ** Copyright(C) 2003-2010 INL
  ** Written by Eric Leblond <eleblond@inl.fr>
  **	       Vincent Deffontaines <vincent@gryzor.com>
  **	       Pierre Chifflier <chifflier@inl.fr>
@@ -343,7 +343,7 @@ static int pgsql_insert(PGconn * ld, connection_t * element,
 			  ", user_id, username, client_os, client_app",
 			  sizeof(request_fields));
 		ok = secure_snprintf(tmp_buffer, sizeof(tmp_buffer),
-				     ", '%u', '%s', '%s', '%s'",
+				     ", '%u', E'%s', E'%s', E'%s'",
 				     element->user_id,
 				     quoted_username,
 				     quoted_osname, quoted_appname);
@@ -630,7 +630,7 @@ G_MODULE_EXPORT void auth_error_log(user_session_t * c_session,
 	}
 
 	ok = secure_snprintf(request_values, sizeof(request_values),
-			"VALUES ('%s', '%s', '%s', ABSTIME(%lu), '%d'",
+			"VALUES (E'%s', '%s', '%s', ABSTIME(%lu), '%d'",
 			quoted_username,
 			addr_ascii,
 			text,
@@ -670,7 +670,7 @@ G_MODULE_EXPORT void auth_error_log(user_session_t * c_session,
 		g_strlcat(request_fields, "os_sysname, os_release, os_version)",
 				sizeof(request_fields));
 		ok = secure_snprintf(tmp_buffer, sizeof(tmp_buffer),
-				     ", '%s', '%s', '%s')",
+				     ", E'%s', E'%s', E'%s')",
 				     q_sysname,
 				     q_release,
 				     q_version);
