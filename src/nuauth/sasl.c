@@ -863,6 +863,12 @@ int sasl_user_check(user_session_t * c_session)
 		{SASL_CB_SERVER_USERDB_CHECKPASS, &userdb_checkpass, c_session},
 		{SASL_CB_LIST_END, NULL, NULL}
 	};
+	sasl_callback_t real_sasl_callbacks[] = {
+		{SASL_CB_SERVER_USERDB_CHECKPASS, &userdb_checkpass, c_session},
+		{SASL_CB_LIST_END, NULL, NULL}
+	};
+
+
 	sasl_callback_t *callbacks;
 
 	if (c_session->user_name) {
@@ -874,7 +880,7 @@ int sasl_user_check(user_session_t * c_session)
 		c_session->auth_type = AUTH_TYPE_INTERNAL;
 		c_session->auth_quality = AUTHQ_SASL;
 		if (!nuauthconf->nuauth_uses_fake_sasl) {
-			callbacks = NULL;
+			callbacks = real_sasl_callbacks;
 		}
 	}
 
