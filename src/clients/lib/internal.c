@@ -632,8 +632,16 @@ int init_sasl(nuauth_session_t * session, const char *hostname, nuclient_error_t
 
 	/* wait of "OK" from server, an other chain will be a failure
 	 * because we can not yet downgrade our protocol */
-	nussl_read(session->nussl, buffer, sizeof(buffer));
+	ret = nussl_read(session->nussl, buffer, sizeof(buffer));
+	if (ret <= 0) {
+		log_printf(DEBUG_LEVEL_CRITICAL,
+		           "nussl_read() failed: %s",
+			   nussl_get_error(session->nussl));
+		SET_ERROR(err, NUSSL_ERR, ret);
+		return 0;
+	}
 	if (strncmp("OK", buffer, 2)) {
+		log_printf(DEBUG_LEVEL_CRITICAL, "received: \"%s\"", buffer);
 		SET_ERROR(err, INTERNAL_ERROR, PROTO_ERR);
 		return 0;
 	}
