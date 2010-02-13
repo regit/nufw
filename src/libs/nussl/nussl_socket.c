@@ -456,7 +456,11 @@ static int raw_poll(int fdno, int rdwr, int secs)
 	ret = -1;
 
 	loop = ev_loop_new(0);
-	ev_io_init(&sock_watcher, sock_activity_cb, fdno , EV_READ|EV_WRITE);
+	if (rdwr == 0) {
+		ev_io_init(&sock_watcher, sock_activity_cb, fdno , EV_READ);
+	} else {
+		ev_io_init(&sock_watcher, sock_activity_cb, fdno , EV_WRITE);
+	}
 	sock_watcher.data = (void *)(long)fdno;
 	ev_io_start(loop, &sock_watcher);
 	ev_timer_init (&timer, sock_timeout_cb, 1.0 * timeout, 0);
