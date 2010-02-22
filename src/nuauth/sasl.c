@@ -1,5 +1,6 @@
 /*
  ** Copyright(C) 2005-2009 INL
+ **		 2010 EdenWall Technologies
  ** Written by Eric Leblond <regit@inl.fr>
  **
  ** This program is free software; you can redistribute it and/or modify
@@ -310,14 +311,14 @@ static void sock_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 		ev_unloop(loop, EVUNLOOP_ONE);
 		memset(buffer, 0, sizeof(buffer));
 
-		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
+		log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 				"Getting protocol information");
 		ret = nussl_read(c_session->nussl,
 				buffer,
 				sizeof(buffer) - 1);
 
 		if (ret <= 0) {
-			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
+			log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 					"nussl_read() failed: %s", nussl_get_error(c_session->nussl));
 			c_session->proto_version = PROTO_VERSION_NONE;
 			return;
@@ -331,7 +332,7 @@ static void sock_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 				atoi((char *) buffer +
 						strlen(PROTO_STRING));
 
-			debug_log_message(VERBOSE_DEBUG,
+			log_message(VERBOSE_DEBUG,
 					DEBUG_AREA_AUTH,
 					"Protocol information: %d",
 					c_session->
@@ -352,7 +353,7 @@ static void sock_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 				case PROTO_VERSION_V24:
 					break;
 				default:
-					debug_log_message(INFO,
+					log_message(INFO,
 							DEBUG_AREA_AUTH,
 							"Bad protocol, announced %d",
 							c_session->proto_version
@@ -377,11 +378,11 @@ static void sock_timeout_cb(struct ev_loop *loop, ev_timer *w, int revents)
 	if (c_session->proto_version != PROTO_VERSION_NONE) {
 		return;
 	}
-	log_message(DEBUG, DEBUG_AREA_AUTH,
+	debug_log_message(DEBUG, DEBUG_AREA_AUTH,
 			"Timeout when waiting protocol announce");
 	ev_io_stop(loop, w->data);
 	ev_unloop(loop, EVUNLOOP_ONE);
-	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 					  "Falling back to v3 protocol");
 	c_session->proto_version = PROTO_VERSION_V20;
 }
@@ -452,7 +453,7 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 			    "generating mechanism list");
 		return result;
 	}
-	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 			  "%d mechanisms : %s (length: %d)", count, data,
 			  sasl_len);
 	/* send capability list to client */
@@ -487,7 +488,7 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 			return SASL_FAIL;
 		}
 	}
-	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 			  "client chose mechanism %s", buf);
 
 	if (strlen(buf) < (size_t) tls_len) {
@@ -540,13 +541,13 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 	}
 
 	if (auth_result != SASL_OK) {
-		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
+		log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 				  "incorrect authentication");
 		if (c_session->proto_version >= PROTO_VERSION_V22_1) {
 			samp_send(c_session->nussl, "N", 1);
 		}
 	} else {
-		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
+		log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 				  "correct authentication");
 		if (c_session->proto_version >= PROTO_VERSION_V22_1) {
 			samp_send(c_session->nussl, "Y", 1);
@@ -634,7 +635,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 			    "proto v3: generating mechanism list");
 		return r;
 	}
-	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH, "proto v3: %d mechanisms : %s",
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH, "proto v3: %d mechanisms : %s",
 			  count, data);
 	tls_len = sasl_len;
 	/* send capability list to client */
@@ -668,22 +669,22 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 			return SASL_FAIL;
 		}
 	}
-	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
+	log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 			  "proto v3: client chose mechanism %s", chosenmech);
 
 	memset(buf, 0, sizeof buf);
 	tls_len = nussl_read(c_session->nussl, buf, sizeof(buf));
 	if (tls_len != 1) {
 		if (tls_len <= 0) {
-			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
+			log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 					  "nussl_read() error: %s", nussl_get_error(c_session->nussl));
 			return SASL_FAIL;
 		}
-		debug_log_message(DEBUG, DEBUG_AREA_AUTH,
+		log_message(DEBUG, DEBUG_AREA_AUTH,
 				  "proto v3: didn't receive first-sent parameter correctly");
 		if (nussl_write(c_session->nussl, "N", 1) < 0)	/* send NO to client */
 		{
-			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
+			log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 					  "nussl_write() error: %s", nussl_get_error(c_session->nussl));
 			return SASL_FAIL;
 		}
@@ -697,7 +698,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 		memset(buf, 0, sizeof(buf));
 		tls_len = nussl_read(c_session->nussl, buf, sizeof(buf));
 		if (tls_len <= 0) {
-			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
+			log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 					  "nussl_read() error: %s", nussl_get_error(c_session->nussl));
 			return SASL_FAIL;
 		}
@@ -705,7 +706,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 		r = sasl_server_start(conn, chosenmech, buf, tls_len,
 				      &data, &sasl_len);
 	} else {
-		debug_log_message(DEBUG, DEBUG_AREA_AUTH, "proto v3: start with no msg");
+		log_message(DEBUG, DEBUG_AREA_AUTH, "proto v3: start with no msg");
 		r = sasl_server_start(conn, chosenmech, NULL, 0, &data,
 				      &sasl_len);
 	}
@@ -726,7 +727,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 
 		if (nussl_write(c_session->nussl, "N", 1) < 0)	/* send NO to client */
 		{
-			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
+			log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 					  "nussl_read() error: %s", nussl_get_error(c_session->nussl));
 			return SASL_FAIL;
 		}
@@ -777,7 +778,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 
 
 	if (r != SASL_OK) {
-		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
+		log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 				  "proto v3: incorrect authentication");
 		/* try to get username */
 		if (c_session->user_name == NULL) {
@@ -818,7 +819,7 @@ static int mysasl_negotiate_v3(user_session_t * c_session,
 		c_session->groups =
 		    modules_get_user_groups(c_session->user_name);
 		if (c_session->groups == NULL) {
-			debug_log_message(DEBUG, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
+			log_message(DEBUG, DEBUG_AREA_USER | DEBUG_AREA_AUTH,
 					  "proto v3: Couldn't get user groups");
 			if (nussl_write(c_session->nussl, "N", 1) < 0)	/* send NO to client */
 				return SASL_FAIL;
