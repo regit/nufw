@@ -1,5 +1,5 @@
 /*
- ** Copyright(C) 2008-2009 INL
+ ** Copyright(C) 2008-2010 INL
  ** Written by  Pierre Chifflier <chifflier@inl.fr>
  **
  ** This program is free software; you can redistribute it and/or modify
@@ -26,16 +26,36 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 
+#include <netinet/in.h>
+#include <netinet/ip.h>
+
 #include "log_ulogd2.h"
 
 #include "security.h"
-
-#define ALIGN 4
 
 /**
  * \ingroup Ulogd2Module
  *
  * @{ */
+
+/***** Keep this in sync with ulogd2 **********/
+struct ulogd_unixsock_packet_t {
+	uint32_t marker;
+	uint16_t total_size;
+	uint32_t version:4,
+		 reserved:28;
+	uint16_t payload_length;
+} __attribute__((packed));
+
+struct ulogd_unixsock_option_t  {
+	uint32_t option_id;
+	uint32_t option_length;
+	char     option_value[0];
+} __attribute__((packed));
+
+#define USOCK_ALIGNTO 8
+#define USOCK_ALIGN(len) ( ((len)+USOCK_ALIGNTO-1) & ~(USOCK_ALIGNTO-1) )
+/***** end of sync **********/
 
 struct ulogd2_request * ulogd2_request_new(void)
 {
@@ -80,37 +100,39 @@ void ulogd2_request_add_option(struct ulogd2_request *req, unsigned int opt, voi
 ssize_t ulogd2_request_format(struct ulogd2_request *req, unsigned char*buf, unsigned int bufsz)
 {
 	struct ulogd2_option *opt, *optbkp;
-	ssize_t ret=0;
+	size_t ret=0;
 	int padded_length;
+	struct ulogd_unixsock_packet_t pkt;
 
-	/* write ulogd packet signature first */
-	*(u_int32_t*)(buf) = htonl(ULOGD_SOCKET_MARK);
-	INC_RET(sizeof(u_int32_t));
+	if (bufsz < sizeof(struct ulogd_unixsock_packet_t))
+		return -1;
 
-	/* skip space to store total length (stored later) */
-	INC_RET(sizeof(u_int16_t));
+	pkt.marker = htonl(ULOGD_SOCKET_MARK);
+	pkt.total_size = 0; /* stored later */
+	pkt.version = 0;
+	pkt.reserved = 0;
+	pkt.payload_length = htons(req->payload_len);
 
-	/* payload length + payload */
-	*(u_int16_t*)(buf + ret) = htons(req->payload_len);
-	INC_RET(sizeof(u_int16_t));
+	memcpy(buf, &pkt, sizeof(pkt));
+	INC_RET(sizeof(pkt));
 
 	memcpy(buf+ret, req->payload, req->payload_len);
-	padded_length = ALIGN + ((req->payload_len - 1) & ~(ALIGN - 1));
+	padded_length = USOCK_ALIGN(req->payload_len);
 	INC_RET(padded_length);
 
 	/* Options, in KLV (Key Length Value) format */
 	llist_for_each_entry_safe(opt, optbkp, &req->options->list, list) {
 		/* Key ID */
-		*(u_int16_t*)(buf + ret) = htons(opt->opt);
-		INC_RET(sizeof(u_int16_t));
+		*(u_int32_t*)(buf + ret) = htonl(opt->opt);
+		INC_RET(sizeof(u_int32_t));
 		/* Length */
 		/* always write a \0 after option data, hence the +1 */
-		*(u_int16_t*)(buf + ret) = htons(opt->length + 1);
-		INC_RET(sizeof(u_int16_t));
+		*(u_int32_t*)(buf + ret) = htonl(opt->length + 1);
+		INC_RET(sizeof(u_int32_t));
 		/* Value */
 		memcpy(buf+ret, opt->value, opt->length);
 		buf[ret + opt->length] = '\0';
-		padded_length = ALIGN + ((opt->length + 1 - 1) & ~(ALIGN - 1));
+		padded_length = USOCK_ALIGN(opt->length);
 		INC_RET(padded_length);
 	}
 
