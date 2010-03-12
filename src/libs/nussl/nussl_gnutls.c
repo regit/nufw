@@ -1083,7 +1083,7 @@ const char *nussl_ssl_clicert_name(const nussl_ssl_client_cert * ccert)
 	return ccert->friendly_name;
 }
 
-nussl_ssl_certificate *nussl_ssl_cert_read(const char *filename)
+nussl_ssl_certificate *nussl_ssl_cert_file_read(const char *filename)
 {
 	int ret;
 	gnutls_datum data;

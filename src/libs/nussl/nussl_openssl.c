@@ -981,7 +981,21 @@ const char *nussl_ssl_clicert_name(const nussl_ssl_client_cert * ccert)
 	return ccert->friendly_name;
 }
 
-nussl_ssl_certificate *nussl_ssl_cert_read(const char *filename)
+nussl_ssl_certificate *nussl_ssl_cert_mem_read(void *cert_x509)
+{
+	X509 *cert = (X509 *) cert_x509;
+
+	if (cert == NULL) {
+		NUSSL_DEBUG(NUSSL_DBG_SSL, "d2i_X509_fp failed: %s\n",
+			    ERR_reason_error_string(ERR_get_error()));
+		ERR_clear_error();
+		return NULL;
+	}
+
+	return populate_cert(nussl_calloc(sizeof(struct nussl_ssl_certificate_s)), cert);
+}
+
+nussl_ssl_certificate *nussl_ssl_cert_file_read(const char *filename)
 {
 	FILE *fp = fopen(filename, "r");
 	X509 *cert;

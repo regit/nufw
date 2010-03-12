@@ -67,9 +67,11 @@ int nussl_ssl_dname_cmp(const nussl_ssl_dname * dn1,
 /* An SSL certificate. */
 typedef struct nussl_ssl_certificate_s nussl_ssl_certificate;
 
+nussl_ssl_certificate *nussl_ssl_cert_mem_read(void *cert_x509);
+
 /* Read a certificate from a file in PEM format; returns NULL if the
  * certificate could not be parsed. */
-nussl_ssl_certificate *nussl_ssl_cert_read(const char *filename);
+nussl_ssl_certificate *nussl_ssl_cert_file_read(const char *filename);
 
 /* Write a certificate to a file in PEM format; returns non-zero if
  * the certificate could not be written. */
