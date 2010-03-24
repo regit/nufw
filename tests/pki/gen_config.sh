@@ -243,8 +243,10 @@ basicConstraints = critical,CA:true
 # Key usage: this is typical for a CA certificate. However since it will
 # prevent it being used as an test self-signed certificate it is best
 # left out by default.
-# keyUsage = cRLSign, keyCertSign
 keyUsage = cRLSign, keyCertSign
+# keyUsage = keyCertSign, cRLSign, digitalSignature, nonRepudiation, keyEncipherment
+
+#extendedKeyUsage        = serverAuth, clientAuth
 
 
 # Some might want this also

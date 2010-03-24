@@ -33,12 +33,14 @@ emailAddress_value              = admin@localhost.edu
 emailAddress_max                = 40
 [ v3_req ]
 nsCertType                      = server
-basicConstraints                = critical,CA:false
+basicConstraints                = CA:false
+keyUsage                = nonRepudiation, digitalSignature, keyEncipherment
+extendedKeyUsage        = serverAuth, nsSGC, msSGC
 # PKIX recommendations harmless if included in all certificates.
 subjectKeyIdentifier            = hash
 # do *not* include email address in subject name (CN field)
 #subjectAltName                  = email:move
-subjectAltName                   = DNS:$1,DNS:blah1,DNS:blah2
+subjectAltName                   = DNS:$1,DNS:blah1,DNS:blah2,DNS:localhost, DNS:127.0.0.1
 #subjectAltName                  = @alt_names
 #[alt_names]
 #DNS.1   = lance.eng.networktest.com
