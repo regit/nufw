@@ -450,7 +450,7 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 			  &count);
 	if (result != SASL_OK) {
 		log_message(WARNING, DEBUG_AREA_AUTH,
-			    "generating mechanism list");
+			    "error generating mechanism list");
 		return result;
 	}
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
