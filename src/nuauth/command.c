@@ -60,6 +60,7 @@ const char* COMMAND_HELP =
 "reload periods: reload the time periods\n"
 "display debug_level\n"
 "display debug_areas\n"
+"display threads\n"
 "debug_level LEVEL\n"
 "debug_areas AREAS\n"
 "help: display this help\n"
@@ -471,6 +472,28 @@ void command_execute(command_client_t * this, char *command)
 		encoder_add_int32(encoder, nuauthconf->debug_level);
 	} else if (strcmp(command, "display debug_areas") == 0) {
 		encoder_add_int32(encoder, nuauthconf->debug_areas);
+	} else if (strcmp(command, "display threads") == 0) {
+		char buffer [450];
+		snprintf (buffer, sizeof(buffer),
+				"User threads: %u\n"
+				"User session threads: %u\n"
+				"Unprocessed user threads: %u\n"
+				"Unprocessed user session threads: %u\n"
+				"Max user threads: %u\n"
+				"Max user session threads: %u\n"
+				"logger user pool full: %s\n"
+				"logger session pool full: %s\n",
+				g_thread_pool_get_num_threads(nuauthdatas->user_loggers),
+				g_thread_pool_get_num_threads(nuauthdatas->user_session_loggers),
+				g_thread_pool_unprocessed(nuauthdatas->user_loggers),
+				g_thread_pool_unprocessed(nuauthdatas->user_session_loggers),
+				g_thread_pool_get_max_threads(nuauthdatas->user_loggers),
+				g_thread_pool_get_max_threads(nuauthdatas->user_session_loggers),
+				(nuauthdatas->loggers_pool_full)?"true":"false",
+				(nuauthdatas->session_loggers_pool_full)?"true":"false"
+			);
+		buffer[sizeof(buffer)-1] = '\0';
+		encoder_add_string(encoder,buffer);
 	} else if (strcmp(command, "packets count") == 0) {
 		encoder_add_int32(encoder, g_hash_table_size(conn_list));
 	} else if (strcmp(command, "user count") == 0) {
