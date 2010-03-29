@@ -12,7 +12,7 @@ string_mask             = nombstr
 req_extensions          = extensions
 input_password          = secret
 output_password         = secret
-[ admin ]
+[ $CN ]
 commonName              = Common Name
 commonName_value        = $CN
 commonName_max          = 64
