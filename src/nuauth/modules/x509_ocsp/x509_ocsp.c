@@ -1,8 +1,6 @@
 /*
-** Copyright(C) 2008 INL
-**          written by Pierre Chifflier <chifflier@inl.fr>
-**
-** $Id$
+** Copyright(C) 2008-2010 EdenWall Technologies
+**          written by Pierre Chifflier <chifflier@edenwall.com>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -67,7 +65,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	params->ca = nuauth_config_table_get("nuauth_tls_cacert");
 	params->ocsp_server = nuauth_config_table_get("nuauth_tls_ocsp_server");
 	params->ocsp_port = nuauth_config_table_get_or_default_int("nuauth_tls_ocsp_port", 80);
-	params->ocsp_path = nuauth_config_table_get("nuauth_tls_ocsp_path");
+	params->ocsp_path = nuauth_config_table_get_or_default("nuauth_tls_ocsp_path", "/");
 	params->ocsp_ca_use_aia = nuauth_config_table_get_or_default_int("nuauth_tls_ocsp_ca_use_aia", 0);
 
 	module->params = (gpointer) params;

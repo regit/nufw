@@ -1,8 +1,6 @@
 /*
-** Copyright(C) 2008 INL
-**          written by Pierre Chifflier <chifflier@inl.fr>
-**
-** $Id$
+** Copyright(C) 2008-2010 EdenWall Technologies
+**          written by Pierre Chifflier <chifflier@edenwall.com>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -105,6 +103,65 @@ static int _extract_ocsp_uri(X509 *ca_cert, char *ocsp_host,
 	return (rc > 0);
 }
 
+static int ocsp_connect_client_socket(const char *ocsp_host, unsigned int ocsp_port)
+{
+	int sock;
+	struct addrinfo *res, *res0;
+	struct addrinfo hints;
+	int ecode;
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_family = PF_UNSPEC;
+
+	ecode = getaddrinfo(ocsp_host, NULL, &hints, &res0);
+	if (ecode != 0) {
+		log_message(WARNING, DEBUG_AREA_MAIN,
+				" Could not resolve OCSP server name %s: %s",
+				ocsp_host, gai_strerror(ecode));
+		return -1;
+	}
+
+	/* try all addresses */
+	for (res=res0; res!=NULL; res=res->ai_next) {
+		sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+		if (sock < 0) {
+			continue;
+		}
+
+		/* set port number */
+		if (res->ai_family == AF_INET) {
+			struct sockaddr_in *in = (struct sockaddr_in*)res->ai_addr;
+			in->sin_port = htons(ocsp_port);
+		} else if (res->ai_family == AF_INET6) {
+			struct sockaddr_in6 *in6 = (struct sockaddr_in6*)res->ai_addr;
+			in6->sin6_port = htons(ocsp_port);
+		} else {
+			continue;
+		}
+
+		/* FIXME blocking call ! */
+		if (connect(sock, res->ai_addr, res->ai_addrlen) != 0) {
+			close(sock);
+			continue;
+		}
+
+		break;
+	}
+
+	freeaddrinfo(res0);
+
+	if (res == NULL) {
+		log_message(WARNING, DEBUG_AREA_MAIN,
+				" Could not createa valid connection to OCSP server %s:%d",
+				ocsp_host, ocsp_port);
+
+		return -1;
+	}
+
+	return sock;
+}
+
 /** See RFC 2459
  */
 int check_ocsp(nussl_session *session, gpointer params_p)
@@ -112,8 +169,6 @@ int check_ocsp(nussl_session *session, gpointer params_p)
 	int retval = 1;
 	int ret;
 	int fd;
-	struct sockaddr_in sin;
-	struct hostent *host;
 	struct x509_ocsp_params *params = (struct x509_ocsp_params *)params_p;
 	char ocsp_host[OCSP_BUFFER_LEN];
 	char ocsp_port_s[OCSP_BUFFER_LEN];
@@ -138,6 +193,7 @@ int check_ocsp(nussl_session *session, gpointer params_p)
 	ASN1_GENERALIZEDTIME *produced_at, *this_update, *next_update;
 	int status, reason;
 
+	/* XXX this will read only the first certificate from the CA file */
 	cacert = _read_cert_file(params->ca);
 	if (cacert == NULL) {
 		log_message(CRITICAL, DEBUG_AREA_MAIN,
@@ -171,30 +227,8 @@ int check_ocsp(nussl_session *session, gpointer params_p)
 		" Checking OCSP status on [%s:%d %s]",
 		ocsp_host, ocsp_port, ocsp_path);
 
-	/* TODO better use getaddrinfo */
-	host = gethostbyname(ocsp_host);
-	if (host == NULL) {
-		log_message(WARNING, DEBUG_AREA_MAIN,
-				" Could not resolve OCSP server name %s", ocsp_host);
-		goto cleanup;
-	}
-
-	/* connect specified OCSP server (responder) */
-	/* FIXME hardcoded IPv4 type */
-	fd = socket(AF_INET, SOCK_STREAM, 0);
+	fd = ocsp_connect_client_socket(ocsp_host, ocsp_port);
 	if (fd < 0) {
-		log_message(WARNING, DEBUG_AREA_MAIN,
-				" Could not allocate socket for OCSP server");
-		goto cleanup;
-	}
-
-	memcpy(&sin.sin_addr.s_addr, host->h_addr, host->h_length);
-	sin.sin_family = AF_INET;
-	sin.sin_port = htons(ocsp_port);
-
-	/* FIXME blocking call ! */
-	ret = connect(fd, (struct sockaddr *)&sin, sizeof(sin));
-	if (ret < 0) {
 		log_message(WARNING, DEBUG_AREA_MAIN,
 				" Could not connect to OCSP server %s", ocsp_host);
 		goto cleanup;
