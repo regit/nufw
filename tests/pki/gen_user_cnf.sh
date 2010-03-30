@@ -24,4 +24,6 @@ nsCertType              = client,email
 basicConstraints        = critical,CA:false
 keyUsage                = digitalSignature, keyEncipherment
 extendedKeyUsage        = clientAuth
+# This is the Microsoft NT-PRINCIPAL extension
+subjectAltName          = otherName:1.3.6.1.4.1.311.20.2.3;UTF8:$CN
 EOF

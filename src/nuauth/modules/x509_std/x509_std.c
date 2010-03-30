@@ -1,9 +1,7 @@
 /*
-** Copyright(C) 2006-2008 INL
+** Copyright(C) 2006-2010 EdenWall Technologies
 **          written by Eric Leblond <regit@inl.fr>
-**                     Pierre Chifflier <chifflier@inl.fr>
-**
-** $Id$
+**                     Pierre Chifflier <chifflier@edenwall.com>
 **
 ** This program is free software; you can redistribute it and/or modify
 ** it under the terms of the GNU General Public License as published by
@@ -21,7 +19,8 @@
 
 
 #include <auth_srv.h>
-#include <gnutls/x509.h>
+
+#include <glib.h>
 
 #include "x509_std.h"
 
@@ -56,6 +55,8 @@ G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 	/*  Free user list */
 	if (params) {
 		g_free(params->trusted_issuer_dn);
+		g_free(params->uid_method);
+		g_strfreev(params->uid_method_list);
 	}
 	g_free(params);
 
@@ -70,7 +71,9 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 		    "X509_std module ($Revision$)");
 
 	/*  set variables */
-	params->trusted_issuer_dn = nuauth_config_table_get("nauth_tls_trusted_issuer_dn");
+	params->trusted_issuer_dn = nuauth_config_table_get("nuauth_tls_trusted_issuer_dn");
+	params->uid_method = nuauth_config_table_get_or_default("nuauth_tls_uid_method", "CN");
+	params->uid_method_list = g_strsplit(params->uid_method, " ", 0);
 
 	module->params = (gpointer) params;
 
@@ -137,7 +140,7 @@ G_MODULE_EXPORT int certificate_check(nussl_session* session,
 	return SASL_OK;
 }
 
-G_MODULE_EXPORT gchar *certificate_to_uid(nussl_session* session,
+static gchar *certificate_cn_to_uid(nussl_session* session,
 					  gpointer params)
 {
 	size_t size;
@@ -164,6 +167,121 @@ G_MODULE_EXPORT gchar *certificate_to_uid(nussl_session* session,
 		}
 		return g_strdup(pointer);
 	}
+
+	return NULL;
+}
+#ifdef HAVE_OPENSSL
+
+#include <fcntl.h>
+
+#include <openssl/ssl.h>
+#include <openssl/err.h>
+#include <openssl/ocsp.h>
+
+static gchar *certificate_subjectaltname_upn_to_uid(nussl_session* session,
+						    gpointer params)
+{
+	SSL *ssl = (SSL*)nussl_get_socket(session);
+	X509 *cert;
+	STACK_OF(GENERAL_NAME) * names;
+	int n;
+
+	cert = SSL_get_peer_certificate(ssl);
+
+	if (cert == NULL) {
+		log_message(WARNING, DEBUG_AREA_MAIN,
+				" Could not get client certificate");
+		return NULL;
+	}
+
+	names = X509_get_ext_d2i(cert, NID_subject_alt_name, NULL, NULL);
+	if (names == NULL) {
+		log_message(WARNING, DEBUG_AREA_MAIN,
+				" No subjectAltName extension found in certificate");
+		return NULL;
+	}
+
+	/* subjectAltName contains a sequence of GeneralNames,
+	 * as described in RFC 3280 page 107
+	 */
+	for (n = 0; n < sk_GENERAL_NAME_num(names); n++) {
+		GENERAL_NAME *nm = sk_GENERAL_NAME_value(names, n);
+
+		/* all enum values in <openssl/x509v3.h> */
+		switch (nm->type) {
+		case GEN_OTHERNAME:
+		{
+			OTHERNAME *othername = nm->d.otherName;
+
+			/* look for the Microsoft Universal Universal Principal Name extension */
+			if (NID_ms_upn == OBJ_obj2nid(othername->type_id)) {
+				char buf[4096];
+				size_t length = sizeof(buf);
+				buf[0] = '\0';
+				 if (othername->value->type == V_ASN1_UTF8STRING) {
+				 	/* length is stored in othername->value->value.utf8string->length */
+					snprintf(buf, length, "UPN<%s>", othername->value->value.utf8string->data);
+				 }
+				log_message(DEBUG, DEBUG_AREA_MAIN,
+						" subjectAltName: found %s", buf);
+				/* XXX be careful, this is unicode */
+				return g_strdup((char*)othername->value->value.utf8string->data);
+			}
+			log_message(WARNING, DEBUG_AREA_MAIN,
+					" subjectAltName unknown othername type: %d",
+					nm->type);
+			break;
+		}
+		default:
+			log_message(DEBUG, DEBUG_AREA_MAIN,
+					" Unknown subjectAltName type: %d", nm->type);
+		}
+	}
+
+
+	return NULL;
+}
+
+#else /* HAVE_OPENSSL */
+
+static gchar *certificate_subjectaltname_upn_to_uid(nussl_session* session,
+						    gpointer params)
+{
+	log_message(CRITICAL, DEBUG_AREA_MAIN,
+			" x509_std: this uid module is not implemented: %d");
+
+	return NULL;
+}
+
+#endif /* HAVE_OPENSSL */
+
+G_MODULE_EXPORT gchar *certificate_to_uid(nussl_session* session,
+					  gpointer params_p)
+{
+	struct x509_std_params *params = (struct x509_std_params *)params_p;
+	const gchar *uid_method;
+	char *reply = NULL;
+	int i = 0;
+
+	while (params->uid_method_list[i] != NULL) {
+		uid_method = params->uid_method_list[i];
+		if (strcasecmp(uid_method, "CN") == 0) {
+			reply = certificate_cn_to_uid(session, params);
+			if (reply)
+				return reply;
+		}
+
+		if (strcasecmp(uid_method, "UPN") == 0) {
+			reply = certificate_subjectaltname_upn_to_uid(session, params);
+			if (reply)
+				return reply;
+		}
+
+		log_message(CRITICAL, DEBUG_AREA_MAIN,
+				" x509_std: unknown uid checking method %s", uid_method);
+
+		i++;
+	};
 
 	return NULL;
 }
