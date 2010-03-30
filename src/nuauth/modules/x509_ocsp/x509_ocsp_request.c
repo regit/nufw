@@ -38,6 +38,8 @@
 
 #define OCSP_BUFFER_LEN 256
 
+#define OCSP_TIMEOUT 10
+
 static X509* _read_cert_file(const char *cert_file)
 {
 	X509 *cert = NULL;
@@ -132,12 +134,90 @@ static int wait_for_write(int fd)
 	return -1;
 }
 
+static void fd_ready_to_read(int revents, void *arg)
+{
+	int *is_ready = arg;
+
+	if (revents & EV_READ)
+		{ /* fd might have data for us, joy! */ *is_ready = 1; }
+	else if (revents & EV_TIMER)
+		{ /* doh, nothing entered */ *is_ready = 0; }
+}
+
+static int wait_for_read(int fd)
+{
+	struct ev_loop *loop;
+	int is_ready = 0;
+
+	loop = ev_loop_new(0);
+	ev_once (loop, fd, EV_READ, 10., fd_ready_to_read, &is_ready);
+
+	ev_loop(loop, 0);
+	ev_loop_destroy(loop);
+
+	if (is_ready > 0)
+		return 0;
+
+	return -1;
+}
+
+static int nonblocking_read(int fd, void *buf, size_t count, unsigned int timeout)
+{
+	int ret;
+	int read_count = 0;
+
+	do {
+		ret = wait_for_read(fd);
+		if (ret < 0)
+			return -1;
+
+		ret = read(fd, buf, count);
+		if (ret == -1) {
+			if (errno == EINPROGRESS || errno == EWOULDBLOCK)
+				continue;
+
+			return -1;
+		}
+		read_count += ret;
+	} while (ret < 0);
+
+	return read_count;
+}
+
+static int nonblocking_write(int fd, void *buf, size_t count, unsigned int timeout)
+{
+	int ret;
+	int write_count = 0;
+
+	do {
+		ret = write(fd, buf, count);
+		if (ret == -1) {
+			if (errno == EINPROGRESS || errno == EWOULDBLOCK) {
+				ret = wait_for_write(fd);
+				if (ret < 0)
+					return -1;
+				ret = 0;
+				continue;
+			}
+			log_message(WARNING, DEBUG_AREA_MAIN,
+					" Fatal write error: %d (%s)\n", errno, strerror(errno));
+
+			return -1;
+		}
+		write_count += ret;
+	} while (ret < 0);
+
+	return write_count;
+}
+
 static int ocsp_connect_client_socket(const char *ocsp_host, unsigned int ocsp_port)
 {
 	int sock;
 	struct addrinfo *res, *res0;
 	struct addrinfo hints;
 	int ecode;
+	int err;
+	socklen_t optlen = sizeof(err);
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_socktype = SOCK_STREAM;
@@ -170,23 +250,43 @@ static int ocsp_connect_client_socket(const char *ocsp_host, unsigned int ocsp_p
 		}
 
 		/* set non-blocking mode */
-		//fcntl(sock,F_SETFL,(fcntl(sock,F_GETFL)|O_NONBLOCK));
+		fcntl(sock,F_SETFL,(fcntl(sock,F_GETFL)|O_NONBLOCK));
 
-		if (connect(sock, res->ai_addr, res->ai_addrlen) != 0) {
-			int error = errno;
-			if (error!=EINPROGRESS && error!=EWOULDBLOCK) {
-				close(sock);
-				continue;
-			}
-			/* wait for socket to be ready to write */
-			ecode = wait_for_write(sock);
-			if (ecode != 0) {
-				close(sock);
-				continue;
-			}
+		if (connect(sock, res->ai_addr, res->ai_addrlen) == 0)
+			break;
+
+		err = errno;
+		if (err!=EINPROGRESS && err!=EWOULDBLOCK) {
+			log_message(WARNING, DEBUG_AREA_MAIN,
+					" Connect failed: %d (%s) family:%d", err, strerror(err),
+					res->ai_family);
+			close(sock);
+			continue;
+		}
+		/* wait for socket to be ready to write */
+		ecode = wait_for_write(sock);
+		if (ecode != 0) {
+			log_message(WARNING, DEBUG_AREA_MAIN,
+					" Connect failed (timeout): family:%d",
+					res->ai_family);
+			close(sock);
+			continue;
 		}
 
-		break;
+		/* make sure socket is connected */
+		if (getsockopt(sock, SOL_SOCKET, SO_ERROR, &err, &optlen)) {
+			log_message(WARNING, DEBUG_AREA_MAIN,
+					" Could not retrieve the error code");
+			close(sock);
+			continue;
+		}
+		if (err == 0) {
+			break;
+		} else {
+			log_message(WARNING, DEBUG_AREA_MAIN,
+					" Connect failed (getsockopt): %d (%s) family:%d", err, strerror(err),
+					res->ai_family);
+		}
 	}
 
 	freeaddrinfo(res0);
@@ -235,11 +335,11 @@ static int _ocsp_send_request(BIO *request, int sock)
 	int rc;
 
 	while ((len = BIO_read(request, buf, sizeof(buf))) > 0) {
-		rc = write(sock, buf, len);
+		rc = nonblocking_write(sock, buf, len, OCSP_TIMEOUT);
 
 		if (rc < 0) {
 			log_message(WARNING, DEBUG_AREA_MAIN,
-					" _ocsp_send_request: %d", errno);
+					" _ocsp_send_request: %d (%s)", errno, strerror(errno));
 			return -1;
 		}
 	}
@@ -249,13 +349,13 @@ static int _ocsp_send_request(BIO *request, int sock)
 
 static OCSP_RESPONSE *_ocsp_read_response(BIO *bio, int sock)
 {
-	char buf[4096];
+	char buf[8192];
 	int len;
 	OCSP_RESPONSE *response = NULL;
 	char *ptr;
 	int headers_found = 0;
 
-	while ((len = read(sock, buf, sizeof(buf))) > 0) {
+	while ((len = nonblocking_read(sock, buf, sizeof(buf), OCSP_TIMEOUT)) > 0) {
 		if (len < 0) {
 			return NULL;
 		}
@@ -454,9 +554,6 @@ int check_ocsp(nussl_session *session, gpointer params_p)
 
 	/* send the request and get a response */
 	response = handle_ocsp_request(request, fd, ocsp_path, ocsp_host, ocsp_port);
-#if 0
-	response = OCSP_sendreq_bio(bio, ocsp_path, request);
-#endif
 	if (response == NULL) {
 		log_message(WARNING, DEBUG_AREA_MAIN,
 				" Could not get OCSP response");
