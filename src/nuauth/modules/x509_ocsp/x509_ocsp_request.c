@@ -30,6 +30,8 @@
 
 #ifdef HAVE_OPENSSL
 
+#include <fcntl.h>
+
 #include <openssl/ssl.h>
 #include <openssl/err.h>
 #include <openssl/ocsp.h>
@@ -103,6 +105,33 @@ static int _extract_ocsp_uri(X509 *ca_cert, char *ocsp_host,
 	return (rc > 0);
 }
 
+static void fd_ready_to_write(int revents, void *arg)
+{
+	int *is_ready = arg;
+
+	if (revents & EV_WRITE)
+		{ /* fd might have data for us, joy! */ *is_ready = 1; }
+	else if (revents & EV_TIMER)
+		{ /* doh, nothing entered */ *is_ready = 0; }
+}
+
+static int wait_for_write(int fd)
+{
+	struct ev_loop *loop;
+	int is_ready = 0;
+
+	loop = ev_loop_new(0);
+	ev_once (loop, fd, EV_WRITE, 10., fd_ready_to_write, &is_ready);
+
+	ev_loop(loop, 0);
+	ev_loop_destroy(loop);
+
+	if (is_ready > 0)
+		return 0;
+
+	return -1;
+}
+
 static int ocsp_connect_client_socket(const char *ocsp_host, unsigned int ocsp_port)
 {
 	int sock;
@@ -140,10 +169,21 @@ static int ocsp_connect_client_socket(const char *ocsp_host, unsigned int ocsp_p
 			continue;
 		}
 
-		/* FIXME blocking call ! */
+		/* set non-blocking mode */
+		//fcntl(sock,F_SETFL,(fcntl(sock,F_GETFL)|O_NONBLOCK));
+
 		if (connect(sock, res->ai_addr, res->ai_addrlen) != 0) {
-			close(sock);
-			continue;
+			int error = errno;
+			if (error!=EINPROGRESS && error!=EWOULDBLOCK) {
+				close(sock);
+				continue;
+			}
+			/* wait for socket to be ready to write */
+			ecode = wait_for_write(sock);
+			if (ecode != 0) {
+				close(sock);
+				continue;
+			}
 		}
 
 		break;
@@ -153,7 +193,7 @@ static int ocsp_connect_client_socket(const char *ocsp_host, unsigned int ocsp_p
 
 	if (res == NULL) {
 		log_message(WARNING, DEBUG_AREA_MAIN,
-				" Could not createa valid connection to OCSP server %s:%d",
+				" Could not create a valid connection to OCSP server %s:%d",
 				ocsp_host, ocsp_port);
 
 		return -1;
@@ -162,13 +202,143 @@ static int ocsp_connect_client_socket(const char *ocsp_host, unsigned int ocsp_p
 	return sock;
 }
 
+/* Serialize an OCSP request which will be sent to the responder at
+ * given URI to a memory BIO object, which is returned. */
+static BIO *serialize_request(OCSP_REQUEST *req, const char *ocsp_path, const char *ocsp_host, unsigned int ocsp_port)
+{
+	BIO *bio;
+	int len;
+
+	len = i2d_OCSP_REQUEST(req, NULL);
+
+	bio = BIO_new(BIO_s_mem());
+
+	BIO_printf(bio, "POST %s HTTP/1.0\r\n"
+			"Host: %s:%d\r\n"
+			"Content-Length: %d\r\n"
+			"\r\n",
+			ocsp_path,
+			ocsp_host, ocsp_port, len);
+
+	if (i2d_OCSP_REQUEST_bio(bio, req) != 1) {
+		BIO_free(bio);
+		return NULL;
+	}
+
+	return bio;
+}
+
+static int _ocsp_send_request(BIO *request, int sock)
+{
+	char buf[4096];
+	int len;
+	int rc;
+
+	while ((len = BIO_read(request, buf, sizeof(buf))) > 0) {
+		rc = write(sock, buf, len);
+
+		if (rc < 0) {
+			log_message(WARNING, DEBUG_AREA_MAIN,
+					" _ocsp_send_request: %d", errno);
+			return -1;
+		}
+	}
+
+	return 0;
+}
+
+static OCSP_RESPONSE *_ocsp_read_response(BIO *bio, int sock)
+{
+	char buf[4096];
+	int len;
+	OCSP_RESPONSE *response = NULL;
+	char *ptr;
+	int headers_found = 0;
+
+	while ((len = read(sock, buf, sizeof(buf))) > 0) {
+		if (len < 0) {
+			return NULL;
+		}
+		buf[len] = '\0';
+
+		/* Skip headers; don't have to even bother parsing the
+		 * Content-Length since the server is obliged to close the
+		 * connection after the response anyway for HTTP/1.0. */
+		/* read until empty line (including this line) */
+
+		if (headers_found) {
+			BIO_write(bio, buf, (int)len);
+		} else {
+			ptr = buf;
+			do {
+				ptr = strchr(ptr, '\n');
+				if (ptr == NULL)
+					continue;
+				ptr++;
+				if (ptr[0] == '\r' || ptr[0] == '\n') {
+					/* empty line: end of headers */
+					ptr = strchr(ptr, '\n');
+					ptr++;
+					if (ptr == NULL) {
+						/* this should never happen */
+						continue;
+					}
+					BIO_write(bio, ptr, (int)len - (ptr-buf));
+					headers_found = 1;
+				}
+			} while(ptr != NULL && headers_found == 0);
+		}
+	}
+
+	/* decode the OCSP response the bio */
+	response = d2i_OCSP_RESPONSE_bio(bio, NULL);
+	if (response == NULL) {
+		log_message(WARNING, DEBUG_AREA_MAIN,
+				"failed to decode OCSP response data");
+	}
+
+	return response;
+}
+
+OCSP_RESPONSE *handle_ocsp_request(OCSP_REQUEST *request, int sock, const char *ocsp_path, const char *ocsp_host, unsigned int ocsp_port)
+{
+	OCSP_RESPONSE *response = NULL;
+	BIO *bio;
+	int rc;
+
+	bio = serialize_request(request, ocsp_path, ocsp_host, ocsp_port);
+	if (bio == NULL) {
+		log_message(WARNING, DEBUG_AREA_MAIN,
+				" Could not serialize OCSP request");
+		return NULL;
+	}
+
+	/* send serialized request */
+	rc = _ocsp_send_request(bio, sock);
+	if (rc != 0) {
+		log_message(WARNING, DEBUG_AREA_MAIN,
+				" Could not send OCSP request");
+		BIO_free(bio);
+		return NULL;
+	}
+
+	 /* Clear the BIO contents, ready for the response. */
+	(void)BIO_reset(bio);
+
+	/* read response */
+	response = _ocsp_read_response(bio, sock);
+
+	BIO_free(bio);
+	return response;
+}
+
 /** See RFC 2459
  */
 int check_ocsp(nussl_session *session, gpointer params_p)
 {
 	int retval = 1;
 	int ret;
-	int fd;
+	int fd = -1;
 	struct x509_ocsp_params *params = (struct x509_ocsp_params *)params_p;
 	char ocsp_host[OCSP_BUFFER_LEN];
 	char ocsp_port_s[OCSP_BUFFER_LEN];
@@ -214,7 +384,7 @@ int check_ocsp(nussl_session *session, gpointer params_p)
 	if (retval > 0) {
 		ocsp_port = (unsigned int)strtoul(ocsp_port_s, NULL, 10);
 	} else {
-		/* TODO check if an OCSP server was configured */
+		/* check if an OCSP server was configured */
 		if (params->ocsp_server == NULL)
 			return 0;
 
@@ -264,7 +434,7 @@ int check_ocsp(nussl_session *session, gpointer params_p)
 	certID=OCSP_cert_to_id(0, cert, issuer);
 	if (certID == NULL) {
 		log_message(WARNING, DEBUG_AREA_MAIN,
-				" Could not get certificate ID fo OCSP request");
+				" Could not get certificate ID for OCSP request");
 		goto cleanup;
 	}
 
@@ -283,17 +453,18 @@ int check_ocsp(nussl_session *session, gpointer params_p)
 	OCSP_request_add1_nonce(request, 0, -1);
 
 	/* send the request and get a response */
-	/* FIXME: this code won't work with ucontext threading */
-	/* (blocking sockets are used) */
-	bio = BIO_new_fd(fd, BIO_NOCLOSE);
-	//setnonblock(fd, 0);
+	response = handle_ocsp_request(request, fd, ocsp_path, ocsp_host, ocsp_port);
+#if 0
 	response = OCSP_sendreq_bio(bio, ocsp_path, request);
-	//setnonblock(c->fd, 1);
+#endif
 	if (response == NULL) {
 		log_message(WARNING, DEBUG_AREA_MAIN,
 				" Could not get OCSP response");
 		goto cleanup;
 	}
+
+	close(fd);
+	fd = -1;
 
 	ret = OCSP_response_status(response);
 	if (ret != OCSP_RESPONSE_STATUS_SUCCESSFUL) {
@@ -346,7 +517,6 @@ int check_ocsp(nussl_session *session, gpointer params_p)
 		log_message(WARNING, DEBUG_AREA_MAIN,
 				" Could not get OCSP basic response (OCSP_resp_find_status)");
 		OCSP_RESPONSE_free(response);
-		close(fd);
 	}
 
 	/* success */
@@ -357,7 +527,6 @@ int check_ocsp(nussl_session *session, gpointer params_p)
 
 
 	X509_STORE_CTX_cleanup (&store_ctx);
-	close(fd);
 
 	retval = status;
 
@@ -374,6 +543,8 @@ cleanup:
 		OCSP_RESPONSE_free(response);
 	if (basicResponse)
 		OCSP_BASICRESP_free(basicResponse);
+	if (fd >= 0)
+		close(fd);
 
 	return retval;
 }
