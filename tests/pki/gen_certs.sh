@@ -28,8 +28,11 @@ make cert NAME="ocsp.inl.fr" CERT_TYPE=ocsp_server
 
 # subca stuff
 make subca NAME="sub1"
-make subcert NAME=subserver1 CA_NAME=sub1 CERT_TYPE=server
-make subcert NAME=subuser1 CA_NAME=sub1 CERT_TYPE=user
+make subcert NAME="subserver1" CA_NAME=sub1 CERT_TYPE=server
+make subcert NAME="subuser1" CA_NAME=sub1 CERT_TYPE=user
+make subcert NAME="subuser1-revoked" CA_NAME=sub1 CERT_TYPE=user
+
+make revoke NAME="subuser1-revoked"
 
 chmod o-rwx *.key
 
