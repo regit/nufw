@@ -87,6 +87,7 @@ organizationName	= match
 organizationalUnitName	= optional
 commonName		= supplied
 emailAddress		= optional
+UID			= optional
 
 # For the 'anything' policy
 # At this point in time, you must list all acceptable 'object'
@@ -99,6 +100,7 @@ organizationName	= optional
 organizationalUnitName	= optional
 commonName		= supplied
 emailAddress		= optional
+UID			= optional
 
 ####################################################################
 [ req ]

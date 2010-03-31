@@ -72,7 +72,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 
 	/*  set variables */
 	params->trusted_issuer_dn = nuauth_config_table_get("nuauth_tls_trusted_issuer_dn");
-	params->uid_method = nuauth_config_table_get_or_default("nuauth_tls_uid_method", "CN");
+	params->uid_method = nuauth_config_table_get_or_default("nuauth_tls_uid_method", "UID CN");
 	params->uid_method_list = g_strsplit(params->uid_method, " ", 0);
 
 	module->params = (gpointer) params;
@@ -170,6 +170,7 @@ static gchar *certificate_cn_to_uid(nussl_session* session,
 
 	return NULL;
 }
+
 #ifdef HAVE_OPENSSL
 
 #include <fcntl.h>
@@ -238,13 +239,72 @@ static gchar *certificate_subjectaltname_upn_to_uid(nussl_session* session,
 		}
 	}
 
-
 	return NULL;
+}
+
+static gchar *certificate_subjectname_uid_to_uid(nussl_session* session,
+						    gpointer params)
+{
+	SSL *ssl = (SSL*)nussl_get_socket(session);
+	X509 *cert;
+	X509_NAME *subj;
+	X509_NAME_ENTRY *entry;
+	int idx = -1, lastidx;
+	ASN1_STRING *oid;
+
+	cert = SSL_get_peer_certificate(ssl);
+	if (cert == NULL) {
+		log_message(WARNING, DEBUG_AREA_MAIN,
+				" Could not get client certificate");
+		return NULL;
+	}
+
+	subj = X509_get_subject_name(cert);
+	if (subj == NULL) {
+		log_message(WARNING, DEBUG_AREA_MAIN,
+				" Could not get subject from client certificate");
+		return NULL;
+	}
+
+	/* find the most specific UID attribute. */
+	do {
+		lastidx = idx;
+		idx = X509_NAME_get_index_by_NID(subj, NID_userId, lastidx);
+	} while (idx >= 0);
+
+	if (lastidx < 0) {
+		log_message(INFO, DEBUG_AREA_MAIN,
+				" Could not get find UID in subject from client certificate");
+		return NULL;
+	}
+
+	/* extract the value from the last entry */
+	entry = X509_NAME_get_entry(subj, lastidx);
+	oid = X509_NAME_ENTRY_get_data(entry);
+	if (entry == NULL || oid == NULL) {
+		log_message(WARNING, DEBUG_AREA_MAIN,
+				" Could not get extract UID from client certificate subject");
+		return NULL;
+	}
+
+	log_message(DEBUG, DEBUG_AREA_MAIN,
+			" subjectName: found UID %s", oid->data);
+
+	return g_strdup((char*)oid->data);
 }
 
 #else /* HAVE_OPENSSL */
 
 static gchar *certificate_subjectaltname_upn_to_uid(nussl_session* session,
+						    gpointer params)
+{
+	log_message(CRITICAL, DEBUG_AREA_MAIN,
+			" x509_std: this uid module is not implemented: %d");
+
+	return NULL;
+}
+
+static gchar *certificate_subjectname_uid_to_uid(nussl_session* session,
 						    gpointer params)
 {
 	log_message(CRITICAL, DEBUG_AREA_MAIN,
@@ -267,6 +327,12 @@ G_MODULE_EXPORT gchar *certificate_to_uid(nussl_session* session,
 		uid_method = params->uid_method_list[i];
 		if (strcasecmp(uid_method, "CN") == 0) {
 			reply = certificate_cn_to_uid(session, params);
+			if (reply)
+				return reply;
+		}
+
+		if (strcasecmp(uid_method, "UID") == 0) {
+			reply = certificate_subjectname_uid_to_uid(session, params);
 			if (reply)
 				return reply;
 		}
