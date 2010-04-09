@@ -883,6 +883,7 @@ void tls_crl_update_nufw_session(GSList *session)
 			continue;
 		}
 
+		g_mutex_lock(nuauth_thread->mutex);
 		ret = nussl_ssl_set_crl_file(context->server, nuauth_tls.crl_file, nuauth_tls.ca);
 
 		if (ret != NUSSL_OK) {
@@ -890,6 +891,7 @@ void tls_crl_update_nufw_session(GSList *session)
 					"[%i] NuFW TLS: CRL file reloading failed (%s)",
 					getpid(), nussl_get_error(context->server));
 		}
+		g_mutex_unlock(nuauth_thread->mutex);
 
 		listrunner = g_slist_next(listrunner);
 

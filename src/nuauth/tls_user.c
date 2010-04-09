@@ -1105,6 +1105,7 @@ void tls_crl_update_user_session(GSList *session)
 
 	while ( listrunner ) {
 		struct nuauth_thread_t *nuauth_thread = listrunner->data;
+                
 		struct tls_user_context_t *context = nuauth_thread->data;
 
 		// Don't update the CRL when nufw is not yet connected
@@ -1113,6 +1114,7 @@ void tls_crl_update_user_session(GSList *session)
 			continue;
 		}
 
+		g_mutex_lock(nuauth_thread->mutex);
 		ret = nussl_ssl_set_crl_file(context->nussl, nuauth_tls.crl_file, nuauth_tls.ca);
 
 		if (ret != NUSSL_OK) {
@@ -1120,6 +1122,7 @@ void tls_crl_update_user_session(GSList *session)
 					"[%i] User TLS: CRL file reloading failed (%s)",
 					getpid(), nussl_get_error(context->nussl));
 		}
+		g_mutex_unlock(nuauth_thread->mutex);
 
 		listrunner = g_slist_next(listrunner);
 
