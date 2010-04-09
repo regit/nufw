@@ -862,6 +862,42 @@ void tls_nufw_start_servers(GSList *servers)
 }
 
 
+/**
+ * Refresh crl in the nufw contexts
+ *
+ */
+
+void tls_crl_update_nufw_session(GSList *session)
+{
+
+	GSList *listrunner = session;
+	int ret;
+
+	while ( listrunner ) {
+		struct nuauth_thread_t *nuauth_thread = listrunner->data;
+		struct tls_nufw_context_t *context = nuauth_thread->data;
+
+		// Don't update the CRL when nufw is not yet connected
+		if (context->server == NULL) {
+			listrunner = g_slist_next(listrunner);
+			continue;
+		}
+
+		ret = nussl_ssl_set_crl_file(context->server, nuauth_tls.crl_file, nuauth_tls.ca);
+
+		if (ret != NUSSL_OK) {
+			log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_CRITICAL,
+					"[%i] NuFW TLS: CRL file reloading failed (%s)",
+					getpid(), nussl_get_error(context->server));
+		}
+
+		listrunner = g_slist_next(listrunner);
+
+	}
+	g_slist_free(listrunner);
+
+}
+
 
 /**
  * @}
