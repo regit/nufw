@@ -1105,11 +1105,51 @@ static int check_crl_validity(nussl_session * sess, const char *crl_file, const 
 	return NUSSL_OK;
 }
 
+/*
+ * If the same CRL was updated (re-issued), we
+ * don't know if this is properly reloaded, so patch openssl
+ * See http://www.open.com.au/pipermail/radiator/2009-November/015911.html
+ * http://rt.openssl.org/Ticket/Display.html?id=1893
+ */
+static int X509_STORE_add_or_replace_crl(X509_STORE *ctx, X509_CRL *x)
+{
+	X509_OBJECT *obj;
+	int idx;
+
+	if (x == NULL) return 0;
+	obj=(X509_OBJECT *)OPENSSL_malloc(sizeof(X509_OBJECT));
+	if (obj == NULL)
+		{
+		X509err(X509_F_X509_STORE_ADD_CRL,ERR_R_MALLOC_FAILURE);
+		return 0;
+		}
+	obj->type=X509_LU_CRL;
+	obj->data.crl=x;
+
+	CRYPTO_w_lock(CRYPTO_LOCK_X509_STORE);
+
+	X509_OBJECT_up_ref_count(obj);
+
+	idx = sk_X509_OBJECT_find(ctx->objs, obj);
+	if (idx >= 0)
+		(void)sk_X509_OBJECT_delete(ctx->objs, idx);
+	sk_X509_OBJECT_push(ctx->objs, obj);
+
+	CRYPTO_w_unlock(CRYPTO_LOCK_X509_STORE);
+
+	return 1;
+}
+
 int nussl_ssl_set_crl_file(nussl_session * sess, const char *crl_file, const char *ca_file)
 {
 	X509_STORE *store = SSL_CTX_get_cert_store(sess->ssl_context->ctx);
-	X509_LOOKUP* lu;
+	STACK_OF(X509_INFO) *sk;
+	X509_INFO *itmp;
+	BIO *in;
+	int i;
+	int count = 0;
 	int ret;
+	unsigned long err;
 
 	if (store == NULL)
 		return NUSSL_ERROR;
@@ -1118,14 +1158,52 @@ int nussl_ssl_set_crl_file(nussl_session * sess, const char *crl_file, const cha
 		return NUSSL_FAILED;
 	}
 
-	lu = X509_STORE_add_lookup(store, X509_LOOKUP_file());
-	if (lu == NULL)
-		return NUSSL_ERROR;
+	in = BIO_new(BIO_s_file());
+	if (in == NULL) {
+		return NUSSL_FAILED;
+	}
 
-	//ret = X509_load_crl_file(lu, crl_file, X509_FILETYPE_ASN1);
+	if (BIO_read_filename(in, crl_file) <= 0) {
+		BIO_free(in);
+		return NUSSL_FAILED;
+	}
 
-	ret = X509_load_crl_file(lu, crl_file, X509_FILETYPE_PEM);
-	if (ret == 1) {
+	sk = PEM_X509_INFO_read_bio(in, NULL, NULL, NULL);
+	BIO_free(in);
+
+	if (sk == NULL) {
+		nussl_set_error(sess, "CRL load failed: unable to get x509 info\n");
+		return NUSSL_FAILED;
+	}
+
+	for(i = 0; i < sk_X509_INFO_num(sk); i++) {
+		itmp = sk_X509_INFO_value(sk, i);
+		if(itmp->crl) {
+			ERR_clear_error();
+			ret = X509_STORE_add_or_replace_crl(store, itmp->crl);
+			if (ret != 1) {
+				/* specifically ignore the error if we are trying to load
+				 * a CRL which was already loaded before
+				 */
+				err = ERR_get_error();
+				if ((err & 0xff) == X509_R_CERT_ALREADY_IN_HASH_TABLE) {
+					NUSSL_DEBUG(NUSSL_DBG_SSL, "Load CRL ignored (file %s index %d)\n",
+							crl_file, i);
+					count++;
+					continue;
+				}
+				NUSSL_DEBUG(NUSSL_DBG_SSL, "Load CRL failed (file %s index %d): %d\n",
+						crl_file, i, ret);
+				NUSSL_DEBUG(NUSSL_DBG_SOCKET,
+						"ssl: error in X509_STORE_add_crl %lx: %s\n",
+						err, ERR_error_string(err,NULL));
+			}
+			count++;
+		}
+	}
+	sk_X509_INFO_pop_free(sk, X509_INFO_free);
+
+	if (count > 0) {
 		X509_STORE_set_flags(store, X509_V_FLAG_CRL_CHECK | X509_V_FLAG_CRL_CHECK_ALL);
 		return NUSSL_OK;
 	}
