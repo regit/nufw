@@ -1610,6 +1610,7 @@ int nussl_sock_accept_ssl(nussl_socket * sock, nussl_ssl_context * ctx)
 		SSL_set_cipher_list(ssl, ctx->ciphers);
 
 	sock->ssl = ssl;
+	errmsg[0] = '\0';
 	ret = nussl_ssl_accept(&ssl, sock->cotimeout, errmsg, sizeof(errmsg));
 	if (ret == 0) { /* timeout */
 		nussl_snprintf(sock->error, (sizeof sock->error),
