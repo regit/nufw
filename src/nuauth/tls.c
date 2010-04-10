@@ -133,10 +133,10 @@ void force_refresh_crl_file(void)
 {
 	struct stat stats;
 
-	if (nuauth_tls.crl_file == NULL) {
+	if (nuauth_tls.crl_file == NULL)
 		return;
-	}
-	stat(nuauth_tls.crl_file, &stats);
+	if (stat(nuauth_tls.crl_file, &stats) < 0)
+		return;
 
 	if (nuauth_tls.crl_file_mtime < stats.st_mtime) {
 		tls_crl_update_nufw_session(nuauthdatas->tls_nufw_servers);
