@@ -1061,12 +1061,17 @@ static int check_crl_validity(nussl_session * sess, const char *crl_file, const 
 		return NUSSL_FAILED;
 
 	ca_bio = BIO_new_file(ca_file, "rb");
-	if (ca_bio == NULL)
+	if (ca_bio == NULL) {
+		X509_CRL_free(crl);
 		return NUSSL_FAILED;
+	}
 
 	ca = PEM_read_bio_X509(ca_bio, NULL, NULL, NULL);
-	if (ca == NULL)
+	if (ca == NULL) {
+		X509_CRL_free(crl);
+		BIO_free(ca_bio);
 		return NUSSL_FAILED;
+	}
 
 	pkey = X509_get_pubkey(ca);
 
@@ -1076,6 +1081,7 @@ static int check_crl_validity(nussl_session * sess, const char *crl_file, const 
 	{
 		EVP_PKEY_free(pkey);
 		X509_CRL_free(crl);
+		X509_free(ca);
 		nussl_set_error(sess, _("CRL check failed: could not extract certificate authority public key from %s: %s\n"),ca_file,ERR_error_string(ERR_get_error(), NULL));
 		return NUSSL_FAILED;
 	}
@@ -1100,7 +1106,9 @@ static int check_crl_validity(nussl_session * sess, const char *crl_file, const 
 		nussl_set_error(sess, "CRL check failed: CRL has expired\n");
 	}
 
+	X509_free(ca);
 	X509_CRL_free(crl);
+
 	return NUSSL_OK;
 }
 
@@ -1116,22 +1124,25 @@ static int X509_STORE_add_or_replace_crl(X509_STORE *ctx, X509_CRL *x)
 	int idx;
 
 	if (x == NULL) return 0;
-	obj=(X509_OBJECT *)OPENSSL_malloc(sizeof(X509_OBJECT));
-	if (obj == NULL)
-		{
+	obj = (X509_OBJECT *)OPENSSL_malloc(sizeof(X509_OBJECT));
+	if (obj == NULL) {
 		X509err(X509_F_X509_STORE_ADD_CRL,ERR_R_MALLOC_FAILURE);
 		return 0;
-		}
-	obj->type=X509_LU_CRL;
-	obj->data.crl=x;
+	}
+	obj->type = X509_LU_CRL;
+	obj->data.crl = x;
 
 	CRYPTO_w_lock(CRYPTO_LOCK_X509_STORE);
 
 	X509_OBJECT_up_ref_count(obj);
 
 	idx = sk_X509_OBJECT_find(ctx->objs, obj);
-	if (idx >= 0)
-		(void)sk_X509_OBJECT_delete(ctx->objs, idx);
+	if (idx >= 0) {
+		X509_OBJECT *obj_old;
+		obj_old = sk_X509_OBJECT_delete(ctx->objs, idx);
+		X509_OBJECT_free_contents(obj_old);
+		OPENSSL_free(obj_old);
+	}
 	sk_X509_OBJECT_push(ctx->objs, obj);
 
 	CRYPTO_w_unlock(CRYPTO_LOCK_X509_STORE);
