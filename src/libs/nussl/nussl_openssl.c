@@ -1096,14 +1096,17 @@ static int check_crl_validity(nussl_session * sess, const char *crl_file, const 
 		 * Error: 67567722 : error:0407006A:rsa routines:RSA_padding_check_PKCS1_type_1:block type is not 01
 		 * In human-readable form, this means the CRL is not signed by the CA ...
 		 */
+		const char * errmsg = ERR_error_string(ERR_get_error(), NULL);
 		/* TODO find a way to warn user without exiting */
-		nussl_set_error(sess, "CRL check failed. Is CRL issued by the same Certificate Authority ?\n");
+		nussl_set_error(sess, "CRL check failed. Is CRL issued by the same Certificate Authority ? (%s)\n", errmsg);
+		NUSSL_DEBUG(NUSSL_DBG_SSL, "CRL check failed. Is CRL issued by the same Certificate Authority ? (%s)\n", errmsg);
 	}
 	if (X509_cmp_current_time(X509_CRL_get_nextUpdate(crl)) < 0
 			|| X509_cmp_current_time(X509_CRL_get_lastUpdate(crl)) > 0)
 	{
 		/* TODO find a way to warn user without exiting */
 		nussl_set_error(sess, "CRL check failed: CRL has expired\n");
+		NUSSL_DEBUG(NUSSL_DBG_SSL, "CRL check failed. CRL has expired\n");
 	}
 
 	X509_free(ca);
