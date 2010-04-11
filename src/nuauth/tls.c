@@ -141,6 +141,7 @@ void force_refresh_crl_file(void)
 	if (nuauth_tls.crl_file_mtime < stats.st_mtime) {
 		tls_crl_update_nufw_session(nuauthdatas->tls_nufw_servers);
 		tls_crl_update_user_session(nuauthdatas->tls_auth_servers);
+		nuauth_tls.crl_file_mtime = stats.st_mtime;
 	}
 	nuauth_tls.crl_refresh_counter = 0;
 }
