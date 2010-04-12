@@ -235,10 +235,14 @@ encoder_t* encode_user(user_session_t* session)
 	/* create group list */
 	for (group=session->groups; group; group=g_slist_next(group)) {
 		encoder_t *group_data;
-		unsigned int gid = GPOINTER_TO_UINT(group->data);
 
 		group_data = encoder_new();
-		encoder_add_int32(group_data, gid);
+		if (nuauthconf->use_groups_name) {
+			encoder_add_string(group_data, (char *)group->data);
+		} else {
+			unsigned int gid = GPOINTER_TO_UINT(group->data);
+			encoder_add_int32(group_data, gid);
+		}
 		groups = g_slist_prepend(groups, group_data);
 	}
 
