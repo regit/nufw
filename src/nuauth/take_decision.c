@@ -1,9 +1,7 @@
 /*
  ** Copyright(C) 2006,2008,2008 INL
- ** Written by Eric Leblond <regit@inl.fr>
- ** INL : http://www.inl.fr/
- **
- ** $Id$
+ ** Copyright(C) 2010 EdenWall Technologies
+ ** Written by Eric Leblond <eleblond@edenwall.com>
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -130,6 +128,33 @@ static void search_user_group_in_acl_groups(struct acl_group *datas,
 	}
 }
 
+static int str_compare(gconstpointer a, gconstpointer b)
+{
+	return strcmp((const char*) a, (const char *) b);
+}
+
+static void search_user_group_in_acl_groups_str(struct acl_group *datas,
+					    decision_t *answer,
+					    test_t *test,
+					    connection_t *element,
+					    time_t *expire,
+					    GSList *user_group)
+{
+	if (g_slist_find_custom(datas->
+			 groups,
+			 (gconstpointer) user_group->data,
+			 (GCompareFunc) str_compare)) {
+		/* find a group match, time to update decision */
+		*answer = datas->answer;
+		update_decision(datas, answer, test, element, expire);
+	} else {
+		if (*answer == DECISION_NODECIDE) {
+			update_connection_datas (element,datas);
+		}
+	}
+}
+
+
 static void search_user_id_in_acl_groups(struct acl_group *datas,
 					    decision_t *answer,
 					    test_t *test,
@@ -149,6 +174,13 @@ static void search_user_id_in_acl_groups(struct acl_group *datas,
 		}
 	}
 }
+
+typedef void search_user_group_in_acl_groups_func(struct acl_group *datas,
+					    decision_t *answer,
+					    test_t *test,
+					    connection_t *element,
+					    time_t *expire,
+					    GSList *user_group);
 
 
 /**
@@ -179,6 +211,7 @@ nu_error_t take_decision(connection_t * element, packet_place_t place)
 	test_t test;
 	GSList *user_group = element->user_groups;
 	time_t expire = -1;	/* no expiration by default */
+	search_user_group_in_acl_groups_func *search_user_group_in_acl_groups_p = NULL;
 
 	debug_log_message(DEBUG, DEBUG_AREA_MAIN,
 			  "Trying to take decision on %p", element);
@@ -202,6 +235,13 @@ nu_error_t take_decision(connection_t * element, packet_place_t place)
 			stop_test = DECISION_ACCEPT;
 		}
 		test = TEST_NODECIDE;
+
+
+		if (nuauthconf->use_groups_name) {
+			search_user_group_in_acl_groups_p = search_user_group_in_acl_groups_str;
+		} else {
+			search_user_group_in_acl_groups_p = search_user_group_in_acl_groups;
+		}
 		for (parcours = element->acl_groups;
 		     (parcours != NULL && test == TEST_NODECIDE);
 		     parcours = g_slist_next(parcours)) {
@@ -231,7 +271,7 @@ nu_error_t take_decision(connection_t * element, packet_place_t place)
 							g_slist_next(user_group)) {
 						/* search user group in acl_groups */
 						if (((struct acl_group *)(parcours->data))->groups) {
-							search_user_group_in_acl_groups(
+							search_user_group_in_acl_groups_p(
 									((struct acl_group *)(parcours->data)),
 									&answer,
 									&test,
