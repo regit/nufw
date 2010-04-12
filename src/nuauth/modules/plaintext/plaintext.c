@@ -787,11 +787,11 @@ static int read_acl_list(struct plaintext_params *params)
 
 	fclose(fd);
 	return 0;
-	}
+}
 
-	G_MODULE_EXPORT gboolean unload_module_with_params(struct plaintext_params
+G_MODULE_EXPORT gboolean unload_module_with_params(struct plaintext_params
 						   * params)
-	{
+{
 	if (!params) {
 		return TRUE;
 	}
