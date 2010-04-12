@@ -357,4 +357,19 @@ int parse_addr_port(
 	return 1;
 }
 
+GSList * duplicate_str_list(const GSList * a)
+{
+	GSList *ret_list = NULL;
+	GSList *p;
+
+	for(p = a; p != NULL; p = p->next) {
+		if (p->data) {
+			ret_list = g_slist_prepend(ret_list,
+						   g_strdup((gchar *)p->data));
+		}
+	}
+
+	return ret_list;
+}
+
 /** @} */
