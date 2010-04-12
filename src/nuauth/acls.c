@@ -132,6 +132,9 @@ void free_one_acl_group(struct acl_group *acl, gpointer userdata)
 {
 	if (acl) {
 		g_slist_free(acl->users);
+		if (nuauthconf->use_groups_name) {
+			g_slist_foreach(acl->groups, (GFunc) g_free, NULL);
+		}
 		g_slist_free(acl->groups);
 		g_free(acl->period);
 		g_free(acl->log_prefix);

@@ -510,7 +510,11 @@ GSList *user_request(struct tls_buffer_read * data)
 			connection->username = g_strdup(data->user_name);
 		}
 		connection->user_id = data->user_id;
-		connection->user_groups = g_slist_copy(data->groups);
+		if (nuauthconf->use_groups_name) {
+			connection->user_groups = duplicate_str_list(data->groups);
+		} else {
+			connection->user_groups = g_slist_copy(data->groups);
+		}
 		connection->os_sysname = g_strdup(data->os_sysname);
 		connection->os_release = g_strdup(data->os_release);
 		connection->os_version = g_strdup(data->os_version);

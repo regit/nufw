@@ -174,7 +174,11 @@ void log_user_session(user_session_t * usession, session_state_t state)
 		g_strdup(usession->user_name);
 	sessevent->session->nussl = NULL;
 	sessevent->session->socket = usession->socket;
-	sessevent->session->groups = g_slist_copy(usession->groups);
+	if (nuauthconf->use_groups_name) {
+		sessevent->session->groups = duplicate_str_list(usession->groups);
+	} else {
+		sessevent->session->groups = g_slist_copy(usession->groups);
+	}
 	sessevent->session->sysname = g_strdup(usession->sysname);
 	sessevent->session->version = g_strdup(usession->version);
 	sessevent->session->release = g_strdup(usession->release);

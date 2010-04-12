@@ -236,7 +236,11 @@ nu_error_t treat_user_request(user_session_t * c_session,
 		/* this is an authorized packet we fill the buffer_read structure */
 		data->user_name = g_strdup(c_session->user_name);
 		data->user_id = c_session->user_id;
-		data->groups = g_slist_copy(c_session->groups);
+		if (nuauthconf->use_groups_name) {
+			data->groups = duplicate_str_list(c_session->groups);
+		} else {
+			data->groups = g_slist_copy(c_session->groups);
+		}
 		if (c_session->sysname) {
 			data->os_sysname = g_strdup(c_session->sysname);
 			if (data->os_sysname == NULL) {

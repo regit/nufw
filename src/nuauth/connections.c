@@ -140,6 +140,9 @@ void free_connection(connection_t * conn)
 	}
 
 	g_slist_free(conn->packet_id);
+	if (nuauthconf->use_groups_name) {
+		g_slist_foreach(conn->user_groups, (GFunc) g_free, NULL);
+	}
 	g_slist_free(conn->user_groups);
 	g_free(conn->app_name);
 	g_free(conn->app_sig);
