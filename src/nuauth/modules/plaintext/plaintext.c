@@ -2,8 +2,8 @@
  **  "plaintext" module
  ** Copyright(C) 2004-2005 Mikael Berthe <mikael+nufw@lists.lilotux.net>
  ** Copyright(C) 2005-2008 INL
+ ** Copyright(C) 2010 EdenWall Technologies
  **
- ** $Id$
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -70,6 +70,43 @@ static char *strip_line(char *line, int acceptnull)
 		return NULL;
 
 	return line;
+}
+
+/**
+ * parse_strings()
+ * Extracts integers (like group ids) in intline and fills *p_intlist.
+ * prefix is displayed in front of the log messages.
+ * Returns 0 if successful.
+ */
+static int parse_strings(char *stringline, GSList ** p_stringlist, char *prefix)
+{
+	GSList *stringlist = *p_stringlist;
+	gchar **groups_list;
+	gchar **groups_list_item;
+
+	/*  parsing strings */
+	groups_list = g_strsplit(stringline, ",", 0);
+	if (groups_list == NULL) {
+		log_message(FATAL, DEBUG_AREA_MAIN,
+				"%s parse_stringlist: Malformed line",
+				prefix);
+		*p_stringlist = stringlist;
+		return 1;
+	}
+	groups_list_item = groups_list;
+	for (groups_list_item = groups_list;
+			groups_list_item != NULL && *groups_list_item != NULL;
+			groups_list_item++) {
+		stringlist = g_slist_append(stringlist,
+				g_strdup(*groups_list_item));
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
+				"adding string: \"%s\"",
+				*groups_list_item);
+	}
+	g_strfreev(groups_list);
+
+	*p_stringlist = stringlist;
+	return 0;
 }
 
 /**
@@ -571,11 +608,20 @@ static int read_acl_list(struct plaintext_params *params)
 			char log_prefix[16];
 			snprintf(log_prefix, sizeof(log_prefix) - 1,
 				 "L.%d: ", ln);
-			/*  parsing groups */
-			if (parse_ints
-			    (p_value, &newacl->groups, log_prefix)) {
-				fclose(fd);
-				return 2;
+			if (nuauthconf->use_groups_name) {
+				/*  parsing groups */
+				if (parse_strings
+						(p_value, &newacl->groups, log_prefix)) {
+					fclose(fd);
+					return 2;
+				}
+			} else {
+				/*  parsing groups */
+				if (parse_ints
+						(p_value, &newacl->groups, log_prefix)) {
+					fclose(fd);
+					return 2;
+				}
 			}
 		} else if (!strcasecmp("uid", p_key)) {	/*  Users */
 			char log_prefix[16];
@@ -870,6 +916,9 @@ G_MODULE_EXPORT gboolean unload_module_with_params(struct plaintext_params
 					NULL);
 			g_slist_free(p_acl->dst_ports);
 			g_slist_free(p_acl->users);
+			if (nuauthconf->use_groups_name) {
+				g_slist_foreach(p_acl->groups, (GFunc) g_free, NULL);
+			}
 			g_slist_free(p_acl->groups);
 			g_free(p_acl->aclname);
 			g_free(p_acl->period);
@@ -1263,7 +1312,11 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element, gpointer params)
 		g_assert(this_acl);
 		this_acl->answer = p_acl->decision;
 		this_acl->users = g_slist_copy(p_acl->users);
-		this_acl->groups = g_slist_copy(p_acl->groups);
+		if (nuauthconf->use_groups_name) {
+			this_acl->groups = duplicate_str_list(p_acl->groups);
+		} else {
+			this_acl->groups = g_slist_copy(p_acl->groups);
+		}
 		if (p_acl->period) {
 			this_acl->period = g_strdup(p_acl->period);
 		} else {
