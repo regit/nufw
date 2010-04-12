@@ -727,19 +727,34 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 					  this_acl->answer,
 					  this_acl->period);
 			ldap_value_free_len(attrs_array);
-			/* build groups list */
-			attrs_array = ldap_get_values_len(ld, result, "Group");
-			attrs_array_len = ldap_count_values_len(attrs_array);
-			walker = attrs_array;
-			for (i = 0; i < attrs_array_len; i++) {
-				sscanf((*walker)->bv_val, "%d", &integer);
-				this_acl->groups =
-				    g_slist_prepend(this_acl->groups,
-						    GINT_TO_POINTER
-						    (integer));
-				walker++;
+			/* Group fetching may vary between name and number */
+			if (nuauthconf->use_groups_name) {
+				/* build groups list */
+				attrs_array = ldap_get_values_len(ld, result, "GroupName");
+				attrs_array_len = ldap_count_values_len(attrs_array);
+				walker = attrs_array;
+				for (i = 0; i < attrs_array_len; i++) {
+					this_acl->groups =
+						g_slist_prepend(this_acl->groups,
+								g_strdup((*walker)->bv_val));
+					walker++;
+				}
+				ldap_value_free_len(attrs_array);
+			} else {
+				/* build groups list */
+				attrs_array = ldap_get_values_len(ld, result, "Group");
+				attrs_array_len = ldap_count_values_len(attrs_array);
+				walker = attrs_array;
+				for (i = 0; i < attrs_array_len; i++) {
+					sscanf((*walker)->bv_val, "%d", &integer);
+					this_acl->groups =
+						g_slist_prepend(this_acl->groups,
+								GINT_TO_POINTER
+								(integer));
+					walker++;
+				}
+				ldap_value_free_len(attrs_array);
 			}
-			ldap_value_free_len(attrs_array);
 			/* build users  list */
 			attrs_array = ldap_get_values_len(ld, result, "User");
 			attrs_array_len = ldap_count_values_len(attrs_array);
