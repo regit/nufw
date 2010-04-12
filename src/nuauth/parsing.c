@@ -136,13 +136,19 @@ gchar *string_escape(const gchar * orig)
 }
 
 static void print_group(gpointer group, gpointer userdata);
+static void print_group_str(gpointer group, gpointer userdata);
 
 gchar *str_print_group(user_session_t * usession)
 {
 	gchar *str_groups = NULL;
 	if (usession->groups) {
-		g_slist_foreach(usession->groups, print_group,
-				&str_groups);
+		if (nuauthconf->use_groups_name) {
+			g_slist_foreach(usession->groups, print_group_str,
+					&str_groups);
+		} else {
+			g_slist_foreach(usession->groups, print_group,
+					&str_groups);
+		}
 	}
 	return str_groups;
 }
@@ -162,5 +168,18 @@ static void print_group(gpointer group, gpointer userdata)
 	g_free(userdata_p);
 }
 
+static void print_group_str(gpointer group, gpointer userdata)
+{
+	char ** str_groups = (char **) userdata;
+	char * userdata_p = *(char **) userdata;
+	if (userdata_p) {
+		*str_groups = g_strdup_printf("%s,%s",
+				userdata_p,
+				(char *)group);
+	} else {
+		*str_groups = g_strdup_printf("%s", (char *)group);
+	}
+	g_free(userdata_p);
+}
 
 /** @} */
