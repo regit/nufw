@@ -124,6 +124,9 @@ struct nuauth_params {
 	int do_ip_authentication;	/*<! nuauth uses ip_authentication
 					  fallback mode if set to 1 */
 	int hello_authentication;
+	int use_groups_name;
+
+
 	char *nufw_srv;
 	char *client_srv;
 #ifdef BUILD_NUAUTH_COMMAND

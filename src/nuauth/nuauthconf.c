@@ -147,6 +147,10 @@ int init_nuauthconf(struct nuauth_params **result)
 #endif
 	conf->hello_authentication =
 	    nuauth_config_table_get_or_default_int("nuauth_hello_authentication", 0);
+
+	conf->use_groups_name =
+	    nuauth_config_table_get_or_default_int("nuauth_use_groups_name", 0);
+
 	conf->debug_areas = nuauth_config_table_get_or_default_int("nuauth_debug_areas", DEFAULT_DEBUG_AREAS);
 	debug_areas = conf->debug_areas;
 	conf->debug_level = nuauth_config_table_get_or_default_int("nuauth_debug_level", DEFAULT_DEBUG_LEVEL);
@@ -355,6 +359,11 @@ static gboolean compare_nuauthparams(
 	if (current->do_ip_authentication != new->do_ip_authentication) {
 		g_warning
 		    ("nuauth_do_ip_authentication has been modified, please restart");
+		restart = TRUE;
+	}
+
+	if (current->use_groups_name != new->use_groups_name) {
+		g_warning("use group name has changed, please restart");
 		restart = TRUE;
 	}
 
