@@ -299,7 +299,7 @@ static gchar *certificate_subjectaltname_upn_to_uid(nussl_session* session,
 						    gpointer params)
 {
 	log_message(CRITICAL, DEBUG_AREA_MAIN,
-			" x509_std: this uid module is not implemented: %d");
+			" x509_std: this uid module is not implemented");
 
 	return NULL;
 }
@@ -308,7 +308,7 @@ static gchar *certificate_subjectname_uid_to_uid(nussl_session* session,
 						    gpointer params)
 {
 	log_message(CRITICAL, DEBUG_AREA_MAIN,
-			" x509_std: this uid module is not implemented: %d");
+			" x509_std: this uid module is not implemented");
 
 	return NULL;
 }
