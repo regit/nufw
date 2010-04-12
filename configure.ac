@@ -392,6 +392,7 @@ AC_CONFIG_FILES([Makefile
         src/nuauth/modules/ipauth_guest/Makefile
         src/nuauth/modules/auth_mysql/Makefile
         src/nuauth/modules/postauth_localuser/Makefile
+        src/nuauth/modules/nnd/Makefile
         src/clients/Makefile
         src/clients/lib/Makefile
         src/clients/lib/libnuclient.pc
