@@ -205,6 +205,12 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 		    "NuFW NSS Daemon module");
 
+	if (nuauthconf->use_groups_name == 0) {
+		log_message(WARNING, DEBUG_AREA_MAIN,
+				"The NND module requires nuauth_use_groups_name=1\nSetting value automatically.");
+		nuauthconf->use_groups_name = 1;
+	}
+
 	params->nnd_socket = nuauth_config_table_get_or_default("nuauth_nnd_socket_path", NND_SOCKET_PATH);
 	/* init thread private stuff */
 	params->nnd_priv = g_private_new((GDestroyNotify) close);
