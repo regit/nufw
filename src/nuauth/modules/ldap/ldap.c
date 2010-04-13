@@ -1,9 +1,8 @@
 /*
- ** Copyright(C) 2003-2008 INL
+ ** Copyright(C) 2003-2010 EdenWall Technologies
  **     written by Eric Leblond <eric@inl.fr>
  **                Vincent Deffontaines <vincent@gryzor.com>
- **
- ** $Id$
+ **                Pierre Chifflier <chifflier@edenwall.com>
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -740,7 +739,7 @@ G_MODULE_EXPORT GSList *acl_check(connection_t * element,
 					walker++;
 				}
 				ldap_value_free_len(attrs_array);
-			} else {
+			} else {
 				/* build groups list */
 				attrs_array = ldap_get_values_len(ld, result, "Group");
 				attrs_array_len = ldap_count_values_len(attrs_array);
