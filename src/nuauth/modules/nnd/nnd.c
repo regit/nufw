@@ -1,6 +1,7 @@
 /*
  ** Copyright(C) 2010 EdenWall Technologies
  ** written by Eric Leblond <eleblond@edenwall.com>
+ **            Pierre Chifflier <chifflier@edenwall.com>
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -202,7 +203,7 @@ G_MODULE_EXPORT gboolean init_module_from_conf(module_t * module)
 {
 	struct nnd_params *params = g_new0(struct nnd_params, 1);
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
-		    "Nufw NSS Daemon module");
+		    "NuFW NSS Daemon module");
 
 	params->nnd_socket = nuauth_config_table_get_or_default("nuauth_nnd_socket_path", NND_SOCKET_PATH);
 	/* init thread private stuff */
