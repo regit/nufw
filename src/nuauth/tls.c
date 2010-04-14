@@ -90,8 +90,7 @@ void tls_common_init(void)
 		stat(nuauth_tls.crl_file, &stats);
 		nuauth_tls.crl_file_mtime = stats.st_mtime;
 	} else {
-		g_warning ("[%i] nuauth: no revocation list configured.\n",
-			getpid());
+		g_warning ("nuauth: no revocation list configured.\n");
 	}
 
 }

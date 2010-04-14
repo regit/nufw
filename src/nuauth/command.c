@@ -136,15 +136,15 @@ int command_new(command_t * this)
 	/* bind socket */
 	ret = bind(this->socket, (struct sockaddr *) &addr, len);
 	if (ret == -1) {
-		g_warning("[%i] Command server: UNIX socket bind(%s) error: %s",
-			    getpid(), SOCKET_TARGET, g_strerror(errno));
+		g_warning("Command server: UNIX socket bind(%s) error: %s",
+				SOCKET_TARGET, g_strerror(errno));
 		return 0;
 	}
 
 	/* listen */
 	if (listen(this->socket, 1) == -1) {
-		g_warning("[%i] Command server: UNIX socket listen() error: %s",
-			    getpid(), g_strerror(errno));
+		g_warning("Command server: UNIX socket listen() error: %s",
+				g_strerror(errno));
 		return 0;
 	}
 

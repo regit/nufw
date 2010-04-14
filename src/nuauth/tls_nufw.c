@@ -888,8 +888,8 @@ void tls_crl_update_nufw_session(GSList *session)
 
 		if (ret != NUSSL_OK) {
 			log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_CRITICAL,
-					"[%i] NuFW TLS: CRL file reloading failed (%s)",
-					getpid(), nussl_get_error(context->server));
+					"NuFW TLS: CRL file reloading failed (%s)",
+					nussl_get_error(context->server));
 		}
 		g_mutex_unlock(nuauth_thread->mutex);
 

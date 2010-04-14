@@ -790,8 +790,8 @@ int tls_user_setcert_auth_params(int requestcert, int authcert)
 		nuauth_tls.request_cert = requestcert;
 	} else {
 		log_message(INFO, DEBUG_AREA_AUTH | DEBUG_AREA_USER,
-				"[%i] config: Invalid nuauth_tls_auth_by_cert value: %d",
-				getpid(), authcert);
+				"config: Invalid nuauth_tls_auth_by_cert value: %d",
+				authcert);
 		return 0;
 	}
 
@@ -811,10 +811,9 @@ int tls_user_setcert_auth_params(int requestcert, int authcert)
 
 	if (!disable_request_warning) {
 		if (nuauth_tls.request_cert != 2) {
-			g_warning ("[%i] nuauth: client certificates are not required\n"
+			g_warning ("nuauth: client certificates are not required\n"
 				"nuauth will *NOT* check client certificates.\n"
-				"Set nuauth_tls_request_cert=2 to request certificates.\n",
-				getpid());
+				"Set nuauth_tls_request_cert=2 to request certificates.\n");
 		} else {
 			log_message(INFO, DEBUG_AREA_AUTH | DEBUG_AREA_USER,
 				    "Client certificates are required.");
@@ -1119,8 +1118,8 @@ void tls_crl_update_user_session(GSList *session)
 
 		if (ret != NUSSL_OK) {
 			log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_CRITICAL,
-					"[%i] User TLS: CRL file reloading failed (%s)",
-					getpid(), nussl_get_error(context->nussl));
+					"User TLS: CRL file reloading failed (%s)",
+					nussl_get_error(context->nussl));
 		}
 		g_mutex_unlock(nuauth_thread->mutex);
 
