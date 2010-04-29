@@ -132,7 +132,7 @@ ssize_t ulogd2_request_format(struct ulogd2_request *req, unsigned char*buf, uns
 		/* Value */
 		memcpy(buf+ret, opt->value, opt->length);
 		buf[ret + opt->length] = '\0';
-		padded_length = USOCK_ALIGN(opt->length);
+		padded_length = USOCK_ALIGN(opt->length + 1);
 		INC_RET(padded_length);
 	}
 
