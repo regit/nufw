@@ -79,7 +79,7 @@
 #endif
 
 /*> max number of packets to authenticate in a single tls packet */
-#define CONN_MAX 10
+#define CONN_MAX 7
 
 #define MIN_DELAY_SEC 0
 #define MIN_DELAY_USEC 50*1000
