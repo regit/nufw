@@ -306,6 +306,12 @@ void prg_cache_load_sub(DIR * dir, const char *path_process,
 	}
 }
 
+
+void prg_cache_init()
+{
+	memset(prg_hash, 0, sizeof(prg_hash));
+}
+
 /**
  * Load program cache
  */

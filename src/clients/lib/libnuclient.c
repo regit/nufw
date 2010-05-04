@@ -83,7 +83,7 @@ void nu_exit_clean(nuauth_session_t * session)
  *  - nu_client_new() or nu_client_new_callback(): start user session
  *  - nu_client_setup_tls(): (optionnal) setup TLS key/certificate files
  *  - nu_client_connect(): try to connect to nuauth server
- *  - nu_client_check(): check if there is packet to authenticate and send authentication 
+ *  - nu_client_check(): check if there is packet to authenticate and send authentication
  *  request to nuauth if needed. It has to be run in a endless loop.
  *  - nu_client_delete(): free a user session
  *  - nu_client_global_deinit(): To be called once at program end
@@ -119,6 +119,7 @@ void nu_client_delete(nuauth_session_t * session)
 int nu_client_global_init(nuclient_error_t * err)
 {
 	int ret;
+	prg_cache_init();
 
 	if (nussl_init() != NUSSL_OK)
 	{
@@ -1027,7 +1028,7 @@ void nu_client_set_min_delay(nuauth_session_t * session, unsigned int delay)
  * Set maximum delay
  *
  * \param session Pointer to client session
- * \param delay a timeval which will be equal to the maximum delay 
+ * \param delay a timeval which will be equal to the maximum delay
  * between two checks (in ms)
  */
 void nu_client_set_max_delay(nuauth_session_t * session, unsigned int delay)
