@@ -126,7 +126,7 @@ const char *prg_cache_getsig(int algo, unsigned long inode)
 	unsigned hi = PRG_HASHIT(inode);
 	struct prg_node *pn;
 	size_t size;
-	unsigned char pnsig[NUSSL_HASH_MAX_SIZE];
+	unsigned char pnsig[4 * NUSSL_HASH_MAX_SIZE];
 
 #define SHA512_PREFIX "{SHA512}"
 
