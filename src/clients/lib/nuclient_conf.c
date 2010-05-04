@@ -37,7 +37,7 @@ int nuclient_parse_configuration(const char *user_config, const char *global_con
 {
 	struct llist_head *new_user_config = NULL, *new_global_config = NULL;
 
-	if (access(user_config,R_OK) == 0) {
+	if (user_config != NULL && access(user_config,R_OK) == 0) {
 		new_user_config = parse_configuration(user_config);
 	}
 
