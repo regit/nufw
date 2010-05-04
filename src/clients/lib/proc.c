@@ -67,7 +67,7 @@ static struct prg_node {
 	unsigned long inode;   /** Inode of the program executable binary */
 	char name[PROGNAME_WIDTH];
 			       /** Name of the program (encoded in UTF-8) */
-	char sig[4 * NUSSL_HASH_MAX_SIZE + 12]; /* HASH size + prefix */
+	char sig[4 * NUSSL_HASH_MAX_SIZE + 48]; /* HASH size + prefix */
 } *prg_hash[PRG_HASH_SIZE];
 
 #define PROGNAME_WIDTHs PROGNAME_WIDTH1(PROGNAME_WIDTH)
