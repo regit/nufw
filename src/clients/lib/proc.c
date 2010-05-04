@@ -151,11 +151,18 @@ void prg_cache_clear(void)
 	struct prg_node **pnp, *pn;
 
 	if (prg_cache_loaded == 2)
-		for (pnp = prg_hash; pnp < prg_hash + PRG_HASH_SIZE; pnp++)
-			while ((pn = *pnp)) {
-				*pnp = pn->next;
-				free(pn);
+
+		for (pnp = prg_hash; pnp < prg_hash + PRG_HASH_SIZE; pnp++) {
+			struct prg_node **it = pnp;
+			struct prg_node *node;
+			while (it != NULL) {
+				node = *it;
+				if (node == NULL) break;
+				it = node->next;
+				free(node);
 			}
+			*pnp = NULL;
+		}
 	prg_cache_loaded = 0;
 }
 
