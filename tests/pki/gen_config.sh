@@ -98,7 +98,7 @@ stateOrProvinceName	= optional
 localityName		= optional
 organizationName	= optional
 organizationalUnitName	= optional
-commonName		= supplied
+commonName		= optional
 emailAddress		= optional
 UID			= optional
 

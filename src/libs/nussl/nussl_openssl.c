@@ -357,24 +357,24 @@ static int check_identity(const char *expected_hostname, X509 * cert, char **ide
 						       lastidx);
 		} while (idx >= 0);
 
-		if (lastidx < 0) {
-			/* no commonName attributes at all. */
-			nussl_buffer_destroy(cname);
-			return -1;
-		}
+		/* check commonName attribute if present */
+		if (lastidx >= 0) {
+			/* extract the string from the entry */
+			entry = X509_NAME_get_entry(subj, lastidx);
+			if (append_dirstring(cname, X509_NAME_ENTRY_get_data(entry))) {
+				nussl_buffer_destroy(cname);
+				return -1;
+			}
 
-		/* extract the string from the entry */
-		entry = X509_NAME_get_entry(subj, lastidx);
-		if (append_dirstring(cname, X509_NAME_ENTRY_get_data(entry))) {
-			nussl_buffer_destroy(cname);
-			return -1;
+			found_hostname = nussl_strdup(cname->data);
+			if (expected_hostname != NULL)
+				match = match_hostname(found_hostname, expected_hostname);
 		}
-
-		found_hostname = nussl_strdup(cname->data);
-		if (expected_hostname != NULL)
-			match = match_hostname(found_hostname, expected_hostname);
 		nussl_buffer_destroy(cname);
 	}
+
+	if (found_hostname == NULL)
+		return 1;
 
 	/*NUSSL_DEBUG(NUSSL_DBG_SSL, "Identity match for '%s' (identity: %s): %s\n",
 			expected_hostname, found_hostname,
