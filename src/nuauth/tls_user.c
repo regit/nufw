@@ -465,9 +465,9 @@ void user_worker(gpointer psession, gpointer data)
 					case NU_EXIT_OK:
 						break;
 					case NU_EXIT_ERROR:
-						debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
-								"problem reading message from \"%s\"",
-								usersession->user_name);
+						log_message(INFO, DEBUG_AREA_USER,
+							    "Problem reading message from \"%s\"",
+							    usersession->user_name);
 						usersession->pending_disconnect = TRUE;
 						sess_ok = FALSE;
 						break;
@@ -629,9 +629,10 @@ static void __client_injector_cb(struct ev_loop *loop, struct tls_user_context_t
 		if (session == NULL)
 			continue;
 		if (session->pending_disconnect) {
-			debug_log_message(VERBOSE_DEBUG,
+			log_message(INFO,
 					  DEBUG_AREA_USER,
-					  "disconnecting %d (%d)",
+					  "disconnecting \'%s\' %d (%d)",
+					  session->user_name,
 					  session->socket, i);
 			delete_locked_client_by_socket(session->socket);
 			continue;
