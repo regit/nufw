@@ -91,6 +91,7 @@ GCRY_THREAD_OPTION_PTHREAD_IMPL;
 
 int read_to_datum(const char *filename, gnutls_datum * datum);
 
+nussl_ssl_certificate *nussl_ssl_cert_read(const char *filename);
 
 /* Returns the highest used index in subject (or issuer) DN of
  * certificate CERT for OID, or -1 if no RDNs are present in the DN
@@ -862,6 +863,26 @@ int nussl_ssl_set_crl_file(nussl_session * sess, const char *crl_file, const cha
 						  GNUTLS_X509_FMT_PEM);
 
 	return (ret > 0) ? NUSSL_OK : NUSSL_FAILED;
+}
+
+int nussl_ssl_set_ca_file(nussl_session *sess, const char *cafile)
+{
+	int ret;
+	nussl_ssl_certificate *ca;
+
+	ca = nussl_ssl_cert_read(cafile);
+	if (ca == NULL) {
+		nussl_set_error(sess,
+				_("Unable to load trust certificate"));
+		return NUSSL_ERROR;
+	}
+
+	ret = nussl_ssl_context_trustcert(sess->ssl_context, ca);
+
+	if (ret == NUSSL_OK)
+		sess->check_peer_cert = 1;
+
+	return ret;
 }
 
 /* Read the contents of file FILENAME into *DATUM. */

@@ -81,6 +81,8 @@
 /* pre-declration list */
 int nussl_session_get_fd(nussl_session * sess);
 
+extern int nussl_ssl_set_ca_file(nussl_session *sess, const char *cafile);
+
 #if 0
 /* Destroy a a list of hooks. */
 static void destroy_hooks(struct hook *hooks)
@@ -461,19 +463,11 @@ void nussl_ssl_provide_clicert(nussl_session * sess,
 int nussl_ssl_trust_cert_file(nussl_session * sess, const char *cert_file)
 {
 	int ret;
-	nussl_ssl_certificate *ca;
 
 	if (!sess)
 		return NUSSL_ERROR;
 
-	ca = nussl_ssl_cert_read(cert_file);
-	if (ca == NULL) {
-		nussl_set_error(sess,
-				_("Unable to load trust certificate"));
-		return NUSSL_ERROR;
-	}
-
-	ret = nussl_ssl_context_trustcert(sess->ssl_context, ca);
+	ret = nussl_ssl_set_ca_file(sess, cert_file);
 
 	if (ret == NUSSL_OK)
 		sess->check_peer_cert = 1;

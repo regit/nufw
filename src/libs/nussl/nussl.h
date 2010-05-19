@@ -151,6 +151,9 @@ extern "C" {
 
 	int nussl_ssl_set_crl_file(nussl_session * sess, const char *crl_file, const char *ca_file);
 
+	/* This function accepts several certificates in the CA file */
+	int nussl_ssl_set_ca_file(nussl_session *sess, const char *cafile);
+
 	void nussl_ssl_disable_certificate_check(nussl_session * sess, int is_disabled);
 
 	/* Set a new value for a particular session flag. */

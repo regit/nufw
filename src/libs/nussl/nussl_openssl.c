@@ -981,7 +981,21 @@ const char *nussl_ssl_clicert_name(const nussl_ssl_client_cert * ccert)
 	return ccert->friendly_name;
 }
 
-nussl_ssl_certificate *nussl_ssl_cert_read(const char *filename)
+nussl_ssl_certificate *nussl_ssl_cert_mem_read_x509(void *cert_x509)
+{
+	X509 *cert = (X509 *) cert_x509;
+
+	if (cert == NULL) {
+		NUSSL_DEBUG(NUSSL_DBG_SSL, "d2i_X509_fp failed: %s\n",
+			    ERR_reason_error_string(ERR_get_error()));
+		ERR_clear_error();
+		return NULL;
+	}
+
+	return populate_cert(nussl_calloc(sizeof(struct nussl_ssl_certificate_s)), cert);
+}
+
+nussl_ssl_certificate *nussl_ssl_cert_file_read(const char *filename)
 {
 	FILE *fp = fopen(filename, "r");
 	X509 *cert;
@@ -1222,6 +1236,83 @@ int nussl_ssl_set_crl_file(nussl_session * sess, const char *crl_file, const cha
 	}
 
 	return NUSSL_ERROR;
+}
+
+int nussl_ssl_set_ca_file(nussl_session *sess, const char *cafile)
+{
+	STACK_OF(X509_INFO) *sk = NULL;
+	STACK_OF(X509) *stack = NULL;
+	nussl_ssl_certificate *ca;
+	BIO *in = NULL;
+	X509_INFO *xi;
+	int num_certs, num_checked = 0;
+	int i, ret = NUSSL_ERROR;
+
+	if (sess == NULL || sess->ssl_context == NULL)
+		return NUSSL_ERROR;
+
+	stack = sk_X509_new_null();
+	if ( !stack ) {
+		nussl_set_error(sess, _("trust cert : memory allocation failure"));
+		goto end;
+	}
+
+	in = BIO_new_file(cafile, "r");
+	if ( !in ) {
+		nussl_set_error(sess, _("trust cert : error opening the file"));
+		goto end;
+	}
+
+	sk = PEM_X509_INFO_read_bio(in, NULL, NULL, NULL);
+	if ( !sk ) {
+		nussl_set_error(sess, _("trust cert : error reading the file"));
+		goto end;
+	}
+
+	while ( sk_X509_INFO_num(sk) ) 	{
+		xi = sk_X509_INFO_shift(sk);
+
+		if ( xi->x509 != NULL ) {
+			sk_X509_push(stack, xi->x509);
+			xi->x509 = NULL;
+		}
+
+		X509_INFO_free(xi);
+	}
+
+	num_certs = sk_X509_num(stack);
+	for ( i=0; i < num_certs; i++ ) {
+		X509 *ucert = NULL;
+		int res;
+
+		ucert = sk_X509_value(stack, i);
+
+		ca = nussl_ssl_cert_mem_read_x509(ucert);
+		if ( ca ) {
+			res = nussl_ssl_context_trustcert(sess->ssl_context, ca);
+
+			if ( res == NUSSL_OK )
+				num_checked++;
+		}
+	}
+
+	if ( num_checked ) {
+		if ( num_checked == num_certs ) {
+			ret = NUSSL_OK;
+		}
+	}
+
+end:
+	if (in)
+		BIO_free(in);
+
+	if (sk)
+		sk_X509_INFO_free(sk);
+
+	if ( stack )
+		sk_X509_free(stack);
+
+	return ret;
 }
 
 nussl_ssl_client_cert *nussl_ssl_import_keypair(const char *cert_file,
