@@ -460,78 +460,24 @@ void nussl_ssl_provide_clicert(nussl_session * sess,
 
 int nussl_ssl_trust_cert_file(nussl_session * sess, const char *cert_file)
 {
-	STACK_OF(X509_INFO) *sk = NULL;
-	STACK_OF(X509) *stack = NULL;
+	int ret;
 	nussl_ssl_certificate *ca;
-	BIO *in = NULL;
-	X509_INFO *xi;
-	int num_certs, num_checked = 0;
-	int i, ret = NUSSL_ERROR;
 
 	if (!sess)
 		return NUSSL_ERROR;
 
-	stack = sk_X509_new_null();
-	if ( !stack ) {
-		nussl_set_error(sess, _("trust cert : memory allocation failure"));
-		goto end;
+	ca = nussl_ssl_cert_read(cert_file);
+	if (ca == NULL) {
+		nussl_set_error(sess,
+				_("Unable to load trust certificate"));
+		return NUSSL_ERROR;
 	}
 
-	in = BIO_new_file(cert_file, "r");
-	if ( !in ) {
-		nussl_set_error(sess, _("trust cert : error opening the file"));
-		goto end;
-	}
+	ret = nussl_ssl_context_trustcert(sess->ssl_context, ca);
 
-	sk = PEM_X509_INFO_read_bio(in, NULL, NULL, NULL);
-	if ( !sk ) {
-		nussl_set_error(sess, _("trust cert : error reading the file"));
-		goto end;
-	}
+	if (ret == NUSSL_OK)
+		sess->check_peer_cert = 1;
 
-	while ( sk_X509_INFO_num(sk) ) 	{
-		xi = sk_X509_INFO_shift(sk);
-
-		if ( xi->x509 != NULL ) {
-			sk_X509_push(stack, xi->x509);
-			xi->x509 = NULL;
-		}
-
-		X509_INFO_free(xi);
-	}
-
-	num_certs = sk_X509_num(stack);
-	for ( i=0; i < num_certs; i++ ) {
-		X509 *ucert = NULL;
-		int res;
-
-		ucert = sk_X509_value(stack, i);
-
-		ca = nussl_ssl_cert_mem_read(ucert);
-		if ( ca ) {
-			res = nussl_ssl_context_trustcert(sess->ssl_context, ca);
-
-			if ( res == NUSSL_OK )
-				num_checked++;
-		}
-	}
-
-	if ( num_checked ) {
-		if ( num_checked == num_certs ) {
-			sess->check_peer_cert = 1;
-			ret = NUSSL_OK;
-		}
-	}
-
-end:
-	if (in)
-		BIO_free(in);
-
-	if (sk)
-		sk_X509_INFO_free(sk);
-
-	if ( stack )
-		sk_X509_free(stack);
 
 	return ret;
 }
