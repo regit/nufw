@@ -353,6 +353,7 @@ void clean_connections_list()
 			element->decision = DECISION_DROP;
 		if (element->state == AUTH_STATE_AUTHREQ) {
 			apply_decision(element);
+			element->state = AUTH_STATE_DONE;
 		}
 		free_connection(element);
 	}
