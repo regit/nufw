@@ -32,9 +32,9 @@
 
 static GStaticMutex period_mutex = G_STATIC_MUTEX_INIT;
 
-static inline unsigned int get_start_of_day_from_time_t(time_t pckt_time)
+static inline unsigned int get_start_of_day_from_time_t(time_t pckt_time, int offset)
 {
-	return pckt_time - pckt_time % 86400;
+	return pckt_time - pckt_time % 86400 - offset;
 }
 
 /**
@@ -79,7 +79,7 @@ static time_t get_end_of_period_item_for_time(struct period_item
 				    && (tmtime.tm_wday <=
 					perioditem->end_day)) {
 					endtime =
-					    get_start_of_day_from_time_t(pckt_time) +
+					    get_start_of_day_from_time_t(pckt_time, tmtime.tm_gmtoff) +
 					    86400 * (perioditem->end_day -
 						     tmtime.tm_wday + 1);
 				} else {
@@ -89,7 +89,7 @@ static time_t get_end_of_period_item_for_time(struct period_item
 				if (tmtime.tm_wday >=
 				    perioditem->start_day) {
 					endtime =
-					    get_start_of_day_from_time_t(pckt_time) +
+					    get_start_of_day_from_time_t(pckt_time, tmtime.tm_gmtoff) +
 								   86400 * (6 -
 								   tmtime.
 								   tm_wday
@@ -99,7 +99,7 @@ static time_t get_end_of_period_item_for_time(struct period_item
 				} else if (tmtime.tm_wday >=
 					   perioditem->end_day) {
 					endtime =
-					    get_start_of_day_from_time_t(pckt_time) +
+					    get_start_of_day_from_time_t(pckt_time, tmtime.tm_gmtoff) +
 					    86400 * (perioditem->end_day -
 						     tmtime.tm_wday + 1);
 				} else {
@@ -117,7 +117,7 @@ static time_t get_end_of_period_item_for_time(struct period_item
 					return endtime;
 				} else {
 					return
-					    get_start_of_day_from_time_t(pckt_time) +
+					    get_start_of_day_from_time_t(pckt_time, tmtime.tm_gmtoff) +
 					    3600 * perioditem->end_hour;
 				}
 			} else {
