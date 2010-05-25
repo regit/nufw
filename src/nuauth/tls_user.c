@@ -631,9 +631,16 @@ static void __client_injector_cb(struct ev_loop *loop, struct tls_user_context_t
 		if (session->pending_disconnect) {
 			log_message(INFO,
 					  DEBUG_AREA_USER,
-					  "disconnecting \'%s\' %d (%d)",
-					  session->user_name,
-					  session->socket, i);
+					  "disconnecting \'%s\' %d"
+#if DEBUG_ENABLE
+					  "(%d)"
+#endif
+					  , session->user_name,
+					  session->socket
+#if DEBUG_ENABLE
+					  , i
+#endif
+					  );
 			delete_locked_client_by_socket(session->socket);
 			continue;
 		}
