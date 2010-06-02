@@ -63,6 +63,8 @@ int nuauth_running = 1;
 
 GList *cleanup_func_list = NULL;
 
+static int quiet_mode = 0;
+
 /**
  * Add a cleanup function: it would be called every second.
  * Functions are stored in ::cleanup_func_list list.
@@ -492,6 +494,7 @@ static struct option long_options[] = {
 	{"help", 0, NULL, 'h'},
 	{"config", 1, NULL, 'c'},
 	{"daemon", 0, NULL, 'D'},
+	{"quiet", 0, NULL, 'q'},
 	{"version", 0, NULL, 'V'},
 	{"verbose", 0, NULL, 'v'},
 	{"nufw-port", 1, NULL, 'p'},
@@ -515,6 +518,7 @@ void print_usage()
 		"\t-h (--help          ): display this help and exit\n"
 		"\t-c (--config        ): use alternate configuration file\n"
 		"\t-D (--daemon        ): run as a daemon, send debug messages to syslog (else stdout/stderr)\n"
+		"\t-q (--quiet         ): do not log to stdout/stderr\n"
 		"\t-V (--version       ): display version and exit\n"
 		"\t-v (--verbose       ): increase debug level (+1 for each 'v') (max useful number : 10)\n"
 		"\t-p (--nufw-port     ): specify listening TCP port (this port waits for nufw) (default : 4128)\n"
@@ -529,7 +533,7 @@ void print_usage()
  */
 void parse_options(int argc, char **argv, command_line_params_t * params)
 {
-	char *options_list = "DhVvc:l:L:C:p:t:T:";
+	char *options_list = "DqhVvc:l:L:C:p:t:T:";
 	int option;
 	int local_debug_level = 0;
 
@@ -550,6 +554,10 @@ void parse_options(int argc, char **argv, command_line_params_t * params)
 
 		case 'v':
 			local_debug_level++;
+			break;
+
+		case 'q':
+			quiet_mode++;
 			break;
 
 		case 'l':
@@ -835,10 +843,11 @@ void configure_app(int argc, char **argv)
 	/* init gcrypt and gnutls */
 	if (params.daemonize == 1) {
 		daemonize();
-		set_glib_loghandlers(1 /* use only syslog */);
+		set_glib_loghandlers(0, 1 /* use only syslog */);
 
 	} else {
-		set_glib_loghandlers(0 /* use syslog and stdout */);
+		int use_stdout = (quiet_mode == 0);
+		set_glib_loghandlers(use_stdout, 0 /* use syslog and stdout */);
 		log_message(FATAL, DEBUG_AREA_MAIN,
 				"[+] NuAuth ($Revision$) with config %s",
 				nuauthconf->configfile);

@@ -22,7 +22,7 @@
 #include <glib.h>
 #include <debug.h>
 
-void set_glib_loghandlers();
+void set_glib_loghandlers(int use_stdout, int use_syslog);
 void process_g_message(const gchar * log_domain, GLogLevelFlags log_level,
 		       const gchar * message, gpointer user_data);
 void process_g_fatal(const gchar * log_domain, GLogLevelFlags log_level,

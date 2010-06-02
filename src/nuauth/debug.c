@@ -54,12 +54,16 @@ void process_g_syslog(const gchar * log_domain, GLogLevelFlags log_level,
 	log_printf(debug_level, message);
 }
 
-void set_glib_loghandlers(int syslog_only)
+void set_glib_loghandlers(int use_stdout, int use_syslog)
 {
-	if (syslog_only)
-		nubase_log_engine_set(LOG_TO_SYSLOG);
-	else
-		nubase_log_engine_set(LOG_TO_STD | LOG_TO_SYSLOG);
+	int flags = 0;
+
+	if (use_stdout)
+		flags |= LOG_TO_STD;
+	if (use_syslog)
+		flags |= LOG_TO_SYSLOG;
+
+	nubase_log_engine_set(flags);
 	init_log_engine("nuauth");
 	g_log_set_handler(NULL, G_LOG_LEVEL_MASK | G_LOG_FLAG_FATAL
 			  | G_LOG_FLAG_RECURSION, process_g_syslog, NULL);
