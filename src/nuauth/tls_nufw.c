@@ -323,7 +323,7 @@ static int tls_nufw_init_worker(nufw_session_t *nu_session)
 		return 1;
 	}
 
-	nufw_servers_connected++;
+	g_atomic_inc(&nufw_servers_connected);
 
 	conn_fd = nussl_session_get_fd(nu_session->nufw_client);
 
@@ -377,7 +377,7 @@ void *tls_nufw_worker(struct nuauth_thread_t *thread)
 
 	/* FIXME : more explicit format */
 	log_message(INFO, DEBUG_AREA_GW, "nufw disconnection");
-	nufw_servers_connected--;
+	g_atomic_int_dec_and_test(&nufw_servers_connected);
 
 	return NULL;
 }
@@ -526,7 +526,7 @@ int tls_nufw_accept_unix(struct tls_nufw_context_t *context)
 	}
 
 
-	nufw_servers_connected++;
+	g_atomic_inc(&nufw_servers_connected);
 
 	add_nufw_server(conn_fd, nu_session);
 	/* create nufw server thread */

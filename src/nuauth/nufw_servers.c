@@ -86,7 +86,7 @@ void clean_nufw_session(nufw_session_t * c_session)
 
 	g_free(c_session);
 
-	nufw_servers_connected--;
+	g_atomic_int_dec_and_test(&nufw_servers_connected);
 
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW, "close nufw session: done");
 }
