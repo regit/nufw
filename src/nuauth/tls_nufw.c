@@ -201,6 +201,7 @@ static void nufw_srv_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 				"nufw read activity");
 		increase_nufw_session_usage(c_session);
 		if (treat_nufw_request(c_session) == NU_EXIT_ERROR) {
+			release_nufw_session(c_session);
 			/* get session link with c */
 			log_message(WARNING, DEBUG_AREA_GW,
 					"nufw server disconnect");
