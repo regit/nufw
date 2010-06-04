@@ -323,8 +323,6 @@ static int tls_nufw_init_worker(nufw_session_t *nu_session)
 		return 1;
 	}
 
-	g_atomic_inc(&nufw_servers_connected);
-
 	conn_fd = nussl_session_get_fd(nu_session->nufw_client);
 
 	add_nufw_server(conn_fd, nu_session);
@@ -525,8 +523,6 @@ int tls_nufw_accept_unix(struct tls_nufw_context_t *context)
 		return 1;
 	}
 
-
-	g_atomic_inc(&nufw_servers_connected);
 
 	add_nufw_server(conn_fd, nu_session);
 	/* create nufw server thread */

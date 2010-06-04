@@ -33,6 +33,7 @@
 
 GHashTable *nufw_servers = NULL;
 GStaticMutex nufw_servers_mutex = G_STATIC_MUTEX_INIT;
+extern int nufw_servers_connected;
 
 void init_nufw_servers()
 {
@@ -48,6 +49,9 @@ nu_error_t add_nufw_server(int conn_fd, nufw_session_t * nu_session)
 	g_static_mutex_lock(&nufw_servers_mutex);
 	g_hash_table_insert(nufw_servers, GINT_TO_POINTER(conn_fd),
 			nu_session);
+
+	g_atomic_int_inc(&nufw_servers_connected);
+
 	g_static_mutex_unlock(&nufw_servers_mutex);
 
 	return NU_EXIT_OK;
@@ -75,7 +79,6 @@ static nu_error_t suppress_nufw_session(nufw_session_t * session)
 	return NU_EXIT_OK;
 }
 
-extern int nufw_servers_connected;
 /**
  * Clean a NuFW TLS session: send "bye", deinit the connection
  * and free the memory.
