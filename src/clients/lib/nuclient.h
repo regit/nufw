@@ -206,6 +206,8 @@ int nu_client_unset_capability(const char *capa);
 int nu_client_set_session_capability(nuauth_session_t * session, const char *capa);
 int nu_client_unset_session_capability(nuauth_session_t * session, const char *capa);
 
+void nu_client_set_sasl_mechlist(nuauth_session_t * session, const char *mechlist);
+
 char *nu_get_home_dir();
 char *nu_get_user_name();
 

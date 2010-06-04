@@ -1,7 +1,8 @@
 /*
- ** Copyright 2004-2009 - INL
+ ** Copyright 2004-2010 - EdenWall Technologies
  ** Written by Eric Leblond <regit@inl.fr>
  **            Vincent Deffontaines <vincent@inl.fr>
+ **            Pierre Chifflier <chifflier@edenwall.com>
  ** INL http://www.inl.fr/
  **
  ** $Id$
@@ -331,6 +332,11 @@ int nu_client_unset_session_capability(nuauth_session_t *session, const char *ca
 	return _nu_client_unset_capability(session->nu_capabilities, capa);
 }
 
+void nu_client_set_sasl_mechlist(nuauth_session_t * session, const char *mechlist)
+{
+	if (mechlist)
+		session->sasl_mechlist = strdup(mechlist);
+}
 
 
 void nu_client_set_client_info(nuauth_session_t *session,

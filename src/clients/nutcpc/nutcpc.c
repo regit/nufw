@@ -91,6 +91,7 @@ typedef struct {
 	char *pkcs12file;
 	char *pkcs12password;
 	char *krb5_service;
+	char *sasl_mechlist;
 } nutcpc_context_t;
 
 /**
@@ -423,6 +424,7 @@ static struct option long_options[] = {
 	{"no-config", 0, NULL, 'F'},
 	{"no-plugins", 0, NULL, 'G'},
 	{"krb-service", 1, NULL, 'Z'},
+	{"sasl-mechs", 1, NULL, 'M'},
 	{"port", 1, NULL, 'p'},
 	{"auth-dn", 1, NULL, 'a'},
 	{"interval", 1, NULL, 'I'},
@@ -465,6 +467,7 @@ static void usage(void)
 	fprintf(stderr, "\n");
 	fprintf(stderr, "SASL options:\n");
 	fprintf(stderr, "  -Z (--krb-service  ) SERVICE: Kerberos service name (nuauth)\n");
+	fprintf(stderr, "  -M (--sasl-mechs   ) MECH_LIST: SASL mechanism list (same as server)\n");
 	fprintf(stderr, "\n");
 	fprintf(stderr, "Other options:\n");
 	fprintf(stderr, "  -p (--port         ) PORT: nuauth port number\n");
@@ -702,6 +705,9 @@ nuauth_session_t *do_connect(nutcpc_context_t * context, char *username)
 		}
 	}
 
+	if (context->sasl_mechlist)
+		nu_client_set_sasl_mechlist(session, context->sasl_mechlist);
+
 	if (!nu_client_connect(session, context->srv_addr, context->port, err)) {
 		goto init_failed;
 	}
@@ -803,7 +809,7 @@ void parse_cmdline_options(int argc, char **argv,
 
 	/* Parse all command line arguments */
 	opterr = 0;
-	while ((ch = getopt_long(argc, argv, "kcldqNQFGVvmu:H:I:U:p:P:a:K:C:A:R:W:S:Z:", long_options, NULL)) != -1) {
+	while ((ch = getopt_long(argc, argv, "kcldqNQFGVvmu:H:I:U:p:P:a:K:C:A:R:W:S:Z:M:", long_options, NULL)) != -1) {
 		switch (ch) {
 		case 'H':
 			SECURE_STRNCPY(context->srv_addr, optarg,
@@ -897,6 +903,8 @@ void parse_cmdline_options(int argc, char **argv,
 			break;
 		case 'Z':
 			context->krb5_service = strdup(optarg);
+		case 'M':
+			context->sasl_mechlist = strdup(optarg);
 			break;
 		default:
 			usage();

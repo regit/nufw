@@ -138,6 +138,7 @@ int mysasl_negotiate(nuauth_session_t * session, sasl_conn_t * conn,
 {
 	char buf[8192];
 	const char *data;
+	const char *mechlist = session->sasl_mechlist;
 	const char *chosenmech;
 	unsigned len;
 	int result;
@@ -150,8 +151,16 @@ int mysasl_negotiate(nuauth_session_t * session, sasl_conn_t * conn,
 		return SASL_FAIL;
 	}
 
+	if (mechlist == NULL)
+		mechlist = buf;
+
+	if (session->verbose) {
+		log_printf(DEBUG_LEVEL_DEBUG, "Server mechanisms %s", buf);
+		log_printf(DEBUG_LEVEL_DEBUG, "Client mechanisms %s", mechlist);
+	}
+
 	result = sasl_client_start(conn,
-				   buf, NULL, &data, &len, &chosenmech);
+				   mechlist, NULL, &data, &len, &chosenmech);
 
 	if (session->verbose) {
 		log_printf(DEBUG_LEVEL_INFO, "Using mechanism %s", chosenmech);

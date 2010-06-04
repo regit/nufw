@@ -190,6 +190,7 @@ struct nuauth_session {
 
 	char *nuauth_cert_dn;
 
+	char *sasl_mechlist;
 	char *krb5_service;
 
 	conntable_t *ct;	/*!< Connection table */
