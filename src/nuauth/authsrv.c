@@ -1,6 +1,7 @@
 /*
- ** Copyright(C) 2004-2008 INL
+ ** Copyright(C) 2004-2010 INL
  ** Written by Eric Leblond <regit@inl.fr>
+ **            Pierre Chifflier <chifflier@edenwall.com>
  **
  ** $Id$
  **
@@ -843,11 +844,13 @@ void configure_app(int argc, char **argv)
 	/* init gcrypt and gnutls */
 	if (params.daemonize == 1) {
 		daemonize();
-		set_glib_loghandlers(0, 1 /* use only syslog */);
+		/* default: use only syslog */
+		set_glib_loghandlers(0, nuauthconf->log_to_syslog);
 
 	} else {
 		int use_stdout = (quiet_mode == 0);
-		set_glib_loghandlers(use_stdout, 0 /* use syslog and stdout */);
+		/* default: use both stdout and syslog */
+		set_glib_loghandlers(use_stdout, nuauthconf->log_to_syslog);
 		log_message(FATAL, DEBUG_AREA_MAIN,
 				"[+] NuAuth ($Revision$) with config %s",
 				nuauthconf->configfile);

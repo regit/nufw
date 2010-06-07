@@ -70,6 +70,7 @@ struct nuauth_params {
 	int debug_areas;
 
 	/* logging related */
+	int log_to_syslog;
 	int log_users;
 	/** \brief See log_user_packet() */
 	int log_users_sync;

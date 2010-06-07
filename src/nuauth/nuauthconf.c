@@ -155,6 +155,7 @@ int init_nuauthconf(struct nuauth_params **result)
 	debug_areas = conf->debug_areas;
 	conf->debug_level = nuauth_config_table_get_or_default_int("nuauth_debug_level", DEFAULT_DEBUG_LEVEL);
 	debug_level = conf->debug_level;
+	conf->log_to_syslog = nuauth_config_table_get_or_default_int("nuauth_log_to_syslog", 1);
 	conf->nuauth_uses_fake_sasl =
 	    nuauth_config_table_get_or_default_int("nuauth_uses_fake_sasl", 1);
 #ifdef BUILD_NUAUTH_COMMAND
