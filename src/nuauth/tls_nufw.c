@@ -420,6 +420,7 @@ void *tls_nufw_unix_worker(struct nuauth_thread_t *thread)
 
 	/* FIXME : more explicit format */
 	log_message(INFO, DEBUG_AREA_GW, "nufw disconnection");
+	g_atomic_int_dec_and_test(&nufw_servers_connected);
 	return NULL;
 }
 
