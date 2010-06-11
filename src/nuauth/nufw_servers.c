@@ -89,8 +89,6 @@ void clean_nufw_session(nufw_session_t * c_session)
 
 	g_free(c_session);
 
-	g_atomic_int_dec_and_test(&nufw_servers_connected);
-
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW, "close nufw session: done");
 }
 
@@ -98,6 +96,8 @@ void clean_nufw_session(nufw_session_t * c_session)
 
 nu_error_t declare_dead_nufw_session(nufw_session_t * session)
 {
+	g_atomic_int_dec_and_test(&nufw_servers_connected);
+
 	g_static_mutex_lock(&nufw_servers_mutex);
 
 	/* session is dead, clean tls and remove session from nufw_servers
