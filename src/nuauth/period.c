@@ -74,34 +74,38 @@ static time_t get_end_of_period_item_for_time(struct period_item
 		/* compare day if this is not a time only period */
 		if (perioditem->start_day != -1) {
 			if (perioditem->start_day <= perioditem->end_day) {
-				if ((tmtime.tm_wday >=
-				     perioditem->start_day)
-				    && (tmtime.tm_wday <=
-					perioditem->end_day)) {
+				/* week day has to be between start and end day */
+				if ((tmtime.tm_wday >= perioditem->start_day)
+						&& (tmtime.tm_wday <= perioditem->end_day)) {
+					/* time is valid, we compute end time as start time
+					of current day plus offset of the number of day to end_day */
 					endtime =
-					    get_start_of_day_from_time_t(pckt_time, tmtime.tm_gmtoff) +
-					    86400 * (perioditem->end_day -
-						     tmtime.tm_wday + 1);
+						get_start_of_day_from_time_t(pckt_time, tmtime.tm_gmtoff) +
+						86400 * (perioditem->end_day -
+								tmtime.tm_wday + 1);
 				} else {
 					return 0;
 				}
 			} else {
-				if (tmtime.tm_wday >=
-				    perioditem->start_day) {
-					endtime =
-					    get_start_of_day_from_time_t(pckt_time, tmtime.tm_gmtoff) +
-								   86400 * (6 -
-								   tmtime.
-								   tm_wday
-								   + 1 +
-								   perioditem->
-								   end_day);
-				} else if (tmtime.tm_wday >=
-					   perioditem->end_day) {
-					endtime =
-					    get_start_of_day_from_time_t(pckt_time, tmtime.tm_gmtoff) +
-					    86400 * (perioditem->end_day -
-						     tmtime.tm_wday + 1);
+				if ((tmtime.tm_wday >= perioditem->start_day)
+						|| (tmtime.tm_wday <= perioditem->end_day)) {
+					if (tmtime.tm_wday >= perioditem->start_day) {
+						/* compute time remaingin to end_time (number of days to end of week
+						and adding time a start of week.
+						Formula is (noting the fact that 0 is sunday, and 6 saturday):
+						[time to end of week] 6 [last day of week] - tw_wday + 1 [interval computation]
+						[time at start of week] + end_day + 1 [interval computation] */
+						endtime =
+							get_start_of_day_from_time_t(pckt_time, tmtime.tm_gmtoff) +
+							86400 * (8 - tmtime.tm_wday + perioditem->end_day);
+					} else if (tmtime.tm_wday <= perioditem->end_day) {
+						/* time is valid, we compute end time as start time
+						   of current day plus offset of the number of day to end_day */
+						endtime =
+							get_start_of_day_from_time_t(pckt_time, tmtime.tm_gmtoff) +
+							86400 * (perioditem->end_day -
+									tmtime.tm_wday + 1);
+					}
 				} else {
 					return 0;
 				}
