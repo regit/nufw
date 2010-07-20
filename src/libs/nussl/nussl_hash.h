@@ -59,7 +59,11 @@ int nussl_hash_compute_with_salt(nussl_hash_algo_t algo, const char *data, size_
 
 
 int nussl_hash_file(nussl_hash_algo_t algo, const char * filename,
-		    unsigned char *out, size_t *outsz);
+		    unsigned char *out, size_t *outsz)
+#ifdef __GNUC__
+	__attribute__ ((warn_unused_result))
+#endif
+;
 
 #ifdef __cplusplus
 }

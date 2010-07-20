@@ -85,10 +85,8 @@ int nussl_hash_file(nussl_hash_algo_t algo, const char * filename,
 	EVP_DigestInit_ex(&mdctx, md, NULL);
 
 	stream = fopen(filename, "r");
-	if (stream == NULL) {
-		/* it is almost normal to leave */
-		return 0;
-	}
+	if (stream == NULL)
+		return -1;
 
 	while (1)  {
 		sum = 0;
@@ -201,10 +199,8 @@ int nussl_hash_file(nussl_hash_algo_t algo, const char * filename,
 	gcry_md_open(&hd, g_algo, 0);
 
 	stream = fopen(filename, "r");
-	if (stream == NULL) {
-		/* it is almost normal to leave */
-		return 0;
-	}
+	if (stream == NULL)
+		return -1;
 
 	while (1)  {
 		sum = 0;

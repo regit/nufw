@@ -127,6 +127,7 @@ const char *prg_cache_getsig(int algo, unsigned long inode)
 	struct prg_node *pn;
 	size_t size;
 	unsigned char pnsig[4 * NUSSL_HASH_MAX_SIZE];
+	int ret;
 
 #define SHA512_PREFIX "{SHA512}"
 
@@ -134,11 +135,15 @@ const char *prg_cache_getsig(int algo, unsigned long inode)
 		if (pn->inode == inode) {
 			if (pn->sig[0] == 0) {
 				char * hexnum;
-				nussl_hash_file(algo, pn->name,
+				ret = nussl_hash_file(algo, pn->name,
 						pnsig, &size);
-				hexnum = pn->sig + strlen(SHA512_PREFIX);
-				memcpy(pn->sig, SHA512_PREFIX, strlen(SHA512_PREFIX));
-				bin2hex(size, pnsig, hexnum);
+				if (ret == 0) {
+					hexnum = pn->sig + strlen(SHA512_PREFIX);
+					memcpy(pn->sig, SHA512_PREFIX, strlen(SHA512_PREFIX));
+					bin2hex(size, pnsig, hexnum);
+				} else {
+					pn->sig[0] = '\0';
+				}
 			}
 			return (pn->sig);
 		}
