@@ -66,7 +66,8 @@
 int parse_tcptable_file(nuauth_session_t * session, conntable_t * ct, char *filename,
 			FILE ** file, int protocol, int use_ipv6)
 {
-	char buf[1024];
+	char *buf;
+	char fullbuf[1024*256];
 	conn_t c;
 	const char state_char = '2';	/* TCP_SYN_SENT written in hexadecimal */
 	int state_pos;
@@ -75,23 +76,17 @@ int parse_tcptable_file(nuauth_session_t * session, conntable_t * ct, char *file
 	int session_uid_len;
 	int ret;
 	char *pos;
+	int fdfile;
+	int i = 0;
 
-	/* open file if it's not already opened */
-	if (*file == NULL) {
-		*file = fopen(filename, "r");
-		if (*file == NULL) {
-			printf("Fail to open %s: %s", filename,
-			       strerror(errno));
-			return 0;
-		}
+	fdfile = open(filename, O_RDONLY);
+	/* read all file */
+	buf = fullbuf;
+	while ( ((1024*256 - (buf - fullbuf)) > 0) &&
+		(i = read(fdfile, buf, 1024*256 - (buf - fullbuf)))) {
+		buf += i;
 	}
-
-	/* rewind to the beginning of the file */
-	rewind(*file);
-
-	/* read header */
-	if (fgets(buf, sizeof(buf), *file) == NULL)
-		panic("%s: missing header!", filename);
+	close(fdfile);
 
 	/* convert session user identifier to string */
 	secure_snprintf(session_uid, sizeof(session_uid), "%5lu",
@@ -99,21 +94,23 @@ int parse_tcptable_file(nuauth_session_t * session, conntable_t * ct, char *file
 	session_uid_len = strlen(session_uid);
 
 	/* get state field position in header */
-	pos = strstr(buf, " st ");
+	pos = strstr(fullbuf, " st ");
 	if (pos == NULL)
 		panic
 		    ("Can't find position of state field in /proc/net/tcp header!");
-	state_pos = pos - buf + 2;
+	state_pos = pos - fullbuf + 2;
 
 	/* get user identifier position in header (it's just after 'retrnsmt' field) */
-	pos = strstr(buf, " retrnsmt ");
+	pos = strstr(fullbuf, " retrnsmt ");
 	if (pos == NULL)
 		panic
 		    ("Can't find position of user identifier field in /proc/net/tcp header!");
-	uid_pos = pos - buf + strlen(" retrnsmt ");
+	uid_pos = pos - fullbuf + strlen(" retrnsmt ");
 
-	while (fgets(buf, sizeof(buf), *file) != NULL) {
+	buf = fullbuf;
+	while (strlen(buf) > uid_pos) {
 
+		buf = strchr(buf, '\n') + 1;
 		/* only keep connections in state "SYN packet sent" */
 		if (buf[state_pos] != state_char) {
 			continue;
