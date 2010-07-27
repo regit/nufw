@@ -78,13 +78,18 @@ int parse_tcptable_file(nuauth_session_t * session, conntable_t * ct, char *file
 	char *pos;
 	int fdfile;
 	int i = 0;
+	int readlen = 0;
 
 	fdfile = open(filename, O_RDONLY);
+	if (fdfile == -1) {
+		panic("Unable to open proc file");
+	}
 	/* read all file */
 	buf = fullbuf;
 	while ( ((1024*256 - (buf - fullbuf)) > 0) &&
 		(i = read(fdfile, buf, 1024*256 - (buf - fullbuf)))) {
 		buf += i;
+		readlen += i;
 	}
 	close(fdfile);
 
@@ -108,7 +113,7 @@ int parse_tcptable_file(nuauth_session_t * session, conntable_t * ct, char *file
 	uid_pos = pos - fullbuf + strlen(" retrnsmt ");
 
 	buf = fullbuf;
-	while (strlen(buf) > uid_pos) {
+	while (buf - fullbuf < readlen - uid_pos) {
 
 		buf = strchr(buf, '\n') + 1;
 		/* only keep connections in state "SYN packet sent" */
@@ -199,11 +204,9 @@ int tcptable_read(nuauth_session_t * session, conntable_t * ct)
 	assert(ct != NULL);
 	assert(TCP_SYN_SENT == 2);
 #endif
-
 	if (!parse_tcptable_file
 	    (session, ct, "/proc/net/tcp", &fd_tcp, IPPROTO_TCP, 0))
 		return 0;
-
 	parse_tcptable_file(session, ct, "/proc/net/tcp6", &fd_tcp6,
 			    IPPROTO_TCP, 1);
 
