@@ -214,7 +214,7 @@ static void nufw_srv_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 
 	if (revents & EV_WRITE) {
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
-				"nufw write activity");
+				"nufw write activity at %s:%d", __FILE__, __LINE__);
 	}
 	ev_io_start(loop, w);
 
@@ -227,7 +227,7 @@ static void nufw_writer_cb(struct ev_loop *loop, ev_async *w, int revents)
 	int ret;
 
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
-				"nufw write activity");
+			  "nufw write activity at %s:%d", __FILE__, __LINE__);
 	ev_io_stop(loop, &nu_session->nufw_watcher);
 	while ((msg = (struct nufw_message_t *) g_async_queue_try_pop(nu_session->queue))) {
 		ret = nussl_write(nu_session->nufw_client, msg->msg, msg->length);
@@ -364,6 +364,9 @@ void *tls_nufw_worker(struct nuauth_thread_t *thread)
 
 	nu_session->context->clients = g_slist_prepend(nu_session->context->clients, nu_session->loop);
 
+	/* session is ready for usage, declare loop as first user */
+	increase_nufw_session_usage(nu_session);
+
 	ev_loop(nu_session->loop, 0);
 
 	g_mutex_lock(nu_session->context->mutex);
@@ -375,7 +378,7 @@ void *tls_nufw_worker(struct nuauth_thread_t *thread)
 	declare_dead_nufw_session(nu_session);
 
 	/* FIXME : more explicit format */
-	log_message(INFO, DEBUG_AREA_GW, "nufw disconnection");
+	log_message(INFO, DEBUG_AREA_GW, "nufw TLS disconnection");
 
 	return NULL;
 }
@@ -405,6 +408,9 @@ void *tls_nufw_unix_worker(struct nuauth_thread_t *thread)
 
 	nu_session->context->clients = g_slist_prepend(nu_session->context->clients, nu_session->loop);
 
+	/* session is ready for usage, declare loop as first user */
+	increase_nufw_session_usage(nu_session);
+
 	ev_loop(nu_session->loop, 0);
 
 	g_mutex_lock(nu_session->context->mutex);
@@ -418,7 +424,7 @@ void *tls_nufw_unix_worker(struct nuauth_thread_t *thread)
 	declare_dead_nufw_session(nu_session);
 
 	/* FIXME : more explicit format */
-	log_message(INFO, DEBUG_AREA_GW, "nufw disconnection");
+	log_message(INFO, DEBUG_AREA_GW, "nufw unix disconnection");
 	return NULL;
 }
 
