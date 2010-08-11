@@ -1,7 +1,8 @@
 /*
- ** Copyright 2004-2009 - INL
+ ** Copyright 2004-2010 - EdenWall Technologies
  ** Written by Eric Leblond <regit@inl.fr>
  **            Vincent Deffontaines <vincent@inl.fr>
+ **            Pierre Chifflier <chifflier@edenwall.com>
  ** INL http://www.inl.fr/
  **
  ** $Id$
@@ -142,6 +143,7 @@ int mysasl_negotiate(nuauth_session_t * session, sasl_conn_t * conn,
 	const char *chosenmech;
 	unsigned len;
 	int result;
+	int retry_auth = 1;
 	/* gnutls_session session = session->tls; */
 
 	memset(buf, 0, sizeof buf);
@@ -154,13 +156,22 @@ int mysasl_negotiate(nuauth_session_t * session, sasl_conn_t * conn,
 	if (mechlist == NULL)
 		mechlist = buf;
 
-	if (session->verbose) {
-		log_printf(DEBUG_LEVEL_DEBUG, "Server mechanisms %s", buf);
-		log_printf(DEBUG_LEVEL_DEBUG, "Client mechanisms %s", mechlist);
-	}
+	while (retry_auth > 0) {
+		retry_auth--;
 
-	result = sasl_client_start(conn,
-				   mechlist, NULL, &data, &len, &chosenmech);
+		if (session->verbose) {
+			log_printf(DEBUG_LEVEL_DEBUG, "Server mechanisms %s", buf);
+			log_printf(DEBUG_LEVEL_DEBUG, "Client mechanisms %s", mechlist);
+		}
+
+		result = sasl_client_start(conn,
+					   mechlist, NULL, &data, &len, &chosenmech);
+		if (result == -1 && strcasestr(mechlist, "gssapi") != NULL) {
+			log_printf(DEBUG_LEVEL_WARNING, "SASL negotiation with mechanism %s failed, retrying with PLAIN", chosenmech);
+			mechlist = "PLAIN";
+			retry_auth = 1;
+		}
+	}
 
 	if (session->verbose) {
 		log_printf(DEBUG_LEVEL_INFO, "Using mechanism %s", chosenmech);
