@@ -350,7 +350,7 @@ nu_error_t authpckt_decode(unsigned char **pdgram,
 	case PROTO_VERSION_NUFW_V22:
 		log_message(CRITICAL, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
 				    "nufw server runs pre 2.2.2 protocol: please upgrade");
-		return NU_EXIT_OK;
+		return NU_EXIT_ERROR;
 	default:
 		{
 			log_message(CRITICAL, DEBUG_AREA_PACKET | DEBUG_AREA_GW,
