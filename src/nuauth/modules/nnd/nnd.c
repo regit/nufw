@@ -189,6 +189,100 @@ G_MODULE_EXPORT GSList *get_user_groups(const char *username,
 	return userlist;
 }
 
+G_MODULE_EXPORT int user_check(const char *username,
+			       const char *clientpass, unsigned passlen,
+			       user_session_t *session,
+			       gpointer pparams)
+{
+	int socket, len, ret;
+	char buffer[1024];
+	struct nnd_params *params = pparams;
+
+	memset(buffer, 0, sizeof(buffer));
+	/* open socket for rw if needed */
+	socket = GPOINTER_TO_INT(g_private_get(params->nnd_priv));
+	if (socket == 0) {
+		socket = nnd_open_socket(params);
+		if (socket < 0) {
+			return SASL_FAIL;
+		} else {
+			g_private_set(params->nnd_priv,
+				      GINT_TO_POINTER(socket));
+		}
+	}
+	/* Write message to socket
+	 *	"auth  USERNAME"
+	 * */
+	log_message(DEBUG, DEBUG_AREA_MAIN,
+		    "writing command: \"auth %s\"", username);
+	len = snprintf(buffer, 512, "auth %s\n%s\n", username, clientpass);
+	if (len < 0) {
+		return SASL_FAIL;
+	}
+
+	ret = write(socket, buffer, len);
+	if (ret < 0) {
+		log_message(INFO, DEBUG_AREA_MAIN,
+				"Unable to write to nnd daemon socket");
+		close(socket);
+		g_private_set(params->nnd_priv, NULL);
+		/* Try to reopen it */
+		socket = nnd_open_socket(params);
+		if (socket < 0) {
+			return SASL_FAIL;
+		} else {
+			ret = write(socket, buffer, len);
+			if (ret < 0) {
+				log_message(INFO, DEBUG_AREA_MAIN,
+					    "Unable to write to nnd daemon after reconnect");
+				close(socket);
+				return SASL_FAIL;
+			}
+			g_private_set(params->nnd_priv,
+				      GINT_TO_POINTER(socket));
+		}
+	}
+
+	debug_log_message(INFO, DEBUG_AREA_MAIN,
+		    "Reading from nnd daemon socket");
+	/* read result */
+	memset(buffer, 0, sizeof(buffer));
+	ret = read(socket, buffer, sizeof(buffer));
+	if (ret <= 0) {
+		log_message(INFO, DEBUG_AREA_MAIN,
+			    "Unable to read from nnd daemon socket");
+		close(socket);
+		g_private_set(params->nnd_priv, NULL);
+		return SASL_FAIL;
+	}
+
+	debug_log_message(INFO, DEBUG_AREA_MAIN,
+		          "Read %ld bytes from nnd daemon socket: \"%s\"",
+			  strlen(buffer),
+			  buffer);
+	/* parse result */
+	buffer[strlen(buffer) - 1] = 0;
+	/* search for 200 code */
+	if (! strncmp("200", buffer, 3)) {
+		log_message(DEBUG, DEBUG_AREA_MAIN,
+			    "Authentification successful for user \"%s\"", username);
+		return SASL_OK;
+	} else if (! strncmp("400", buffer, 3)) {
+		log_message(DEBUG, DEBUG_AREA_MAIN,
+			    "Authentification failure for user \"%s\"", username);
+		return SASL_BADAUTH;
+	} else {
+		log_message(WARNING, DEBUG_AREA_MAIN,
+			    "Unknown return code during \"%s\" authentication", username);
+		return SASL_BADAUTH;
+	}
+
+	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
+			  "We are leaving (nnd) user_check()");
+
+	return SASL_OK;
+}
+
 G_MODULE_EXPORT gboolean unload_module_with_params(gpointer params_p)
 {
 	struct nnd_params *params = (struct nnd_params *) params_p;
