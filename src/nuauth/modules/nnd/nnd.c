@@ -117,8 +117,8 @@ G_MODULE_EXPORT GSList *get_user_groups(const char *username,
 	 *	"grouplist  USERNAME"
 	 * */
 	log_message(INFO, DEBUG_AREA_MAIN,
-		    "writing command: \"grouplist %s\"", username);
-	len = snprintf(buffer, 512, "grouplist %s\n", username);
+		    "writing command: \"usergroups %s\"", username);
+	len = snprintf(buffer, 512, "usergroups %s\n", username);
 	if (len < 0) {
 		return NULL;
 	}
