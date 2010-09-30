@@ -170,50 +170,52 @@ nu_error_t treat_user_request(user_session_t * c_session,
 		g_free(data);
 		return NU_EXIT_ERROR;
 	}
-	data->buffer_len = nussl_read(c_session->nussl, data->buffer,
-			       CLASSIC_NUFW_PACKET_SIZE);
 
-	if (data->buffer_len < (int) sizeof(struct nu_header)) {
-#ifdef DEBUG_ENABLE
-		if (data->buffer_len <= 0)
-			log_message(DEBUG, DEBUG_AREA_USER,
-				    "Received error from user %s (%s)",
-				    c_session->user_name, nussl_get_error(c_session->nussl));
-#endif
+	/* read message header */
+
+	data->buffer_len = nussl_read(c_session->nussl, data->buffer,
+			       (int) sizeof(struct nu_header));
+
+	if (data->buffer_len != (int) sizeof(struct nu_header)) {
+		log_message(DEBUG, DEBUG_AREA_USER,
+				"Received error from user %s (%s)",
+				c_session->user_name, nussl_get_error(c_session->nussl));
 		free_buffer_read(data);
-		return NU_EXIT_OK;
+		if (!strcmp("Resource temporarily unavailable",
+					nussl_get_error(c_session->nussl))) {
+			return NU_EXIT_CONTINUE;
+		} else {
+			return NU_EXIT_ERROR;
+		}
 	}
 
-
-	/* get header to check if we need to get more data */
+	/* get header to get how much data we have to read */
 	header = (struct nu_header *) data->buffer;
 	header_length = ntohs(header->length);
 
-	/* is it an "USER HELLO" message ? */
-	if (header->proto == PROTO_VERSION
-	    && header->msg_type == USER_HELLO) {
-		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
-				  "tls user: HELLO from user \"%s\"",
-				  c_session->user_name);
+	if (header_length >= MAX_NUFW_PACKET_SIZE) {
+		log_message(INFO, DEBUG_AREA_USER,
+				    "User packet from \'%s\' with too big announced size (%d)",
+				    c_session->user_name, header_length);
 		free_buffer_read(data);
-		return NU_EXIT_CONTINUE;
+		return NU_EXIT_ERROR;
 	}
 
-	/* if message content is bigger than CLASSIC_NUFW_PACKET_SIZE, */
 	/* continue to read the content */
 	if (header->proto == PROTO_VERSION
-	    && header_length > data->buffer_len
-	    && header_length < MAX_NUFW_PACKET_SIZE) {
+	    && header_length > data->buffer_len) {
 		int tmp_len;
 
-		/* we realloc and get what we miss */
-		data->buffer = g_realloc(data->buffer, header_length);
-		header = (struct nu_header *) data->buffer;
+		if (header_length > CLASSIC_NUFW_PACKET_SIZE) {
+			data->buffer = g_realloc(data->buffer, header_length);
+			header = (struct nu_header *) data->buffer;
+		}
 
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+				  "tls user: reading %d", header_length);
 		tmp_len = nussl_read(c_session->nussl,
-				       data->buffer +
-				       CLASSIC_NUFW_PACKET_SIZE,
-				       header_length - data->buffer_len);
+				       data->buffer + sizeof(struct nu_header),
+				       header_length - sizeof(struct nu_header));
 		if (tmp_len <= 0) {
 			free_buffer_read(data);
 			return NU_EXIT_ERROR;
@@ -221,15 +223,19 @@ nu_error_t treat_user_request(user_session_t * c_session,
 		data->buffer_len += tmp_len;
 	}
 
-	/* check message type because USER_HELLO has to be ignored */
-	if (header->msg_type == USER_HELLO) {
-		free_buffer_read(data);
+	/* looks like a regular user message attempt, update last_request */
+	c_session->last_request = time(NULL);
+
+	/* is it an "USER HELLO" message ? */
+	if (header->proto == PROTO_VERSION
+	    && header->msg_type == USER_HELLO) {
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+				  "tls user: HELLO from user \"%s\"",
+				  c_session->user_name);
 		c_session->last_request = time(NULL);
+		free_buffer_read(data);
 		return NU_EXIT_CONTINUE;
 	}
-
-	/* looks like a regular auth attempt, update last_request */
-	c_session->last_request = time(NULL);
 
 	/* check authorization if we're facing a multi user packet */
 	if (header->option == 0x0) {
