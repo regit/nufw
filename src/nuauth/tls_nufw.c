@@ -65,17 +65,24 @@ static int treat_nufw_request(nufw_session_t * c_session)
 	unsigned char *dgram = cdgram;
 	int dgram_size;
 	connection_t *current_conn;
-	int ret;
+	int ret, message_length, offset, i;
 
 	if (c_session == NULL)
 		return NU_EXIT_OK;
 
-	/* read data from nufw */
-	dgram_size = nussl_read(c_session->nufw_client, (char *)dgram, CLASSIC_NUFW_PACKET_SIZE);
+	/* read header from nufw */
+	dgram_size = nussl_read(c_session->nufw_client, (char *)dgram,
+				sizeof(nufw_to_nuauth_message_header_t));
 	if (dgram_size < 0) {
-		log_message(INFO, DEBUG_AREA_GW,
+		if (!strcmp("Resource temporarily unavailable",
+					nussl_get_error(c_session->nufw_client))) {
+			return NU_EXIT_OK;
+		} else {
+			log_message(INFO, DEBUG_AREA_GW,
 			    "nufw failure at %s:%d (%s)", __FILE__,
 			    __LINE__, nussl_get_error(c_session->nufw_client));
+			return NU_EXIT_ERROR;
+		}
 		return NU_EXIT_ERROR;
 	} else if (dgram_size == 0) {
 		log_message(INFO, DEBUG_AREA_GW,
@@ -85,15 +92,59 @@ static int treat_nufw_request(nufw_session_t * c_session)
 		return NU_EXIT_ERROR;
 	}
 
+	message_length = get_nufw_message_length_from_packet(dgram, dgram_size);
+	if (message_length <= 0) {
+		return NU_EXIT_ERROR;
+	}
+	/* read data */
+	offset = sizeof(nufw_to_nuauth_message_header_t);
+	i = 0;
+	do {
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
+				  "nufw read pass %d", i);
+		dgram_size = nussl_read(c_session->nufw_client,
+				(char *) (dgram + offset),
+				message_length - offset);
+		if (dgram_size != message_length - offset) {
+			if (dgram_size < 0) {
+				log_message(INFO, DEBUG_AREA_GW,
+						"nufw failure at %s:%d (%s)", __FILE__,
+						__LINE__, nussl_get_error(c_session->nufw_client));
+				return NU_EXIT_ERROR;
+			} else if (dgram_size == 0) {
+				log_message(INFO, DEBUG_AREA_GW,
+						"nufw disconnect at %s:%d",
+						__FILE__,
+						__LINE__);
+				return NU_EXIT_ERROR;
+			} else {
+				log_message(INFO, DEBUG_AREA_GW,
+						"(pass %d) nufw incomplete read (%d vs %d) at %s:%d",
+						i,
+						dgram_size,
+						message_length - sizeof(nufw_to_nuauth_message_header_t),
+						__FILE__,
+						__LINE__);
+				/* give one last chance ? */
+				offset += dgram_size;
+			}
+		} else {
+			break;
+		}
+		i++;
+	} while (i < 3);
+
 	/* Bad luck, this is first packet, we have to test nufw proto version */
 	if (c_session->proto_version == PROTO_UNKNOWN) {
 		c_session->proto_version =
 		    get_proto_version_from_packet(dgram,
-						  (size_t) dgram_size);
+						  (size_t) message_length);
 		if (!c_session->proto_version) {
 			return NU_EXIT_ERROR;
 		}
 	}
+
+	dgram_size = message_length;
 	/* decode data */
 	do {
 		ret = authpckt_decode(&dgram, (unsigned int *) &dgram_size,

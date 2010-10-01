@@ -577,8 +577,10 @@ static int load_modules_from(gchar * confvar, gchar * func,
 		     (gpointer *) & initmod)) {
 			/* Initialize module */
 			if (!initmod(current_module)) {
-				g_warning
-				    ("Unable to init module");
+				log_message(WARNING, DEBUG_AREA_MAIN,
+					    "Unable to init module \"%s\"",
+					    g_module_name(current_module->module)
+					   );
 				current_module->params = NULL;
 				return 0;
 			}

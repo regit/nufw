@@ -29,4 +29,6 @@ void acl_check_and_decide(gpointer userdata, gpointer data);
 unsigned char get_proto_version_from_packet(const unsigned char *dgram,
 					    size_t dgram_size);
 
+int get_nufw_message_length_from_packet(const unsigned char * dgram,
+					size_t dgram_size);
 #endif

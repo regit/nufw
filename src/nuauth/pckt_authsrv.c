@@ -382,3 +382,26 @@ unsigned char get_proto_version_from_packet(const unsigned char *dgram,
 		return 0;
 	}
 }
+
+/**
+ * \return < 0 if error, message length if success
+ */
+
+int get_nufw_message_length_from_packet(const unsigned char * dgram,
+					size_t dgram_size)
+{
+	nufw_to_nuauth_message_header_t *header;
+	uint16_t length = 0;
+
+	if (dgram_size < sizeof(nufw_to_nuauth_message_header_t)) {
+		return -ERANGE;
+	}
+	header = (nufw_to_nuauth_message_header_t *) dgram;
+	length = ntohs(header->msg_length);
+
+	if (length > MAX_NUFW_PACKET_SIZE) {
+		return -ENOSPC;
+	}
+
+	return length;
+}
