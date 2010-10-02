@@ -142,8 +142,8 @@ int raw_sock6;
 /* IP packet catcher */
 void *packetsrv(void *data);
 
-/* IP auth server */
-void *authsrv(void *data);
+/* IP auth function */
+int authsrv(void *data);
 
 /* send an auth request packet given a payload (raw packet) */
 int auth_request_send(uint8_t type, struct queued_pckt *pckt);

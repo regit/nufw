@@ -39,6 +39,7 @@ int auth_process_answer(char *dgram, int dgram_size)
 	int sandf;
 	u_int32_t packet_id;
 	int payload_len;
+	int msg_len;
 
 	/* check packet size */
 	if (dgram_size < (int) sizeof(nuv4_nuauth_decision_response_t)) {
@@ -48,11 +49,8 @@ int auth_process_answer(char *dgram, int dgram_size)
 
 	/* check payload length */
 	payload_len = ntohs(answer->payload_len);
-	if (dgram_size <
-	    (int) (sizeof(nuv5_nuauth_decision_response_t) + payload_len)
-	    || ((payload_len != 0) && (payload_len != (20 + 8))
-		&& (payload_len != (40 + 8)) &&
-		(dgram_size != (int) (sizeof(nuv5_nuauth_decision_response_t) + payload_len)))) {
+	msg_len = payload_len + sizeof(nuv5_nuauth_decision_response_t);
+	if (dgram_size < msg_len) {
 		log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_WARNING,
 				"[!] Packet with improper size: payload of %d, received %d (vs %d)",
 				payload_len,
@@ -125,7 +123,7 @@ int auth_process_answer(char *dgram, int dgram_size)
 				 "(*) Drop packet %u", packet_id);
 		IPQ_SET_VERDICT(packet_id, NF_DROP);
 	}
-	return sizeof(nuv5_nuauth_decision_response_t) + payload_len;
+	return msg_len;
 }
 
 /**
@@ -178,30 +176,94 @@ static int auth_packet_to_decision(char *dgram, int dgram_size)
  * Thread waiting to authentication server (NuAuth) answer.
  * Call auth_packet_to_decision() on new packet.
  */
-void *authsrv(void *data)
+int authsrv(void *data)
 {
 	int ret;
 	int read_size;
 	char cdgram[512];
 	char *dgram = cdgram;
+	int offset = 0;
+	int i = 0;
 
 	log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_VERBOSE_DEBUG,
 			"[+] In auth server thread");
 
-	/* memset(dgram, 0, sizeof dgram); */
-	if (tls.session)
-		ret = nussl_read(tls.session, dgram, sizeof cdgram);
-	else
+	if (tls.session) {
+		read_size = sizeof(nuv5_nuauth_decision_response_t);
+		/* read size of data */
+		do {
+			if (i>0) {
+				log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_VERBOSE_DEBUG,
+						"Reading header (pass %d)", i);
+			}
+			ret = nussl_read(tls.session, dgram + offset, read_size - offset);
+			if (ret < 0) {
+				log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_WARNING,
+						"Unable to read header");
+				if (!strcmp("Resource temporarily unavailable",
+							nussl_get_error(tls.session))) {
+					log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_WARNING,
+							"Resource temporarily unavailable");
+					i++;
+					continue;
+				} else {
+					close_tls_session();
+					return NU_EXIT_ERROR;
+				}
+			} else if (ret == 0) {
+				log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_WARNING,
+						"Disconnect during read");
+				close_tls_session();
+				return NU_EXIT_ERROR;
+			} else if (ret != (read_size - offset)) {
+				log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_WARNING,
+						"Under read: %d for %d",
+						ret,
+						read_size);
+				offset += ret;
+				i++;
+				continue;
+			} else {
+				offset += ret;
+				break;
+			}
+		} while ((offset != read_size) && i < 3);
+
+		if (i == 3) {
+			log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_WARNING,
+					"Unable to nussl_read %d from session", read_size);
+			return NU_EXIT_ERROR;
+		}
+
+		read_size = ntohs(((nuv5_nuauth_decision_response_t *) dgram)->payload_len);
+		if (read_size != 0) {
+			log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_VERBOSE_DEBUG,
+					"going to nussl_read: %d", read_size);
+			if (read_size + offset > sizeof(cdgram)) {
+				log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_VERBOSE_DEBUG,
+						"too big to read nussl_read: %d", read_size);
+				close_tls_session();
+				return NU_EXIT_ERROR;
+			}
+			ret = nussl_read(tls.session, dgram + offset, read_size);
+			if (ret != read_size) {
+				log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_WARNING,
+						"Unable to read data");
+				return NU_EXIT_ERROR;
+			}
+		}
+	} else
 		ret = 0;
 	if (ret == NUSSL_SOCK_TIMEOUT) {
-		return NULL;
+		return NU_EXIT_ERROR;
 	}
 	if (ret <= 0) {
 		log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_VERBOSE_DEBUG,
 				"Error during nussl_read: %s", nussl_get_error(tls.session));
 		close_tls_session();
-		return NULL;
+		return NU_EXIT_ERROR;
 	} else {
+		ret = read_size + offset;
 		do {
 			read_size = auth_packet_to_decision(dgram, ret);
 			ret -= read_size;
@@ -210,5 +272,5 @@ void *authsrv(void *data)
 	}
 
 	dgram = cdgram;
-	return NULL;
+	return NU_EXIT_OK;
 }
