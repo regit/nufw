@@ -201,6 +201,8 @@ static int treat_packet(struct nfq_handle *qh, struct nfgenmsg *nfmsg,
  */
 int packetsrv_open(void *data)
 {
+	int ret;
+
 	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
 			"Opening netfilter queue socket");
 	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
@@ -238,6 +240,11 @@ int packetsrv_open(void *data)
 			return -1;
 		}
 	}
+
+	ret = nfnl_rcvbufsiz(nfq_nfnlh(h), 10 * 65536);
+	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,
+			"rcv buf size set to %d (%d asked)",
+			ret, 10 * 65536);
 
 	/* binding this socket to queue number ::nfqueue_num
 	 * and install our packet handler */
@@ -326,8 +333,10 @@ static void packetsrv_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 			struct nlif_handle *nlif_handle = (struct nlif_handle *) w->data;
 			log_area_printf(DEBUG_AREA_MAIN,
 					DEBUG_LEVEL_WARNING,
-					"[!] Error of read on netfilter queue socket (code %i)!",
-					rv);
+					"[!] Error of read on netfilter queue socket (code %i, errno %d): %s!",
+					rv,
+					errno,
+					strerror(errno));
 			log_area_printf(DEBUG_AREA_MAIN,
 					DEBUG_LEVEL_SERIOUS_MESSAGE,
 					"Reopen netlink connection.");
