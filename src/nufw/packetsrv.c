@@ -283,7 +283,11 @@ void packetsrv_close(int smart)
 			"Destroy netfilter queue socket");
 	if (smart)
 		nfq_destroy_queue(hndl);
+
 	nfq_close(h);
+	/* packet id will be reset after restart, we discard
+	   waiting packets */
+	clear_packet_list();
 }
 
 static void iface_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
@@ -339,6 +343,7 @@ static void packetsrv_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 						"[!] FATAL ERROR: Fail to reopen netlink connection!");
 				exit(EXIT_FAILURE);
 			}
+			ev_io_stop(loop, w);
 			ev_io_set(w, fd, EV_READ);
 			ev_io_start(loop, w);
 			return;
