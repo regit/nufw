@@ -559,8 +559,9 @@ static int finish_nego(user_session_t * c_session)
 	msg.option = OS_VERSION;
 	if (nussl_write(c_session->nussl, (char*)&msg, sizeof(msg)) < 0) {
 		log_message(WARNING, DEBUG_AREA_USER,
-			    "nussl_write() failure at %s:%d",
-			    __FILE__, __LINE__);
+			    "nussl_write() failure at %s:%d: %s",
+			    __FILE__, __LINE__,
+			    nussl_get_error(c_session->nussl));
 		return SASL_FAIL;
 	}
 	debug_log_message(DEBUG, DEBUG_AREA_USER,
@@ -569,8 +570,9 @@ static int finish_nego(user_session_t * c_session)
 	buf_size = nussl_read(c_session->nussl, buf, sizeof buf);
 	if (buf_size < 0) {
 		log_message(WARNING, DEBUG_AREA_USER,
-			    "nussl_read() failure at %s:%d",
-			    __FILE__, __LINE__);
+			    "nussl_read() failure at %s:%d: %s",
+			    __FILE__, __LINE__,
+			    nussl_get_error(c_session->nussl));
 		return SASL_FAIL;
 	}
 	ret = parse_user_os(c_session, buf, buf_size);
@@ -583,14 +585,22 @@ static int finish_nego(user_session_t * c_session)
 	msg.option = CLIENT_VERSION;
 	if (nussl_write(c_session->nussl, (char*)&msg, sizeof(msg)) < 0) {
 		log_message(WARNING, DEBUG_AREA_USER,
-			    "nussl_write() failure at %s:%d",
-			    __FILE__, __LINE__);
+			    "nussl_write() failure at %s:%d: %s",
+			    __FILE__, __LINE__,
+			    nussl_get_error(c_session->nussl));
 		return SASL_FAIL;
 	}
 	debug_log_message(DEBUG, DEBUG_AREA_USER,
 				  "user version asked");
 
 	buf_size = nussl_read(c_session->nussl, buf, sizeof buf);
+	if (buf_size < 0) {
+		log_message(WARNING, DEBUG_AREA_USER,
+			    "nussl_read() failure at %s:%d: %s",
+			    __FILE__, __LINE__,
+			    nussl_get_error(c_session->nussl));
+		return SASL_FAIL;
+	}
 	ret = parse_user_version(c_session, buf, buf_size);
 
 	if (ret != SASL_OK)
@@ -602,14 +612,22 @@ static int finish_nego(user_session_t * c_session)
 	msg.option = CLIENT_CAPA;
 	if (nussl_write(c_session->nussl, (char*)&msg, sizeof(msg)) < 0) {
 		log_message(WARNING, DEBUG_AREA_USER,
-			    "nussl_write() failure at %s:%d",
-			    __FILE__, __LINE__);
+			    "nussl_write() failure at %s:%d: %s",
+			    __FILE__, __LINE__,
+			    nussl_get_error(c_session->nussl));
 		return SASL_FAIL;
 	}
 	debug_log_message(DEBUG, DEBUG_AREA_USER,
 				  "user capabilities asked");
 
 	buf_size = nussl_read(c_session->nussl, buf, sizeof buf);
+	if (buf_size < 0) {
+		log_message(WARNING, DEBUG_AREA_USER,
+			    "nussl_read() failure at %s:%d: %s",
+			    __FILE__, __LINE__,
+			    nussl_get_error(c_session->nussl));
+		return SASL_FAIL;
+	}
 	ret = parse_user_capabilities(c_session, buf, buf_size);
 
 	if (ret != SASL_OK)
@@ -633,8 +651,9 @@ static int finish_nego(user_session_t * c_session)
 	msg.length = 0;
 	if (nussl_write(c_session->nussl, (char*)&msg, sizeof(msg)) < 0) {
 		log_message(WARNING, DEBUG_AREA_USER,
-			    "nussl_write() failure at %s:%d",
-			    __FILE__, __LINE__);
+			    "nussl_write() failure at %s:%d: %s",
+			    __FILE__, __LINE__,
+			    nussl_get_error(c_session->nussl));
 		return SASL_FAIL;
 	}
 
@@ -644,8 +663,9 @@ static int finish_nego(user_session_t * c_session)
 	msg.length = htons(nuauthconf->hash_algo);
 	if (nussl_write(c_session->nussl, (char*)&msg, sizeof(msg)) < 0) {
 		log_message(WARNING, DEBUG_AREA_USER,
-			    "nussl_write() failure at %s:%d",
-			    __FILE__, __LINE__);
+			    "nussl_write() failure at %s:%d: %s",
+			    __FILE__, __LINE__,
+			    nussl_get_error(c_session->nussl));
 		return SASL_FAIL;
 	}
 
