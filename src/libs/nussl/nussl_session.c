@@ -693,6 +693,10 @@ int nussl_write(nussl_session * session, const char *buffer, size_t count)
 	return ret;
 }
 
+ssize_t nussl_read_available(nussl_session * session)
+{
+	return nussl_sock_read_available(session->socket);
+}
 
 ssize_t nussl_read(nussl_session * session, char *buffer, size_t count)
 {

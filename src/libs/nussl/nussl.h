@@ -85,6 +85,8 @@ extern "C" {
 /* Write to session */
 	int nussl_write(nussl_session * sess, const char *buffer, size_t count);
 
+	ssize_t nussl_read_available(nussl_session * sess);
+
 /* Read from session */
 /* returns the number of octets read on success */
 /* returns a NUSSL_SOCK_* error on failure */

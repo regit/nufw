@@ -490,6 +490,11 @@ int nussl_sock_block(nussl_socket * sock, int n)
 /* Cast address object AD to type 'sockaddr_TY' */
 #define SACAST(ty, ad) ((struct sockaddr_##ty *)(ad))
 
+ssize_t nussl_sock_read_available(nussl_socket * sock)
+{
+	return sock->bufavail;
+}
+
 ssize_t nussl_sock_read(nussl_socket * sock, char *buffer, size_t buflen)
 {
 	ssize_t bytes;
@@ -502,8 +507,11 @@ ssize_t nussl_sock_read(nussl_socket * sock, char *buffer, size_t buflen)
 
 	if (sock->bufavail > 0) {
 		/* Deliver buffered data. */
-		if (buflen > sock->bufavail)
+		if (buflen > sock->bufavail) {
+			NUSSL_DEBUG(NUSSL_DBG_SOCKET, "buf: short read (%d vs %d)\n",
+				    buflen, sock->bufavail);
 			buflen = sock->bufavail;
+		}
 		memcpy(buffer, sock->bufpos, buflen);
 		sock->bufpos += buflen;
 		sock->bufavail -= buflen;

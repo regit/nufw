@@ -159,6 +159,9 @@ void nussl_sock_prebind(nussl_socket * sock, const nussl_inet_addr * addr,
 int nussl_sock_connect(nussl_socket * sock, const nussl_inet_addr * addr,
 		       unsigned int port);
 
+
+ssize_t nussl_sock_read_available(nussl_socket * sock);
+
 /* Read up to 'count' bytes from socket into 'buffer'.  Returns:
  *   NUSSL_SOCK_* on error,
  *   >0 length of data read into buffer (may be less than 'count')
