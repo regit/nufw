@@ -383,11 +383,16 @@ static void packetsrv_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 static void tls_activity_cb(struct ev_loop *loop, ev_io *w, int revents) {
 	ev_io *nfq_watcher = (ev_io *) w->data;
 	int ret;
+	int i = 0;
 
 	if (revents & EV_READ) {
 		ev_io_stop(loop, w);
 		ev_io_stop(loop, nfq_watcher);
 		do {
+			if (i>0) {
+				log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_VERBOSE_DEBUG,
+						"remaining data to read");
+			}
 			/* TODO improve function type here */
 			ret = authsrv(NULL);
 		} while ((ret != NU_EXIT_ERROR) && (nussl_read_available(tls.session)));
@@ -395,6 +400,7 @@ static void tls_activity_cb(struct ev_loop *loop, ev_io *w, int revents) {
 		if (tls.session) {
 			ev_io_start(loop, w);
 		}
+		i++;
 	}
 
 	if (revents & EV_ERROR) {
