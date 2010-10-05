@@ -92,8 +92,24 @@ static int treat_nufw_request(nufw_session_t * c_session)
 		return NU_EXIT_ERROR;
 	}
 
+	if (dgram_size < (int) sizeof(nufw_to_nuauth_message_header_t)) {
+		log_message(INFO, DEBUG_AREA_GW,
+			    "nufw short read at %s:%d",
+			    __FILE__,
+			    __LINE__);
+		/* can not recuperate from this state with current code */
+		declare_dead_nufw_session(c_session);
+		return NU_EXIT_ERROR;
+	}
+
 	message_length = get_nufw_message_length_from_packet(dgram, dgram_size);
 	if (message_length <= 0) {
+		log_message(INFO, DEBUG_AREA_GW,
+			    "message length invalid at %s:%d",
+			    __FILE__,
+			    __LINE__);
+		/* can not recuperate from this state with current code */
+		declare_dead_nufw_session(c_session);
 		return NU_EXIT_ERROR;
 	}
 	/* read data */
@@ -212,7 +228,7 @@ static int treat_nufw_request(nufw_session_t * c_session)
 #endif
 	} while (dgram_size > 0);
 
-	return NU_EXIT_OK;
+	return NU_EXIT_CONTINUE;
 }
 
 
@@ -234,6 +250,7 @@ static int get_reverse_dns_info(struct sockaddr_storage *addr, char *buffer, siz
 static void nufw_srv_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 {
 	nufw_session_t *c_session = w->data;
+	int ret;
 
 
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
@@ -250,17 +267,28 @@ static void nufw_srv_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 	if (revents & EV_READ) {
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
 				"nufw read activity");
-		increase_nufw_session_usage(c_session);
-		if (treat_nufw_request(c_session) == NU_EXIT_ERROR) {
-			release_nufw_session(c_session);
-			/* get session link with c */
-			log_message(WARNING, DEBUG_AREA_GW,
-					"nufw server disconnect");
-			ev_unloop(loop, EVUNLOOP_ONE);
-			return;
-		} else {
-			release_nufw_session(c_session);
-		}
+		do {
+			increase_nufw_session_usage(c_session);
+			ret = treat_nufw_request(c_session) ;
+			switch (ret) {
+				case NU_EXIT_ERROR:
+					release_nufw_session(c_session);
+					/* get session link with c */
+					log_message(WARNING, DEBUG_AREA_GW,
+							"nufw server disconnect");
+					ev_unloop(loop, EVUNLOOP_ONE);
+					return;
+				case NU_EXIT_OK:
+				case NU_EXIT_CONTINUE:
+					release_nufw_session(c_session);
+					break;
+				default:
+					log_message(WARNING, DEBUG_AREA_GW,
+						    "return not correct at %s:%d", __FILE__, __LINE__);
+					release_nufw_session(c_session);
+					break;
+			}
+		} while (nussl_read_available(c_session->nufw_client));
 	}
 
 	if (revents & EV_WRITE) {
