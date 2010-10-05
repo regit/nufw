@@ -251,6 +251,7 @@ static void nufw_srv_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 {
 	nufw_session_t *c_session = w->data;
 	int ret;
+	int i = 0;
 
 
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
@@ -268,6 +269,12 @@ static void nufw_srv_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
 				"nufw read activity");
 		do {
+			if (i > 0) {
+				debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_GW,
+						  "%d data remaining (pass %d)",
+						  nussl_read_available(c_session->nufw_client),
+						  i);
+			}
 			increase_nufw_session_usage(c_session);
 			ret = treat_nufw_request(c_session) ;
 			switch (ret) {
@@ -288,6 +295,7 @@ static void nufw_srv_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 					release_nufw_session(c_session);
 					break;
 			}
+			i++;
 		} while (nussl_read_available(c_session->nufw_client));
 	}
 
