@@ -239,7 +239,7 @@ int authsrv(void *data)
 		if (read_size != 0) {
 			log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_VERBOSE_DEBUG,
 					"going to nussl_read: %d", read_size);
-			if (read_size + offset > sizeof(cdgram)) {
+			if (read_size + offset > (int) sizeof(cdgram)) {
 				log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_VERBOSE_DEBUG,
 						"too big to read nussl_read: %d", read_size);
 				close_tls_session();
