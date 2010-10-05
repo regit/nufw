@@ -382,11 +382,15 @@ static void packetsrv_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 
 static void tls_activity_cb(struct ev_loop *loop, ev_io *w, int revents) {
 	ev_io *nfq_watcher = (ev_io *) w->data;
+	int ret;
+
 	if (revents & EV_READ) {
 		ev_io_stop(loop, w);
 		ev_io_stop(loop, nfq_watcher);
-		/* FIXME correct function type here */
-		authsrv(NULL);
+		do {
+			/* TODO improve function type here */
+			ret = authsrv(NULL);
+		} while ((ret != NU_EXIT_ERROR) && (nussl_read_available(tls.session)));
 		ev_io_start(loop, nfq_watcher);
 		if (tls.session) {
 			ev_io_start(loop, w);
