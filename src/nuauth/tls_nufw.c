@@ -296,7 +296,7 @@ static void nufw_srv_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 					break;
 			}
 			i++;
-		} while (nussl_read_available(c_session->nufw_client));
+		} while ((i < 3) && nussl_read_available(c_session->nufw_client));
 	}
 
 	if (revents & EV_WRITE) {

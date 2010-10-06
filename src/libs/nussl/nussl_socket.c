@@ -508,8 +508,6 @@ ssize_t nussl_sock_read(nussl_socket * sock, char *buffer, size_t buflen)
 	if (sock->bufavail > 0) {
 		/* Deliver buffered data. */
 		if (buflen > sock->bufavail) {
-			NUSSL_DEBUG(NUSSL_DBG_SOCKET, "buf: short read (%d vs %d)\n",
-				    buflen, sock->bufavail);
 			buflen = sock->bufavail;
 		}
 		memcpy(buffer, sock->bufpos, buflen);
