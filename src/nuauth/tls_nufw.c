@@ -150,6 +150,14 @@ static int treat_nufw_request(nufw_session_t * c_session)
 		i++;
 	} while (i < 3);
 
+	if (i == 3) {
+		log_message(INFO, DEBUG_AREA_GW,
+						"nufw read impossible at %s:%d",
+						__FILE__,
+						__LINE__);
+		return NU_EXIT_ERROR;
+	}
+
 	/* Bad luck, this is first packet, we have to test nufw proto version */
 	if (c_session->proto_version == PROTO_UNKNOWN) {
 		c_session->proto_version =
