@@ -1147,7 +1147,7 @@ void tls_user_start_servers(GSList *servers)
 		struct nuauth_thread_t *srv_thread =
 			g_new0(struct nuauth_thread_t, 1);
 		if (!parse_addr_port(user_servers[i], nuauthconf->userpckt_port, &context->addr, &context->port)) {
-			log_message(FATAL, DEBUG_AREA_MAIN | DEBUG_AREA_GW,
+			log_message(FATAL, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
 					"Address parsing error at %s:%d (\"%s\")", __FILE__,
 					__LINE__, user_servers[i]);
 			nuauth_ask_exit();
@@ -1179,7 +1179,7 @@ void tls_crl_update_user_session(GSList *session)
 
 	while ( listrunner ) {
 		struct nuauth_thread_t *nuauth_thread = listrunner->data;
-                
+
 		struct tls_user_context_t *context = nuauth_thread->data;
 
 		// Don't update the CRL when nufw is not yet connected
@@ -1192,7 +1192,7 @@ void tls_crl_update_user_session(GSList *session)
 		ret = nussl_ssl_set_crl_file(context->nussl, nuauth_tls.crl_file, nuauth_tls.ca);
 
 		if (ret != NUSSL_OK) {
-			log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_CRITICAL,
+			log_area_printf(DEBUG_AREA_USER, DEBUG_LEVEL_CRITICAL,
 					"User TLS: CRL file reloading failed (%s)",
 					nussl_get_error(context->nussl));
 		}
