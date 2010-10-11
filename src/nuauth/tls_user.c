@@ -201,7 +201,12 @@ nu_error_t treat_user_request(user_session_t * c_session,
 			return NU_EXIT_ERROR;
 		} else {
 			/* incomplete read */
-
+			log_message(INFO, DEBUG_AREA_USER,
+					"user imcomplete read at %s:%d",
+					__FILE__,
+					__LINE__);
+			free_buffer_read(data);
+			return NU_EXIT_ERROR;
 		}
 	}
 
