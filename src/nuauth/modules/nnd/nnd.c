@@ -215,7 +215,7 @@ G_MODULE_EXPORT int user_check(const char *username,
 	 * */
 	log_message(DEBUG, DEBUG_AREA_MAIN,
 		    "writing command: \"auth %s\"", username);
-	len = snprintf(buffer, 512, "auth %s\n%s\n", username, clientpass);
+	len = snprintf(buffer, 512, "auth %s,%s\n", username, clientpass);
 	if (len < 0) {
 		return SASL_FAIL;
 	}
