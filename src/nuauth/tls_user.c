@@ -152,6 +152,7 @@ nu_error_t treat_user_request(user_session_t * c_session,
 	int header_length;
 	struct nu_header *header;
 	struct tls_buffer_read *data;
+	int i = 0, offset = 0, dgram_size;
 
 	if (c_session == NULL)
 		return NU_EXIT_ERROR;
@@ -177,15 +178,30 @@ nu_error_t treat_user_request(user_session_t * c_session,
 			       (int) sizeof(struct nu_header));
 
 	if (data->buffer_len != (int) sizeof(struct nu_header)) {
-		log_message(DEBUG, DEBUG_AREA_USER,
-				"Received error from user %s (%s)",
-				c_session->user_name, nussl_get_error(c_session->nussl));
-		free_buffer_read(data);
-		if (!strcmp("Resource temporarily unavailable",
-					nussl_get_error(c_session->nussl))) {
-			return NU_EXIT_CONTINUE;
-		} else {
+		if (data->buffer_len < 0) {
+			log_message(DEBUG, DEBUG_AREA_USER,
+					"Received error from user %s (%s)",
+					c_session->user_name, nussl_get_error(c_session->nussl));
+			free_buffer_read(data);
+			if (!strcmp("Resource temporarily unavailable",
+						nussl_get_error(c_session->nussl))) {
+				log_message(DEBUG, DEBUG_AREA_USER,
+						"Read unavailable from %s (%s)",
+						c_session->user_name, nussl_get_error(c_session->nussl));
+				return NU_EXIT_CONTINUE;
+			} else {
+				return NU_EXIT_ERROR;
+			}
+		} else if (data->buffer_len == 0) {
+			log_message(INFO, DEBUG_AREA_USER,
+					"user disconnect at %s:%d",
+					__FILE__,
+					__LINE__);
+			free_buffer_read(data);
 			return NU_EXIT_ERROR;
+		} else {
+			/* incomplete read */
+
 		}
 	}
 
@@ -204,7 +220,6 @@ nu_error_t treat_user_request(user_session_t * c_session,
 	/* continue to read the content */
 	if (header->proto == PROTO_VERSION
 	    && header_length > data->buffer_len) {
-		int tmp_len;
 
 		if (header_length > CLASSIC_NUFW_PACKET_SIZE) {
 			data->buffer = g_realloc(data->buffer, header_length);
@@ -213,14 +228,56 @@ nu_error_t treat_user_request(user_session_t * c_session,
 
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 				  "tls user: reading %d", header_length);
-		tmp_len = nussl_read(c_session->nussl,
-				       data->buffer + sizeof(struct nu_header),
-				       header_length - sizeof(struct nu_header));
-		if (tmp_len <= 0) {
+		offset = sizeof(struct nu_header);
+		i = 0;
+		do {
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+					"user read pass %d", i);
+			dgram_size = nussl_read(c_session->nussl,
+					(char *) (data->buffer + offset),
+					header_length - offset);
+			if (dgram_size != header_length - offset) {
+				if (dgram_size < 0) {
+					log_message(INFO, DEBUG_AREA_USER,
+							"user failure at %s:%d (%s)", __FILE__,
+							__LINE__, nussl_get_error(c_session->nussl));
+					free_buffer_read(data);
+					return NU_EXIT_ERROR;
+				} else if (dgram_size == 0) {
+					log_message(INFO, DEBUG_AREA_USER,
+							"user disconnect at %s:%d",
+							__FILE__,
+							__LINE__);
+					free_buffer_read(data);
+					return NU_EXIT_ERROR;
+				} else {
+					log_message(INFO, DEBUG_AREA_USER,
+							"(pass %d) nufw incomplete read (%d vs %d) at %s:%d",
+							i,
+							dgram_size,
+							header_length - offset,
+							__FILE__,
+							__LINE__);
+					/* give one last chance ? */
+					offset += dgram_size;
+				}
+			} else {
+				break;
+			}
+			i++;
+		} while (i < 3);
+
+		if (i == 3) {
+			log_message(INFO, DEBUG_AREA_USER,
+					"user read impossible at %s:%d",
+					__FILE__,
+					__LINE__);
 			free_buffer_read(data);
 			return NU_EXIT_ERROR;
 		}
-		data->buffer_len += tmp_len;
+
+		/* read is complete here */
+		data->buffer_len = header_length;
 	}
 
 	/* looks like a regular user message attempt, update last_request */
