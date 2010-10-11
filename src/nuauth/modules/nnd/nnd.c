@@ -95,7 +95,7 @@ G_MODULE_EXPORT GSList *get_user_groups(const char *username,
 
 	int ret, len;
 	int socket;
-	char buffer[1024];
+	char buffer[4096];
 	GSList *userlist = NULL;
 	gchar **groups_list;
 	gchar **groups_list_item;
