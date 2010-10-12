@@ -501,6 +501,8 @@ int tls_user_accept(struct tls_user_context_t *context)
  */
 nu_error_t tls_user_check_activity(user_session_t *c_session)
 {
+	int ret = NU_EXIT_OK;
+	int i;
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 			  "user activity on socket %d", c_session->socket);
 
@@ -510,8 +512,14 @@ nu_error_t tls_user_check_activity(user_session_t *c_session)
 
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
 			  "user_checker starting");
+	do {
+		ret = user_check_and_decide(c_session);
+		if (ret == NU_EXIT_ERROR) {
+			return ret;
+		}
+	} while (++i < 3);
 
-	return user_check_and_decide(c_session);
+	return ret;
 }
 
 void user_worker(gpointer psession, gpointer data)
