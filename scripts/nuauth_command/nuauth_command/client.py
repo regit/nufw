@@ -144,6 +144,8 @@ class Client:
             return self._send_command(command)
 
     def _send_command(self, command):
+        if not self.socket:
+            self.reconnect()
         # Send command
         err = self.socket.send(command)
         if err:
