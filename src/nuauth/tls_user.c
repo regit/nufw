@@ -515,9 +515,14 @@ nu_error_t tls_user_check_activity(user_session_t *c_session)
 	do {
 		ret = user_check_and_decide(c_session);
 		if (ret == NU_EXIT_ERROR) {
+			debug_log_message(INFO, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
+					"user_check_and_decide error");
 			return ret;
 		}
-	} while (++i < 3);
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN | DEBUG_AREA_USER,
+				"user_checker (pass %d)",
+				i++);
+	} while ((i < 3) && (nussl_read_available(c_session->nussl)));
 
 	return ret;
 }
