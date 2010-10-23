@@ -539,6 +539,7 @@ void user_worker(gpointer psession, gpointer data)
 				ret = tls_user_check_activity(usersession);
 				switch (ret) {
 					case NU_EXIT_OK:
+					case NU_EXIT_CONTINUE:
 						break;
 					case NU_EXIT_ERROR:
 						log_message(INFO, DEBUG_AREA_USER,
@@ -547,14 +548,6 @@ void user_worker(gpointer psession, gpointer data)
 						usersession->pending_disconnect = TRUE;
 						sess_ok = FALSE;
 						break;
-					case NU_EXIT_CONTINUE:
-						/* send socket back to user select no message are waiting */
-						g_async_queue_push(mx_queue, usersession);
-						ev_async_send(usersession->srv_context->loop,
-								&usersession->srv_context->client_injector_signal);
-
-						g_mutex_unlock(usersession->rw_lock);
-						return;
 				}
 			} else {
 				debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
