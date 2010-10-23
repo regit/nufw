@@ -571,10 +571,14 @@ void user_worker(gpointer psession, gpointer data)
 		}
 		/* send socket back to user select no message are waiting */
 		g_async_queue_push(mx_queue, usersession);
+		g_mutex_unlock(usersession->rw_lock);
 		ev_async_send(usersession->srv_context->loop,
 				&usersession->srv_context->client_injector_signal);
 
-		g_mutex_unlock(usersession->rw_lock);
+	} else {
+		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+				"client locked at %s:%d", __FILE__, __LINE__);
+
 	}
 	return;
 }
