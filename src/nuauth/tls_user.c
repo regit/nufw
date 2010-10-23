@@ -495,7 +495,8 @@ int tls_user_accept(struct tls_user_context_t *context)
 /**
  * Process client events:
  *    - Delete client if its session expired: delete_client_by_socket()
- *    - Call treat_user_request(). If it gets EOF, delete the client:
+ *    - Call user_check_and_decide which call treat_user_request(). If it gets
+ *	Nu_EXIT_ERROR, delete the client:
  *      send #FREE_MESSAGE to tls_push_queue (see push_worker()) if using
  *      PUSH mode (::nuauthconf->push), or call delete_client_by_socket().
  */
@@ -794,11 +795,21 @@ static void loop_destructor_cb(struct ev_loop *loop, ev_async *w, int revents)
 
 
 /**
- * Wait for new client connection or client event using ::mx_queue
- * and select().
+ * Event loop for a client context.
  *
- * It calls tls_user_accept() on new client connection, and
- * tls_user_check_activity() on user event.
+ * Usage of the loop is the following:
+ * - client_injector_signal: send new client socket to the loop. Callback is
+ *   client_injector_cb().
+ * - client_writer_signal: if a write is needed, ask for removal of client socket.
+ *   from the loop and process to write by poping write event from a per-client
+ *   message queue. Callback is client_writer_cb().
+ * - client_destructor_signal: ask for removal a client socket from the loop. This
+ *   is used by the command_mode to trigger disconnection. Callback is
+ *   client_destructor_cb().
+ * - client_accept_cb(): treat new client. This call back is called by watcher
+ *   other server socket.
+ * - loop_fini_signal: async signal used to trigger loop end
+ *
  */
 void tls_user_main_loop(struct tls_user_context_t *context, GMutex * mutex)
 {
@@ -823,7 +834,6 @@ void tls_user_main_loop(struct tls_user_context_t *context, GMutex * mutex)
 	ev_async_init(&context->client_destructor_signal, client_destructor_cb);
 	ev_async_start(context->loop, &context->client_destructor_signal);
 	context->client_destructor_signal.data = context;
-
 
 	/* register destructor cb */
 	ev_async_init(&context->loop_fini_signal, loop_destructor_cb);
