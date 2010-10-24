@@ -577,6 +577,7 @@ int tls_nufw_accept_unix(struct tls_nufw_context_t *context)
 	struct sockaddr_un sockaddr;
 	socklen_t len_unix = sizeof(sockaddr);
 	struct nuauth_thread_t *nufw_worker_p = g_new0(struct nuauth_thread_t, 1);
+	int opt, ret;
 
 	nufw_session_t *nu_session;
 
@@ -624,6 +625,17 @@ int tls_nufw_accept_unix(struct tls_nufw_context_t *context)
 		return 1;
 	}
 
+
+	opt = nuauth_config_table_get_or_default_int("nuauth_unix_sndbuf_size", 0);
+	if (opt > 0) {
+		ret = setsockopt(conn_fd, SOL_SOCKET, SO_SNDBUFFORCE, &opt, sizeof(opt));
+		if (ret < 0) {
+			log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_DEBUG,
+					"Couldn't set buf send to unix socket: %s",
+					strerror(errno));
+			return 1;
+		}
+	}
 
 	add_nufw_server(conn_fd, nu_session);
 	/* create nufw server thread */
