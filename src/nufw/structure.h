@@ -73,6 +73,9 @@ int packet_timeout;
 /*! Maximum size of the packet list (::packets_list), default value: #TRACK_SIZE */
 int track_size;
 
+/*! Unix sock send buffer size */
+int buffer_size;
+
 /*! If equals to 1, set mark on packet using #IPQ_SET_VWMARK. Default value: 0 */
 int nufw_set_mark;
 

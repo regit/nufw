@@ -167,6 +167,7 @@ void tls_connect_unix()
 	int s;
 	int ret;
 	nussl_session* sess;
+	int opt;
 
 	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
 		"Trying to connect to unix socket: %s", authreq_addr);
@@ -186,6 +187,17 @@ void tls_connect_unix()
 		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
 				"Couldn't connect to unix socket");
 		return;
+	}
+
+	if (buffer_size != 0) {
+		opt = buffer_size;
+		ret = setsockopt(s, SOL_SOCKET, SO_SNDBUFFORCE, &opt, sizeof(opt));
+		if (ret < 0) {
+			log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_DEBUG,
+					"Couldn't set send buffer size to unix socket: %s",
+					strerror(errno));
+			return;
+		}
 	}
 
 	sess = nussl_session_create_with_fd(s, 0 /* verify */);

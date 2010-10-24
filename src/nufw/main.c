@@ -356,6 +356,7 @@ static struct option long_options[] = {
 	{"queue-len", 1, NULL, 'L'},
 	{"timeout", 1, NULL, 't'},
 	{"track-size", 1, NULL, 'T'},
+	{"buffer-size", 1, NULL, 'b'},
 
 	{0, 0, 0, 0}
 };
@@ -398,7 +399,8 @@ void display_usage(void)
 #endif
 #endif
 "\t-t (--timeout    ): timeout to forget about packets when they don't match (default: 15 s)\n\
-\t-T (--track-size ): track size (default : 1000)\n",
+\t-T (--track-size ): track size (default: 1000)\n\
+\t-b (--buffer-size ): unix buffer size  (default: system)\n",
 				PACKAGE_TARNAME);
 }
 
@@ -436,10 +438,10 @@ int main(int argc, char *argv[])
 #ifdef HAVE_NFQ_SET_QUEUE_MAXLEN
 	    "L:"
 #endif
-	    "c:k:a:n:r:d:p:t:T:A:"
+	    "c:k:a:n:r:d:p:t:T:A:b:"
 	    ;
 #else
-	char *options_list = "4sSNDf:hVvmc:k:a:n:r:d:p:t:T:A:";
+	char *options_list = "4sSNDf:hVvmc:k:a:n:r:d:p:t:T:A:b:";
 #endif
 	int option, daemonize = 0;
 	char *version = PACKAGE_VERSION;
@@ -451,6 +453,7 @@ int main(int argc, char *argv[])
 	authreq_port = AUTHREQ_PORT;
 	packet_timeout = PACKET_TIMEOUT;
 	track_size = TRACK_SIZE;
+	buffer_size = 0;
 	cert_file = NULL;
 	key_file = NULL;
 	ca_file = NULL;
@@ -576,6 +579,9 @@ int main(int argc, char *argv[])
 			break;
 		case '4':
 			nufw_no_ipv6 = 1;
+			break;
+		case 'b':
+			sscanf(optarg, "%u", &buffer_size);
 			break;
 #if USE_NFQUEUE
 		case 'q':
