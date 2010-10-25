@@ -155,6 +155,7 @@ static int treat_nufw_request(nufw_session_t * c_session)
 						"nufw read impossible at %s:%d",
 						__FILE__,
 						__LINE__);
+		declare_dead_nufw_session(c_session);
 		return NU_EXIT_ERROR;
 	}
 
@@ -164,6 +165,7 @@ static int treat_nufw_request(nufw_session_t * c_session)
 		    get_proto_version_from_packet(dgram,
 						  (size_t) message_length);
 		if (!c_session->proto_version) {
+			declare_dead_nufw_session(c_session);
 			return NU_EXIT_ERROR;
 		}
 	}
@@ -175,6 +177,8 @@ static int treat_nufw_request(nufw_session_t * c_session)
 					&current_conn);
 		switch (ret) {
 		case NU_EXIT_ERROR:
+			/* better to have a disconnect than going in space */
+			declare_dead_nufw_session(c_session);
 			return NU_EXIT_ERROR;
 		case NU_EXIT_OK:
 			if (current_conn != NULL) {
