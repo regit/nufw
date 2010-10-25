@@ -26,7 +26,7 @@
 
 #define RETURN_NO_LOG return
 
-static GSList *userpckt_decode(struct tls_buffer_read *data);
+static nu_error_t userpckt_decode(struct tls_buffer_read *data, GSList **conn_elts);
 
 /**
  * Get user data (containing datagram) and goes till inclusion
@@ -44,6 +44,7 @@ nu_error_t user_check_and_decide(user_session_t *usersession)
 	connection_t *conn_elt;
 	struct tls_buffer_read *userdata = NULL;
 	nu_error_t u_request;
+	nu_error_t ret;
 
 	debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER, "entering user_check");
 
@@ -67,7 +68,16 @@ nu_error_t user_check_and_decide(user_session_t *usersession)
 	}
 
 	/* reload condition */
-	conn_elts = userpckt_decode(userdata);
+	ret = userpckt_decode(userdata, &conn_elts);
+
+	switch (ret) {
+		case NU_EXIT_CONTINUE:
+			return NU_EXIT_OK;
+		case NU_EXIT_ERROR:
+			return ret;
+		default:
+			break;
+	}
 
 	if (conn_elts == NULL) {
 		if (((struct nu_header *) userdata->buffer)->msg_type != EXTENDED_PROTO) {
@@ -75,7 +85,7 @@ nu_error_t user_check_and_decide(user_session_t *usersession)
 					"User packet decoding failed");
 		}
 		free_buffer_read(userdata);
-		return NU_EXIT_CONTINUE;
+		return NU_EXIT_ERROR;
 	}
 
 	/* if OK search and fill */
@@ -540,7 +550,7 @@ GSList *user_request(struct tls_buffer_read * data)
 	return conn_elts;
 }
 
-static GSList *treat_extended_proto(struct tls_buffer_read *data)
+static nu_error_t treat_extended_proto(struct tls_buffer_read *data)
 {
 	int ret;
 	struct nu_header *header = (struct nu_header *) data->buffer;
@@ -548,7 +558,7 @@ static GSList *treat_extended_proto(struct tls_buffer_read *data)
 	if (sizeof(*header) > (size_t)data->buffer_len) {
 		log_message(WARNING, DEBUG_AREA_USER,
 				"Error: too small message");
-		return NULL;
+		return NU_EXIT_ERROR;
 	}
 
 	if (header->length > data->buffer_len) {
@@ -556,7 +566,7 @@ static GSList *treat_extended_proto(struct tls_buffer_read *data)
 				"Error: message bigger than buffer (%d vs %d)",
 				header->length,
 				data->buffer_len);
-		return NULL;
+		return NU_EXIT_ERROR;
 	}
 
 	if (! llist_empty(&(nuauthdatas->ext_proto_l))) {
@@ -567,12 +577,13 @@ static GSList *treat_extended_proto(struct tls_buffer_read *data)
 		if (ret != SASL_OK) {
 			log_message(WARNING, DEBUG_AREA_USER,
 					"Error when processing extended proto message");
+			return NU_EXIT_ERROR;
 		}
 	} else {
 		log_message(WARNING, DEBUG_AREA_USER,
 				"No protocol extension supported but extended proto message");
 	}
-	return NULL;
+	return NU_EXIT_CONTINUE;
 }
 
 /**
@@ -582,7 +593,7 @@ static GSList *treat_extended_proto(struct tls_buffer_read *data)
  * \param data Pointer to a struct tls_buffer_read:
  * \return Single linked list of connections (of type connection_t).
  */
-static GSList *userpckt_decode(struct tls_buffer_read *data)
+static nu_error_t userpckt_decode(struct tls_buffer_read *data, GSList ** conn)
 {
 	char *dgram = data->buffer;
 	struct nu_header *header = (struct nu_header *) dgram;
@@ -591,7 +602,7 @@ static GSList *userpckt_decode(struct tls_buffer_read *data)
 	if (data->buffer_len < (int) sizeof(struct nu_header)) {
 		log_message(WARNING, DEBUG_AREA_USER,
 			    "Received buffer too small to read header");
-		return NULL;
+		return NU_EXIT_ERROR;
 	}
 
 	/* check protocol version */
@@ -600,7 +611,7 @@ static GSList *userpckt_decode(struct tls_buffer_read *data)
 			    "Unsupported protocol, got protocol %d (msg %d) with option %d (length %d)",
 			    header->proto, header->msg_type,
 			    header->option, header->length);
-		return NULL;
+		return NU_EXIT_ERROR;
 	}
 
 	header->length = ntohs(header->length);
@@ -608,16 +619,23 @@ static GSList *userpckt_decode(struct tls_buffer_read *data)
 	if (header->length > MAX_NUFW_PACKET_SIZE) {
 		log_message(WARNING, DEBUG_AREA_USER,
 			    "Improper length signaled in packet header");
-		return NULL;
+		return NU_EXIT_ERROR;
 	}
 
 	switch (header->msg_type) {
 		case USER_REQUEST:
-			return user_request(data);
+			*conn = user_request(data);
+			if (conn == NULL) {
+				return NU_EXIT_ERROR;
+			}
+			break;
 		case EXTENDED_PROTO:
+			debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
+					  "treat extended proto message");
 			return treat_extended_proto(data);
 		default:
 			log_message(WARNING, DEBUG_AREA_USER, "Unsupported message type");
-			return NULL;
+			return NU_EXIT_ERROR;
 	}
+	return NU_EXIT_OK;
 }
