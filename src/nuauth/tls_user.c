@@ -223,8 +223,7 @@ nu_error_t treat_user_request(user_session_t * c_session,
 	}
 
 	/* continue to read the content */
-	if (header->proto == PROTO_VERSION
-	    && header_length > data->buffer_len) {
+	if (header_length > data->buffer_len) {
 
 		if (header_length > CLASSIC_NUFW_PACKET_SIZE) {
 			data->buffer = g_realloc(data->buffer, header_length);
@@ -289,8 +288,7 @@ nu_error_t treat_user_request(user_session_t * c_session,
 	c_session->last_request = time(NULL);
 
 	/* is it an "USER HELLO" message ? */
-	if (header->proto == PROTO_VERSION
-	    && header->msg_type == USER_HELLO) {
+	if (header->msg_type == USER_HELLO) {
 		debug_log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 				  "tls user: HELLO from user \"%s\"",
 				  c_session->user_name);
