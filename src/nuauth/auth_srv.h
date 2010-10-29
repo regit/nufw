@@ -185,6 +185,13 @@ nu_error_t treat_user_request(user_session_t * c_session,
  */
 #define MAX_NUFW_PACKET_SIZE 1800
 
+
+/**
+ * SASL buffer size, can be tuned to fix issue some
+ * weird setup (Kerberos with huge ticket for example)
+ */
+#define SASL_BUF_SIZE 32768
+
 /*----------------------- SSL stuff ----------------------------------*/
 
 /**

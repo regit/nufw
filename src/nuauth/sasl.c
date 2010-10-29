@@ -231,7 +231,8 @@ static unsigned samp_recv(nussl_session* nussl, char *buf, int bufsize)
 	result = sasl_decode64(buf + 3, (unsigned) strlen(buf + 3), buf,
 			       bufsize, &len);
 	if (result != SASL_OK) {
-		log_message(INFO, DEBUG_AREA_AUTH, "Decoding data in base64");
+		log_message(WARNING, DEBUG_AREA_AUTH, "Unable to decode base64 data: %s",
+			    sasl_errstring(result, NULL, NULL));
 		return 0;
 	}
 	buf[len] = '\0';
@@ -434,7 +435,7 @@ nu_error_t get_proto_info(user_session_t * c_session)
  */
 static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 {
-	char buf[8192];
+	char buf[SASL_BUF_SIZE];
 	const char *data = NULL;
 	int tls_len = 0;
 	unsigned sasl_len = 0;
