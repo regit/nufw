@@ -42,5 +42,5 @@ pkgconfig_DATA = libnussl.pc
 bin_PROGRAMS = nussl_tool
 
 nussl_tool_SOURCES = nussl_tool.c
-nussl_tool_LDFLAGS = ./libnussl.la
+nussl_tool_LDADD = ./libnussl.la
 
