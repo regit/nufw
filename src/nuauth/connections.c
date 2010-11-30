@@ -361,7 +361,7 @@ void clean_connections_list()
 
 	/* display number of deleted elements */
 	if (0 < nb_deleted) {
-		log_message(INFO, DEBUG_AREA_MAIN,
+		log_message(VERBOSE_DEBUG, DEBUG_AREA_MAIN,
 			    "Clean connection list: %d connection(s) suppressed",
 			    nb_deleted);
 	}
