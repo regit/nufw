@@ -2,6 +2,7 @@
  ** Copyright(C) 2005-2009 INL
  **		 2010 EdenWall Technologies
  ** Written by Eric Leblond <regit@inl.fr>
+ ** Modified by Pierre-Louis Bonicoli <bonicoli@edenwall.com>
  **
  ** This program is free software; you can redistribute it and/or modify
  ** it under the terms of the GNU General Public License as published by
@@ -217,7 +218,8 @@ static int samp_send(nussl_session* nussl, const char *buffer,
 	return result;
 }
 
-static unsigned samp_recv(nussl_session* nussl, char *buf, int bufsize)
+static unsigned samp_recv(nussl_session* nussl, sasl_conn_t * conn, char *buf,
+			       int bufsize)
 {
 	unsigned int len;
 	int result;
@@ -233,7 +235,7 @@ static unsigned samp_recv(nussl_session* nussl, char *buf, int bufsize)
 			       bufsize, &len);
 	if (result != SASL_OK) {
 		log_message(WARNING, DEBUG_AREA_AUTH, "Unable to decode base64 data: %s",
-			    sasl_errstring(result, NULL, NULL));
+			    sasl_errdetail(conn));
 		return 0;
 	}
 	buf[len] = '\0';
@@ -477,7 +479,7 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 			  "Now we know record_send >= 0");
 
 	memset(buf, 0, sizeof(buf));
-	tls_len = samp_recv(c_session->nussl, buf, sizeof(buf));
+	tls_len = samp_recv(c_session->nussl, conn, buf, sizeof(buf));
 	if (tls_len <= 0) {
 		if (tls_len == 0) {
 			log_message(INFO, DEBUG_AREA_AUTH,
@@ -509,13 +511,13 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 	if (auth_result != SASL_OK && auth_result != SASL_CONTINUE) {
 		char *tempname = NULL;
 		log_message(INFO, DEBUG_AREA_AUTH, "Error starting SASL negotiation: %s (%d)",
-			  sasl_errstring(auth_result, NULL, NULL),
+			  sasl_errdetail(conn),
 			  auth_result);
 		result =
 		    sasl_getprop(conn, SASL_AUTHUSER,
 				 (const void **) &(tempname));
 		if (result != SASL_OK) {
-			g_warning("get user failed: %s", sasl_errstring(result, NULL, NULL));
+			g_warning("get user failed: %s", sasl_errdetail(conn));
 			return result;
 		}
 		if (tempname == NULL)
@@ -538,7 +540,7 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 				  "Waiting for client reply...");
 
 		memset(buf, 0, sizeof(buf));
-		len = samp_recv(c_session->nussl, buf, sizeof(buf));
+		len = samp_recv(c_session->nussl, conn, buf, sizeof(buf));
 		data = NULL;
 		auth_result = sasl_server_step(conn, buf, len, &data, &len);
 	}
@@ -569,7 +571,7 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 		    sasl_getprop(conn, SASL_AUTHUSER,
 				 (const void **) &(tempname));
 		if (result != SASL_OK) {
-			g_warning("get user failed: %s", sasl_errstring(result, NULL, NULL));
+			g_warning("get user failed: %s", sasl_errdetail(conn));
 			return result;
 		}
 		if (tempname == NULL)
