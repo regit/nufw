@@ -230,11 +230,12 @@ int user_process_field_app(struct nu_authreq *authreq,
 	}
 
 	if (len > 512 || (len <= 0)) {
-		/* it is reaaally long (or too short), we ignore packet (too lasy to kill client) */
+		/* it is reaaally long (or too short), we ignore packet (too lazy to kill client) */
 		log_message(INFO, DEBUG_AREA_USER,
 			    "user packet announced a bad length app name : %d",
 			    len);
-		return -1;
+		connection->app_name = NULL;
+		return 1;
 	}
 	dec_appname = g_new0(gchar, len + 1);
 	int ret;
@@ -280,7 +281,8 @@ int user_process_field_hash(struct nu_authreq *authreq,
 		log_message(WARNING, DEBUG_AREA_USER,
 			    "Improper application field length signaled in authreq header %d < %d",
 			    field_buffer_len, appfield->length);
-		return -1;
+		connection->app_sig = NULL;
+		return 1;
 	}
 
 	if (len > 256 || (len <= 0)) {
@@ -288,7 +290,8 @@ int user_process_field_hash(struct nu_authreq *authreq,
 		log_message(INFO, DEBUG_AREA_USER,
 			    "user packet announced a bad length app name : %d",
 			    len);
-		return -1;
+		connection->app_sig = NULL;
+		return 1;
 	}
 
 	appsig = g_new0(gchar, len + 1);
