@@ -215,7 +215,8 @@ void *localid_auth(GMutex * mutex)
 	msg->length = htons(sizeof(struct nu_srv_helloreq));
 
 	/* init hash table */
-	localid_auth_hash = g_hash_table_new(NULL, NULL);
+	localid_auth_hash = g_hash_table_new_full(NULL, NULL, NULL,
+					     (GDestroyNotify) free_connection);
 
 	g_async_queue_ref(nuauthdatas->localid_auth_queue);
 	g_async_queue_ref(nuauthdatas->tls_push_queue);
