@@ -448,7 +448,8 @@ char warn_clients(struct msg_addr_set *global_msg,
 	ipsessions = g_hash_table_lookup(client_ip_hash, &global_msg->addr);
 	if (ipsessions) {
 		global_msg->found = TRUE;
-
+		/* if data or scheck is not NULL we need to send the message and thus
+		we do not enter the delay code */
 		if ((!(data || scheck)) && ipsessions->proto_version >= PROTO_VERSION_V22_1) {
 			gettimeofday(&timestamp, NULL);
 			timeval_substract(&interval, &timestamp, &(ipsessions->last_message));
