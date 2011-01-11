@@ -632,7 +632,7 @@ int tls_nufw_accept_unix(struct tls_nufw_context_t *context)
 
 	opt = nuauth_config_table_get_or_default_int("nuauth_unix_sndbuf_size", 0);
 	if (opt > 0) {
-		ret = setsockopt(conn_fd, SOL_SOCKET, SO_SNDBUFFORCE, &opt, sizeof(opt));
+		ret = setsockopt(conn_fd, SOL_SOCKET, SO_SNDBUF, &opt, sizeof(opt));
 		if (ret < 0) {
 			log_area_printf(DEBUG_AREA_GW, DEBUG_LEVEL_DEBUG,
 					"Couldn't set buf send to unix socket: %s",
