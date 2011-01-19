@@ -40,6 +40,14 @@ typedef enum {
 	AUTH_TYPE_INTERNAL, /*!< authentication SASL */
 } auth_type_t;
 
+typedef enum {
+	PCKT_ERROR,
+	PCKT_SPOOFED,
+	PCKT_HELLO,
+	PCKT_RECEIVE,
+} pckt_treat_t;
+
+
 /**
  * \brief Stores all information relative to a TLS user session.
  *
@@ -83,10 +91,17 @@ typedef struct {
 	int auth_quality;
 	time_t connect_timestamp;
 	time_t last_request;
+	int rx_pckts;
+	int error_pckts;
+	int spoofed_pckts;
+	int hello_pckts;
 	gboolean activated;	/*!< \brief TRUE if user server listen for event for this session */
 	gboolean pending_disconnect; /*!< \brief TRUE if session must be killed during loop reinjection */
 } user_session_t;
 
 char *capa_array[32];
+
+
+nu_error_t increase_user_counter(user_session_t *usersession, pckt_treat_t ev);
 
 #endif

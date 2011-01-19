@@ -28,6 +28,26 @@
 
 static nu_error_t userpckt_decode(struct tls_buffer_read *data, GSList **conn_elts);
 
+nu_error_t increase_user_counter(user_session_t *usersession, pckt_treat_t ev) {
+	switch (ev) {
+		case PCKT_RECEIVE:
+			g_atomic_int_inc(&usersession->rx_pckts);
+			break;
+		case PCKT_HELLO:
+			g_atomic_int_inc(&usersession->hello_pckts);
+			break;
+		case PCKT_ERROR:
+			g_atomic_int_inc(&usersession->error_pckts);
+			break;
+		case PCKT_SPOOFED:
+			g_atomic_int_inc(&usersession->spoofed_pckts);
+			break;
+		default:
+			return NU_EXIT_ERROR;
+	}
+	return NU_EXIT_OK;
+}
+
 /**
  * Get user data (containing datagram) and goes till inclusion
  * (or decision) on packet.
@@ -59,6 +79,7 @@ nu_error_t user_check_and_decide(user_session_t *usersession)
 		log_message(VERBOSE_DEBUG, DEBUG_AREA_USER,
 			    "treat_user_request() failure");
 #endif
+		increase_user_counter(usersession, PCKT_ERROR);
 		return NU_EXIT_ERROR;
 	}
 
@@ -74,6 +95,7 @@ nu_error_t user_check_and_decide(user_session_t *usersession)
 		case NU_EXIT_CONTINUE:
 			return NU_EXIT_OK;
 		case NU_EXIT_ERROR:
+			increase_user_counter(usersession, PCKT_ERROR);
 			return ret;
 		default:
 			break;
@@ -84,6 +106,7 @@ nu_error_t user_check_and_decide(user_session_t *usersession)
 			log_message(INFO, DEBUG_AREA_USER,
 					"User packet decoding failed");
 		}
+		increase_user_counter(usersession, PCKT_ERROR);
 		free_buffer_read(userdata);
 		return NU_EXIT_ERROR;
 	}
@@ -122,6 +145,7 @@ nu_error_t user_check_and_decide(user_session_t *usersession)
 				}
 				/* free connection */
 				free_connection(conn_elt);
+				increase_user_counter(usersession, PCKT_SPOOFED);
 				continue;
 			}
 		}

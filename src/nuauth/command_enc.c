@@ -262,6 +262,10 @@ encoder_t* encode_user(user_session_t* session)
 	encoder_add_string(encoder, session->release);
 	encoder_add_string(encoder, session->version);
 	encoder_add_bool(encoder, session->activated);
+	encoder_add_int32(encoder, session->rx_pckts);
+	encoder_add_int32(encoder, session->hello_pckts);
+	encoder_add_int32(encoder, session->spoofed_pckts);
+	encoder_add_int32(encoder, session->error_pckts);
 
 	/* destroy group list */
 	encoder_slist_destroy(groups);

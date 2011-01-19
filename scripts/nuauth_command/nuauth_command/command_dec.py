@@ -30,7 +30,7 @@ class Uptime(Message):
 class User(Message):
     def __init__(self, client_version, socket, name, addr, sport, uid, groups,
     connect_timestamp, uptime, expire,
-    sysname, release, version, activated):
+    sysname, release, version, activated, rx, error, spoofed, hello):
         self.client_version = client_version
         self.socket = socket
         self.name = name
@@ -48,6 +48,10 @@ class User(Message):
         self.release = release
         self.version = version
         self.activated = activated
+        self.rx = rx
+        self.error = error
+        self.spoofed = spoofed
+        self.hello = hello
 
     def __str__(self):
         addr = self.addr.strCompressed()
@@ -56,11 +60,12 @@ class User(Message):
             expire = ", %s" % self.expire
         else:
             expire = ""
-        return "#%s: %r at %s (port %s) %s since %s\n   id: %s, groups: %s%s\n   %s %s (%s)" % (
+        return "#%s: %r at %s (port %s) %s since %s\n   id: %s, groups: %s%s\n   %s %s (%s)\n   rx: %s, err: %s, hello: %s, spoofed: %s" % (
             self.socket, self.name, addr,
             self.sport, self.uptime, self.connect_timestamp,
             self.uid, groups, expire,
-            self.sysname, self.release, self.version)
+            self.sysname, self.release, self.version,
+            self.rx, self.error, self.hello, self.spoofed)
 
 class NuFW:
     def __init__(self, version, socket, peername, connect_timestamp, uptime, usage, alive):
@@ -210,9 +215,13 @@ class Decoder:
         release = self.readString()
         version = self.readString()
         activated = self.readBool()
+        rx = self.readInt32()
+        hello = self.readInt32()
+        spoofed = self.readInt32()
+        error = self.readInt32()
         return User(version, socket, name, addr, sport,
             uid, groups, timestamp, uptime, expire,
-            sysname, release, version, activated)
+            sysname, release, version, activated, rx, error, spoofed, hello)
 
     def decode_nufw(self):
         index = self.index

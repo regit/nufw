@@ -210,6 +210,7 @@ nu_error_t treat_user_request(user_session_t * c_session,
 		}
 	}
 
+	increase_user_counter(c_session, PCKT_RECEIVE);
 	/* get header to get how much data we have to read */
 	header = (struct nu_header *) data->buffer;
 	header_length = ntohs(header->length);
@@ -294,6 +295,7 @@ nu_error_t treat_user_request(user_session_t * c_session,
 				  c_session->user_name);
 		c_session->last_request = time(NULL);
 		free_buffer_read(data);
+		increase_user_counter(c_session, PCKT_HELLO);
 		return NU_EXIT_CONTINUE;
 	}
 
