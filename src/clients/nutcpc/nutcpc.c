@@ -40,7 +40,13 @@
 #include "proto.h"
 #include "security.h"
 #include "debug.h"
-#define NUTCPC_VERSION PACKAGE_VERSION " $Revision$"
+#ifdef REVISION
+#define xstr(s) str(s)
+#define str(s) #s
+#define NUTCPC_VERSION PACKAGE_VERSION " [" xstr(REVISION) "]"
+#else
+#define NUTCPC_VERSION PACKAGE_VERSION
+#endif
 
 #ifdef HAVE_GETOPT_H
 # include <getopt.h>

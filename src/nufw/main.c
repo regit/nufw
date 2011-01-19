@@ -46,6 +46,14 @@
 
 #include "nufwconf.h"
 
+#ifdef REVISION
+#define xstr(s) str(s)
+#define str(s) #s
+#define NUFW_FULL_VERSION VERSION " [" xstr(REVISION) "]"
+#else
+#define NUFW_FULL_VERSION VERSION
+#endif
+
 char *key_file = NULL;
 char *cert_file = NULL;
 
@@ -444,7 +452,7 @@ int main(int argc, char *argv[])
 	char *options_list = "4sSNDf:hVvmc:k:a:n:r:d:p:t:T:A:b:";
 #endif
 	int option, daemonize = 0;
-	char *version = PACKAGE_VERSION;
+	char *version = NUFW_FULL_VERSION;
 	nufw_no_ipv6 = 0;
 
 	/* initialize variables */
@@ -687,7 +695,7 @@ int main(int argc, char *argv[])
 	}
 
 	log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_FATAL,
-			"[+] NuFW " VERSION " started");
+			"[+] NuFW " NUFW_FULL_VERSION " started");
 
 	if (daemonize == 0) {
 		log_area_printf(DEBUG_AREA_MAIN, DEBUG_LEVEL_CRITICAL,

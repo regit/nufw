@@ -235,7 +235,13 @@ nu_error_t treat_user_request(user_session_t * c_session,
 /**
  * Nuauth full version, eg. "nuauth 2.1.2 (Revision: 2730)"
  */
-#define NUAUTH_FULL_VERSION (VERSION " ($Revision$)")
+#ifdef REVISION
+#define xstr(s) str(s)
+#define str(s) #s
+#define NUAUTH_FULL_VERSION VERSION " [" xstr(REVISION) "]"
+#else
+#define NUAUTH_FULL_VERSION VERSION
+#endif
 
 void nuauth_ask_exit();
 void stop_all_thread_pools(gboolean wait);

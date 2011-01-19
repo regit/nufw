@@ -852,7 +852,7 @@ void configure_app(int argc, char **argv)
 		/* default: use both stdout and syslog */
 		set_glib_loghandlers(use_stdout, nuauthconf->log_to_syslog);
 		log_message(FATAL, DEBUG_AREA_MAIN,
-				"[+] NuAuth ($Revision$) with config %s",
+				"[+] NuAuth " NUAUTH_FULL_VERSION " with config %s",
 				nuauthconf->configfile);
 		log_message(FATAL, DEBUG_AREA_MAIN,
 		"Nuauth started in foreground (without -D option), "
