@@ -356,6 +356,18 @@ else
 	CFLAGS="$CFLAGS -O2"
 fi
 
+# get revision
+if test -f ./revision; then
+    REVISION=`cat ./revision`
+    CFLAGS="${CFLAGS} -DREVISION=\"${REVISION}\""
+else
+    GIT=`which git`
+    if test "$GIT" != ""; then
+        REVISION=`git rev-parse --short HEAD`
+        CFLAGS="${CFLAGS} -DREVISION=\"${REVISION}\""
+    fi
+fi
+
 AC_CONFIG_FILES([Makefile
         doc/Makefile
         conf/Makefile
