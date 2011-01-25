@@ -52,7 +52,6 @@
 #include <auth_srv.h>
 #include <sasl/saslutil.h>
 #include <ev.h>
-#include <fcntl.h>
 #include "security.h"
 
 #include <nubase.h>
@@ -460,7 +459,6 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
 			  "%d mechanisms : %s (length: %d)", count, data,
 			  sasl_len);
-	fcntl(c_session->socket,F_SETFL,(fcntl(c_session->socket,F_GETFL)&~O_NONBLOCK));
 	/* send capability list to client */
 	record_send = samp_send(c_session->nussl, data, sasl_len);
 	tls_len = sasl_len;
@@ -608,7 +606,6 @@ static int mysasl_negotiate(user_session_t * c_session, sasl_conn_t * conn)
 		return SASL_FAIL;
 #endif
 
-	fcntl(c_session->socket,F_SETFL,(fcntl(c_session->socket,F_GETFL)|O_NONBLOCK));
 	/* negotiation complete */
 	return SASL_OK;
 }
