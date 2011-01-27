@@ -307,7 +307,11 @@ static void sock_activity_cb(struct ev_loop *loop, ev_io *w, int revents)
 		return;
 	}
 #endif
-	if (revents & (EV_READ|EV_WRITE)) {
+	if (revents & EV_WRITE) {
+		log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
+				"Write event when waiting protocol information");
+	}
+	if (revents & EV_READ) {
 		char buffer[20];
 		int ret;
 		ev_io_stop(loop, w);
@@ -378,11 +382,11 @@ static void sock_timeout_cb(struct ev_loop *loop, ev_timer *w, int revents)
 {
 	user_session_t *c_session = w->data;
 
+	debug_log_message(DEBUG, DEBUG_AREA_AUTH,
+			"Timeout when waiting protocol announce");
 	if (c_session->proto_version != PROTO_VERSION_NONE) {
 		return;
 	}
-	debug_log_message(DEBUG, DEBUG_AREA_AUTH,
-			"Timeout when waiting protocol announce");
 	ev_io_stop(loop, w->data);
 	ev_unloop(loop, EVUNLOOP_ONE);
 	log_message(VERBOSE_DEBUG, DEBUG_AREA_AUTH,
@@ -410,14 +414,14 @@ nu_error_t get_proto_info(user_session_t * c_session)
 
 	c_session->proto_version = PROTO_VERSION_NONE;
 	loop = ev_loop_new(0);
-	ev_io_init(&sock_watcher, sock_activity_cb, c_session->socket , EV_READ|EV_WRITE);
+	ev_io_init(&sock_watcher, sock_activity_cb, c_session->socket, EV_READ);
 	sock_watcher.data = c_session;
 	ev_io_start(loop, &sock_watcher);
-	ev_timer_init (&timer, sock_timeout_cb, 1.0 * nuauthconf->proto_wait_delay, 0);
+	ev_timer_init(&timer, sock_timeout_cb, 1.0 * nuauthconf->proto_wait_delay, 0.);
 	timer.data = c_session;
 	ev_timer_start(loop, &timer);
 
-	ev_loop(loop, EVLOOP_ONESHOT);
+	ev_loop(loop, 0);
 
 	ev_loop_destroy(loop);
 
