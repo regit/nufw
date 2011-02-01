@@ -427,7 +427,8 @@ int send_os(nuauth_session_t * session, nuclient_error_t * err)
 	ret = nussl_write(session->nussl, buf, ntohs(osfield->length));
 	if (ret < 0) {
 		if (session->verbose)
-			log_printf(DEBUG_LEVEL_CRITICAL, "Error sending tls data: ...");
+			log_printf(DEBUG_LEVEL_CRITICAL, "Error sending OS data: %s",
+					nussl_get_error(session->nussl));
 		SET_ERROR(err, NUSSL_ERR, ret);
 		return 0;
 	}
@@ -474,7 +475,8 @@ int send_client(nuauth_session_t * session, nuclient_error_t * err)
 	ret = nussl_write(session->nussl, buf, ntohs(vfield->length));
 	if (ret < 0) {
 		if (session->verbose)
-			log_printf(DEBUG_LEVEL_CRITICAL, "Error sending tls data: ...");
+			log_printf(DEBUG_LEVEL_CRITICAL, "Error sending Client data: %s",
+					nussl_get_error(session->nussl));
 		SET_ERROR(err, NUSSL_ERR, ret);
 		return 0;
 	}
@@ -523,7 +525,8 @@ int send_capa(nuauth_session_t * session, nuclient_error_t * err)
 	ret = nussl_write(session->nussl, buf, ntohs(vfield->length));
 	if (ret < 0) {
 		if (session->verbose)
-			log_printf(DEBUG_LEVEL_CRITICAL, "Error sending tls data: ...");
+			log_printf(DEBUG_LEVEL_CRITICAL, "Error sending Capabilities data: %s",
+					nussl_get_error(session->nussl));
 		SET_ERROR(err, NUSSL_ERR, ret);
 		return 0;
 	}
