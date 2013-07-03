@@ -95,6 +95,20 @@ typedef unsigned char nussl_d2i_uchar;
 typedef const unsigned char nussl_d2i_uchar;
 #endif
 
+#if !defined(HAVE_SSL_SESSION_CMP) && !defined(SSL_SESSION_cmp) \
+    && defined(OPENSSL_VERSION_NUMBER) \
+    && OPENSSL_VERSION_NUMBER > 0x10000000L
+/* OpenSSL 1.0 removed SSL_SESSION_cmp for no apparent reason - hoping
+ * it is reasonable to assume that comparing the session IDs is
+ * sufficient. */
+static int SSL_SESSION_cmp(SSL_SESSION *a, SSL_SESSION *b)
+{
+	return a->session_id_length == b->session_id_length
+		&& memcmp(a->session_id, b->session_id, a->session_id_length) == 0;
+}
+#endif
+
+
 /* Append an ASN.1 DirectoryString STR to buffer BUF as UTF-8.
  * Returns zero on success or non-zero on error. */
 static int append_dirstring(nussl_buffer * buf, ASN1_STRING * str)
